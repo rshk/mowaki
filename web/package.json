@@ -12,7 +12,9 @@
   },
   "devDependencies": {
     "@neutrinojs/eslint": "^8.3.0",
+    "@neutrinojs/jest": "^8.3.0",
     "@neutrinojs/react": "^8.3.0",
+    "@neutrinojs/standardjs": "^8.3.0",
     "@neutrinojs/style-loader": "^8.3.0",
     "autoprefixer": "^9.3.1",
     "eslint-config-react-app": "^2.1.0",
