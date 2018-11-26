@@ -1,6 +1,65 @@
-/* Add your global style here
+/*********************************************************************
+
+    Global CSS main entry-point.
+
+    This should be used to load global styles, eg. base font size /
+    color, styling for HTML elements, etc.
+
+    It's also a good place to load your libraries (eg. Bootstrap) and
+    fonts.
+
 *********************************************************************/
+
+
+/* Reset CSS rules
+*********************************************************************/
+
+@import './reset';
+
+
+/* Example to load (and customize) Bootstrap
+ * Also consider installing "reactstrap" for ready-made components
+ ********************************************************************/
 
 /* @import "~style/vars"; */
 /* @import "~bootstrap/scss/bootstrap"; */
 /* @import "~style/overrides"; */
+
+
+/* Use "border-box" box sizing by default
+********************************************************************/
+
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+
+/* Some example styling for HTML components
+********************************************************************/
+
+body {
+    color: #000;
+    background: #fff;
+    font: 16px sans-serif;
+}
+
+a, a:visited, a:link {
+    color: #3949AB;
+}
+
+h1 {
+    font-size: 2em;
+}
+h2 {
+    font-size: 1.5em;
+}
+h3 {
+    font-size: 1.2em;
+}
+
+input, textarea {
+    font: 16px sans-serif;
+}

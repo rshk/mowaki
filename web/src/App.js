@@ -1,7 +1,6 @@
 import React from 'react';
+import DemoApp from 'demo';
 
 export default function App() {
-    return <div>
-        Hello, world!
-    </div>;
+    return <DemoApp />;
 }
