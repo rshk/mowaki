@@ -1,0 +1,24 @@
+# -*- mode: gitignore; -*-
+
+*~
+\#*\#
+.\#*
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/
+
+# dotenv environment variables file
+.env
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+build/
+dist/

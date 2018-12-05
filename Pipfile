@@ -1,0 +1,31 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+"psycopg2" = "*"
+alembic = "*"
+bcrypt = "*"
+flask = "*"
+flask-cors = "*"
+flask-graphql = "*"
+flask-sockets = "*"
+flask-sqlalchemy-core = "*"
+graphql-core = "*"
+graphql-ws = "*"
+gunicorn = "*"
+nicelog = "*"
+pyjwt = "*"
+pytz = "*"
+redis = "*"
+rx = "*"
+sqlalchemy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
+
+[scripts]
+start = "gunicorn -k flask_sockets.worker app.dev:app --reload --bind localhost:5000"

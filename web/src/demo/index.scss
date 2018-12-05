@@ -1,0 +1,47 @@
+.header {
+    background: #3949AB;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    font: 20px sans-serif;
+    border-bottom: solid 4px #FFB300;
+    min-height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.page {
+    width: 90%;
+    max-width: 960px;
+    margin: 0 auto;
+}
+
+.button {
+    background: #ddd;
+    border: solid 1px #aaa;
+    color: #000 !important;
+    padding: 5px 10px;
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+
+    &--danger {
+        background: #d00;
+        border-color: #a00;
+        color: #fff !important;
+    }
+}
+
+.inputField, .textareaField {
+    width: 100%;
+    background: #fff;
+    border: solid 1px #ddd;
+    padding: 10px;
+}
+
+.textareaField {
+    resize: vertical;
+    min-height: 200px;
+}
