@@ -1,8 +1,8 @@
-# MoWAKi Application Demo
+# New MoWAKi Project
 
 Application created with [MoWAKi].
 
-[MoWAKi]: https://github.com/rshk/mowaki
+[MoWAKi]: https://github.com/rshk/mowaki-project
 
 
 ## Installing

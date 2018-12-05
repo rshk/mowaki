@@ -1,51 +1,15 @@
-# MoWAKi Application Demo
-
-Application created with [MoWAKi].
-
-[MoWAKi]: https://github.com/rshk/mowaki
+# MoWAKi Project
 
 
-## Installing
-
-Install backend dependencies:
-
-    pipenv install
+MoWAKi (Modern Web Application Kit) provides a way to quickly get
+started developing modern web applications with Python and React.
 
 
-Install frontend dependencies:
+## Getting started
 
-    cd web && yarn install
+To create a new MoWAKi project, simply clone this repository and run
+the ``bin/initialize`` script:
 
-
-Run database migrations:
-
-    pipenv run alembic upgrade head
-
-
-## Configuring
-
-Create an ``.env`` file containing the necessary configuration:
-
-```
-PYTHONPATH=.
-SECRET_KEY=notasecret
-DATABASE_URL=postgres://postgres:@localhost:5432/default
-REDIS_URL=redis://localhost:6379
-```
-
-
-## Running
-
-Start the necessary services via docker-compose:
-
-    docker-compose up
-
-
-Start the backend server:
-
-    pipenv run start
-
-
-Start the frontend server:
-
-    cd web && yarn start
+    git clone --depth=1 https://github.com/rshk/mowaki-project --branch master ./myproject
+    cd ./myproject
+    ./bin/initialize
