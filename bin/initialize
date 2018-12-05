@@ -2,11 +2,13 @@
 
 cd "$( dirname $( dirname "$BASH_SOURCE" ))"
 
-echo "Initializing new Mowaki project"
+echo "Initializing new MoWAKi project..."
+
+git rev-parse HEAD > .mowaki-ref
 
 mv tpl/README.md README.md
 cp .env.example .env
 
 rm -rf .git bin tpl
 
-echo "Done. Your new project is ready!"
+echo "Done. Your new MoWAKi project is ready!"
