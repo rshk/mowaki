@@ -1,0 +1,13 @@
+#!/bin/bash
+
+NAME="$1"
+BRANCH="${2:-master}"
+
+if [ -z "$NAME" ]; then
+    echo "Usage: ./create <project-name> [<branch>]"
+    exit 1
+fi
+
+git clone --depth=1 https://github.com/rshk/mowaki --branch "$BRANCH" "$NAME"
+cd "$NAME"
+./bin/initialize
