@@ -1,11 +1,7 @@
 import React from 'react';
-import {BrowserRouter, Route, Switch, Redirect, Link} from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import gql from 'graphql-tag';
 import {Query} from 'react-apollo';
-
-import {API_URL} from '../lib/apollo';
-import ApolloProvider from '../lib/apollo-provider';
-import styles from './index.scss';
 
 
 const QUERY_LIST_NOTES = gql`
