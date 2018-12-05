@@ -49,3 +49,8 @@ Start the backend server:
 Start the frontend server:
 
     cd web && yarn start
+
+
+Then head to http://localhost:8000/
+
+You can also access GraphiQL running at http://localhost:5000/graphql
