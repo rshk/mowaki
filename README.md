@@ -7,6 +7,11 @@ started developing modern web applications with Python and React.
 
 ## Getting started
 
+If you like running code from the internet:
+
+    curl -sL https://git.io/mowaki-create | bash -s - ./newproject
+
+
 To create a new MoWAKi project, simply clone this repository and run
 the ``bin/initialize`` script:
 
