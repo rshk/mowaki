@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd "$( dirname $( dirname "$BASH_SOURCE" ))"
+
+echo "Initializing new Mowaki project"
+
+mv tpl/README.md README.md
+cp .env.example .env
+
+rm -rf .git bin tpl
+
+echo "Done. Your new project is ready!"
