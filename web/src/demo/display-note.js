@@ -34,7 +34,7 @@ function NoteView({noteId, loading, error, data}) {
     const {id, title, body} = data.note;
     return <div>
         <h1>#{id}: {title}</h1>
-        <div>{body}</div>
+        <div style={{whiteSpace: 'pre-wrap'}}>{body}</div>
         <div style={{marginTop: '20px'}}>
             <DeleteNoteButton noteId={id} />{' '}
             <Link to={`/note/${noteId}/edit`}>Edit note</Link>

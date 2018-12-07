@@ -2,12 +2,12 @@ import logging
 from collections import namedtuple
 
 from graphql.type import (
-    GraphQLArgument, GraphQLBoolean, GraphQLEnumType, GraphQLEnumValue,
-    GraphQLField, GraphQLInt, GraphQLInterfaceType, GraphQLList,
+    GraphQLArgument, GraphQLBoolean, GraphQLField, GraphQLInt, GraphQLList,
     GraphQLNonNull, GraphQLObjectType, GraphQLSchema, GraphQLString)
 
 from app.db.query.example import (
     create_note, delete_note, get_note, list_notes, update_note)
+from app.lib.graphql import GraphQLFileUpload
 
 logger = logging.getLogger(__name__)
 
@@ -77,9 +77,23 @@ def resolve_delete_note(root, info, id):
     return DeleteNoteResult(ok=True)
 
 
+def resolve_upload_note(root, info, uploadedFile):
+    title = uploadedFile.filename
+    body = uploadedFile.stream.read().decode('utf-8')
+    # TODO: ensure the file contains text, not binary data
+    note_id = create_note(title=title, body=body)
+    return UploadNoteResult(
+        ok=True,
+        noteId=note_id,
+        title=title,
+        body=body,
+    )
+
+
 CreateNoteResult = namedtuple('CreateNoteResult', 'ok,noteId')
 UpdateNoteResult = namedtuple('UpdateNoteResult', 'ok')
 DeleteNoteResult = namedtuple('DeleteNoteResult', 'ok')
+UploadNoteResult = namedtuple('UploadNoteResult', 'ok,noteId,title,body')
 
 
 mutationType = GraphQLObjectType(
@@ -132,6 +146,23 @@ mutationType = GraphQLObjectType(
                 'id': GraphQLArgument(GraphQLInt),
             },
             resolver=resolve_delete_note,
+        ),
+
+        'uploadNote': GraphQLField(
+            GraphQLObjectType(
+                'UploadNoteResult',
+                fields=lambda: {
+                    'ok': GraphQLField(GraphQLBoolean),
+                    'noteId': GraphQLField(GraphQLInt),
+                    'title': GraphQLField(GraphQLString),
+                    'body': GraphQLField(GraphQLString),
+                },
+            ),
+            args={
+                'uploadedFile': GraphQLArgument(
+                    (GraphQLFileUpload)),
+            },
+            resolver=resolve_upload_note,
         ),
 
     },

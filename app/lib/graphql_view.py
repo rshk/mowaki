@@ -33,8 +33,10 @@ class GraphQLView(flask_graphql.GraphQLView):
             # files (from "parts") and place them in the "operations"
             # data structure (list or dict) according to the "map".
             # --------------------------------------------------------
+
             operations = load_json_body(request.form['operations'])
             files_map = load_json_body(request.form['map'])
+
             return place_files_in_operations(
                 operations, files_map, request.files)
 
