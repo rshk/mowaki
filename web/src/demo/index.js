@@ -10,6 +10,7 @@ import NotesList from './notes-list';
 import DisplayNote from './display-note';
 import CreateNoteForm from './create-note';
 import UpdateNoteForm from './update-note';
+import UploadNoteForm from './upload-note';
 
 
 export default function DemoApp() {
@@ -33,6 +34,7 @@ function AppRoutes() {
     return <Switch>
         <Route exact path="/" component={NotesListPage} />
         <Route exact path="/new" component={NoteCreatePage} />
+        <Route exact path="/upload" component={NoteUploadPage} />
         <Route exact path="/note/:noteId"
                render={({match: {params: {noteId}}}) =>
                    <NoteDisplayPage noteId={parseInt(noteId, 10)} /> } />
@@ -63,6 +65,9 @@ function NotesListPage() {
         <div>
             <Link className={styles.button} to="/new">
                 Create new note
+            </Link>{' '}
+            <Link className={styles.button} to="/upload">
+                Upload from file
             </Link>
         </div>
         <div style={{marginTop: '20px'}}>
@@ -86,6 +91,14 @@ function NoteCreatePage() {
     return <SubPage>
         <h1>Create note</h1>
         <CreateNoteForm />
+    </SubPage>;
+}
+
+
+function NoteUploadPage() {
+    return <SubPage>
+        <h1>Upload note</h1>
+        <UploadNoteForm />
     </SubPage>;
 }
 
