@@ -1,5 +1,6 @@
-# MoWAKi Project
+![](https://www.mowaki.org/icons/icon-144x144.png)
 
+# MoWAKi Project
 
 MoWAKi (Modern Web Application Kit) provides a way to quickly get
 started developing modern web applications with Python and React.
