@@ -1,5 +1,6 @@
 import React from 'react';
 import {BrowserRouter, Route, Switch, Redirect, Link} from 'react-router-dom';
+import {Helmet} from 'react-helmet';
 
 import {API_URL} from '../lib/apollo';
 import ApolloProvider from '../lib/apollo-provider';
@@ -11,22 +12,30 @@ import DisplayNote from './display-note';
 import CreateNoteForm from './create-note';
 import UpdateNoteForm from './update-note';
 import UploadNoteForm from './upload-note';
+import ICON from './img/icon.png';
+import LOGO from './img/mowaki.png';
 
 
 export default function DemoApp() {
-    return <ApolloProvider>
-        <BrowserRouter>
-            <div>
-                <MowakiIntro />
-                <div className={styles.page}>
-                    <div style={{textAlign: 'right'}}>
-                        <a href={API_URL}>Access GraphiQL</a>
+    return <React.Fragment>
+        <Helmet>
+            <title>MoWAKi demo app</title>
+            <link rel="icon" href={ICON} />
+        </Helmet>
+        <ApolloProvider>
+            <BrowserRouter>
+                <div>
+                    <MowakiIntro />
+                    <div className={styles.page}>
+                        <div style={{textAlign: 'right'}}>
+                            <a href={API_URL}>Access GraphiQL</a>
+                        </div>
+                        <AppRoutes />
                     </div>
-                    <AppRoutes />
                 </div>
-            </div>
-        </BrowserRouter>
-    </ApolloProvider>;
+            </BrowserRouter>
+        </ApolloProvider>
+    </React.Fragment>;
 }
 
 
@@ -48,12 +57,15 @@ function AppRoutes() {
 
 function MowakiIntro() {
     return <div className={styles.header}>
-        <h1 style={{fontWeight: 'bold', fontSize: '3em', margin: '1em'}}>
+        <div>
+            <img src={LOGO} alt="" className={styles.logo} />
+        </div>
+        <h1 className={styles.siteTitle}>
             Welcome to MoWAKi
         </h1>
         <div>
             Your new project has been set up correctly.<br/>
-            Ready to start building your modern web application!
+            Feel free to play around with the demo app.
         </div>
     </div>;
 }
