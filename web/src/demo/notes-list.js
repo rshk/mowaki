@@ -33,7 +33,7 @@ function NotesList({loading, error, data, refetch}) {
         return <div>Loading...</div>;
     }
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div>Error: {error.message}</div>;
     }
     if (!data.notes.length) {
         return <div>There are no notes.</div>;
