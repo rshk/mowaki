@@ -33,7 +33,8 @@ export default class CreateNoteForm extends React.Component {
         </Mutation>;
     }
 
-    _renderForm(createNote) {
+    _renderForm(createNote, {loading, error}) {
+
         const {title, body, errorMessage, createdNoteId} = this.state;
         const onSubmit = this._onSubmit.bind(this, createNote);
         const onTitleChange = evt => this.setState({title: evt.target.value});
@@ -51,6 +52,8 @@ export default class CreateNoteForm extends React.Component {
             body,
             onTitleChange,
             onBodyChange,
+            loading,
+            error,
         };
 
         return <NoteForm {...formProps} />;

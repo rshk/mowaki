@@ -7,10 +7,18 @@ import styles from './index.scss';
 
 export  default function NoteForm({
     onSubmit, errorMessage, noteId, title, body,
-    onTitleChange, onBodyChange}) {
+    onTitleChange, onBodyChange, loading, error}) {
 
     return <form onSubmit={onSubmit}>
-        {errorMessage && <div><strong>Error</strong> {errorMessage}</div>}
+
+        {loading && <div>Loading...</div>}
+
+        {/* Error returned in the GraphQL response */}
+        {errorMessage && <div><strong>Error:</strong> {errorMessage}</div>}
+
+        {/* Error raised by client, eg. connection error... */}
+        {error && <div><strong>Error:</strong> {error.message}</div>}
+
         <div>
             <input type="text" value={title} onChange={onTitleChange}
                    className={styles.inputField} />
