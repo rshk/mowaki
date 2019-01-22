@@ -24,14 +24,9 @@ module.exports = {
                 localIdentName: '[local]--[hash:base64:8]',
             },
             loaders: [
-                {
-                    loader: 'sass-loader',
-                    useId: 'sass',
-                    options: {
-                        includePaths: ['node_modules', 'src'],
-                        localIdentName: '[local]--[hash:base64:8]',
-                    }
-                },
+                // WARNING: Loaders need to be in *reverse* order (for
+                // some obscure reason), i.e. postcss-loader needs to be
+                // listed *before* sass-loader.
                 {
                     loader: 'postcss-loader',
                     options: {
@@ -47,7 +42,15 @@ module.exports = {
                             }),
                         ]
                     }
-                }
+                },
+                {
+                    loader: 'sass-loader',
+                    useId: 'sass',
+                    options: {
+                        includePaths: ['node_modules', 'src'],
+                        localIdentName: '[local]--[hash:base64:8]',
+                    }
+                },
             ]
         }],
         (neutrino) => {
