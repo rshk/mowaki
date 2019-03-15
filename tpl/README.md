@@ -14,7 +14,7 @@ Install backend dependencies:
 
 Install frontend dependencies:
 
-    cd web && yarn install
+    cd web && npm install
 
 
 Run database migrations:
@@ -48,7 +48,7 @@ Start the backend server:
 
 Start the frontend server:
 
-    cd web && yarn start
+    cd web && npm start
 
 
 Then head to http://localhost:8000/
