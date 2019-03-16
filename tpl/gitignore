@@ -22,7 +22,3 @@ __pycache__/
 # Distribution / packaging
 build/
 dist/
-
-# Dependency lockfiles, ignored from the main repo
-/web/package-lock.json
-/Pipfile.lock
