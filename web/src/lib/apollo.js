@@ -12,25 +12,34 @@ import {getMainDefinition} from 'apollo-utilities';
 import {doLogout, getToken} from './auth';
 
 
-// TODO load from process.env.API_URL or similar
 export const API_URL = process.env.API_URL || 'http://localhost:5000/graphql';
+
 const WEBSOCKET_URL = (
-    API_URL.replace(/^http(s?):\/\/(.*)/, 'ws$1://$2')
-    .replace(/\/graphql$/, '/subscriptions')  // HACK
+    API_URL
+        .replace(/^http(s?):\/\/(.*)/, 'ws$1://$2')
+        .replace(/\/graphql$/, '/subscriptions')  // HACK
 );
 
 const ENABLE_UPLOADS = true;
 
 
 const onErrorLink = onError(({graphQLErrors, networkError}) => {
-    if (graphQLErrors)
-        graphQLErrors.map(({ message, locations, path }) =>
-            console.log(
-                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`,
-            ),
-        );
 
-    if (networkError) console.log(`[Network error]: ${networkError}`);
+    if (graphQLErrors) {
+        graphQLErrors.map(({message, locations, path, extensions})=> {
+
+            console.log(
+                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`);
+
+            // 401 exception caught by GraphQL will add a
+            // "login_required" extension.
+            if (extensions && extensions.login_required) {
+                doLogout();
+            }
+
+            return null;
+        });
+    }
 
     if (networkError) {
         console.log(`[Network error]: ${networkError}`);
