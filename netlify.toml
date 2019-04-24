@@ -5,3 +5,8 @@
 
 [build.environment]
     API_URL = "https://api.example.com/graphql"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
