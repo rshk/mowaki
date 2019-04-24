@@ -67,6 +67,6 @@ module.exports = {
                 baseConfig: {extends: ['eslint-config-react-app']},
             }
         }],
-
+        ['@neutrinojs/env', ['API_URL']],
     ]
 };
