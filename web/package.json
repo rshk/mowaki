@@ -46,6 +46,7 @@
     "react-helmet": "^5.2.0",
     "react-hot-loader": "^3",
     "react-router": "^5.0.0",
+    "react-router-dom": "^5.0.0",
     "subscriptions-transport-ws": "^0.9.16"
   }
 }
