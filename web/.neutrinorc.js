@@ -4,7 +4,7 @@ module.exports = {
         ['@neutrinojs/react', {
             devServer: {
                 host: '127.0.0.1',
-                port: 8000,
+                port: parseInt(process.env.PORT || 8000, 10),
                 https: false,
             },
             html: {
