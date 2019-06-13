@@ -21,6 +21,7 @@ pytz = "*"
 redis = "*"
 rx = "*"
 sqlalchemy = "*"
+pyql = "*"
 
 [dev-packages]
 

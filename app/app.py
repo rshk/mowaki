@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():
-    app = create_graphql_app(schema)
+    app = create_graphql_app(schema.compile())
     return app
 
 
