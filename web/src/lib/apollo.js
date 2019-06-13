@@ -11,8 +11,12 @@ import {getMainDefinition} from 'apollo-utilities';
 
 import {doLogout, getToken} from './auth';
 
+function getDefaultAPIURL() {
+    const {protocol, hostname} = document.location;
+    return `${protocol}//${hostname}:5000/graphql`;
+}
 
-export const API_URL = process.env.API_URL || 'http://localhost:5000/graphql';
+export const API_URL = process.env.API_URL || getDefaultAPIURL();
 
 const WEBSOCKET_URL = (
     API_URL
