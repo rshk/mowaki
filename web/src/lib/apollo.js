@@ -109,6 +109,34 @@ const link = split(
 
 const cache = new InMemoryCache();
 
-const client = new ApolloClient({link, cache});
+
+const LOCALSTORAGE_AUTH_TOKEN_KEY = 'auth-token';
+
+const resolvers = {
+
+    Query: {
+        authToken() {
+            return localStorage.getItem(LOCALSTORAGE_AUTH_TOKEN_KEY);
+        },
+    },
+
+    Mutation: {
+        setAuthToken(_, {token}, {cache}) {
+            localStorage.setItem(LOCALSTORAGE_AUTH_TOKEN_KEY, token);
+
+            const data = {
+                __typename: 'Query',
+                authToken: token,
+            };
+
+            cache.writeData({data});
+
+            return data;
+        },
+    },
+
+};
+
+const client = new ApolloClient({link, cache, resolvers});
 
 export default client;
