@@ -29,3 +29,4 @@ python_version = "3.6"
 
 [scripts]
 start = "gunicorn -k flask_sockets.worker app.dev:app --reload --bind localhost:5000"
+start_windows = "env FLASK_APP=app.dev:app pipenv run flask run -p 8001"
