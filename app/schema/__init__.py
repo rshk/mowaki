@@ -94,11 +94,8 @@ def resolve_upload_note(
         body=body)
 
 
-CurrentTime = Object('CurrentTime', {'time': str})
-
-
 @schema.subscription.field('current_time')
-def subscribe_current_time(root, info) -> CurrentTime:
+def subscribe_current_time(root, info) -> str:
     return Observable.from_iterable(poll_current_time())
 
 

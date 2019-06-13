@@ -12,6 +12,8 @@ import DisplayNote from './display-note';
 import CreateNoteForm from './create-note';
 import UpdateNoteForm from './update-note';
 import UploadNoteForm from './upload-note';
+import CurrentTime from './current-time';
+
 import ICON from './img/icon.png';
 import LOGO from './img/mowaki.png';
 
@@ -84,6 +86,17 @@ function NotesListPage() {
         </div>
         <div style={{marginTop: '20px'}}>
             <NotesList />
+        </div>
+        <div>
+            <hr/>
+            <div style={{textAlign: 'center'}}>
+                <div style={{opacity: '.7'}}>
+                    Current UTC time, via GraphQL subscription:
+                </div>
+                <div style={{fontSize: '2em'}}>
+                    <CurrentTime />
+                </div>
+            </div>
         </div>
     </div>;
 }
