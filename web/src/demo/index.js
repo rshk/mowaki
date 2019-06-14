@@ -1,6 +1,7 @@
 import React from 'react';
 import {BrowserRouter, Route, Switch, Redirect, Link} from 'react-router-dom';
 import {Helmet} from 'react-helmet';
+import { Container, Button } from 'reactstrap';
 
 import {API_URL} from '../lib/apollo';
 import ApolloProvider from '../lib/apollo-provider';
@@ -28,12 +29,14 @@ export default function DemoApp() {
             <BrowserRouter>
                 <div>
                     <MowakiIntro />
-                    <div className={styles.page}>
-                        <div style={{textAlign: 'right'}}>
-                            <a href={API_URL}>Access GraphiQL</a>
+                    <Container>
+                        <div className="text-right">
+                            <Button tag="a" href={API_URL} color="primary" outline>
+                                Access GraphiQL
+                            </Button>
                         </div>
                         <AppRoutes />
-                    </div>
+                    </Container>
                 </div>
             </BrowserRouter>
         </ApolloProvider>
@@ -59,16 +62,18 @@ function AppRoutes() {
 
 function MowakiIntro() {
     return <div className={styles.header}>
-        <div>
-            <img src={LOGO} alt="" className={styles.logo} />
-        </div>
-        <h1 className={styles.siteTitle}>
-            Welcome to MoWAKi
-        </h1>
-        <div>
-            Your new project has been set up correctly.<br/>
-            Feel free to play around with the demo app.
-        </div>
+        <Container>
+            <div>
+                <img src={LOGO} alt="" className={styles.logo} />
+            </div>
+            <h1 className={styles.siteTitle}>
+                Welcome to MoWAKi
+            </h1>
+            <div>
+                Your new project has been set up correctly.<br/>
+                Feel free to play around with the demo app.
+            </div>
+        </Container>
     </div>;
 }
 
@@ -77,12 +82,12 @@ function NotesListPage() {
     return <div>
         <h1>List notes</h1>
         <div>
-            <Link className={styles.button} to="/new">
+            <Button tag={Link} to="/new" color="success">
                 Create new note
-            </Link>{' '}
-            <Link className={styles.button} to="/upload">
+            </Button>
+            <Button tag={Link} to="/upload" color="secondary" className="ml-3">
                 Upload from file
-            </Link>
+            </Button>
         </div>
         <div style={{marginTop: '20px'}}>
             <NotesList />

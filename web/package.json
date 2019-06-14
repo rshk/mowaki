@@ -38,6 +38,7 @@
     "apollo-link-state": "^0.4.2",
     "apollo-link-ws": "^1.0.17",
     "apollo-upload-client": "^9.1.0",
+    "bootstrap": "^4.3.1",
     "graphql": "^14.3.1",
     "graphql-tag": "^2.10.1",
     "react": "^16.8.6",
@@ -47,6 +48,7 @@
     "react-hot-loader": "^3",
     "react-router": "^5.0.1",
     "react-router-dom": "^5.0.1",
+    "reactstrap": "^8.0.0",
     "subscriptions-transport-ws": "^0.9.16"
   }
 }

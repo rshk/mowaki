@@ -1,0 +1,20 @@
+/* Override vars from ./node_modules/bootstrap/scss/_variables.scss */
+
+
+// Customize fonts
+// -------------------------------------------------------------------
+
+@import url('https://fonts.googleapis.com/css?family=Alegreya+Sans:500|Roboto+Mono|Roboto:400,400i,700&display=swap');
+
+
+$font-family-sans-serif: 'Roboto', sans-serif;
+$font-family-base: $font-family-sans-serif;
+$font-family-monospace: 'Roboto Mono', monospace;
+
+$headings-font-family: 'Alegreya Sans', sans-serif;
+$headings-font-weight: 500;
+
+
+// Mowaki theme blue color
+$primary: #3949AB;
+$secondary: #DDDDDD;
