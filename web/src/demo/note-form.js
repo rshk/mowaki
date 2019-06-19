@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Alert, Button } from 'reactstrap';
 
 import styles from './index.scss';
 
@@ -14,10 +15,10 @@ export  default function NoteForm({
         {loading && <div>Loading...</div>}
 
         {/* Error returned in the GraphQL response */}
-        {errorMessage && <div><strong>Error:</strong> {errorMessage}</div>}
+        {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
 
         {/* Error raised by client, eg. connection error... */}
-        {error && <div><strong>Error:</strong> {error.message}</div>}
+        {error && <Alert color="danger">{error.message}</Alert>}
 
         <div>
             <input type="text" value={title} onChange={onTitleChange}
@@ -28,10 +29,12 @@ export  default function NoteForm({
                       className={styles.textareaField}/>
         </div>
         <div>
-            <button type="submit" className={styles.button}>
+            <Button type="submit" color="primary">
                 {noteId ? 'Update note' : 'Create note'}
-            </button>{' '}
-            {noteId && <Link to={`/note/${noteId}`}>Cancel</Link>}
+            </Button>{' '}
+            {noteId && <Button tag={Link} to={`/note/${noteId}`} color="link">
+                Cancel
+            </Button>}
         </div>
     </form>;
 }

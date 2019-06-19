@@ -9,7 +9,7 @@ import {split} from 'apollo-link';
 import {WebSocketLink} from 'apollo-link-ws';
 import {getMainDefinition} from 'apollo-utilities';
 
-import {doLogout, getToken} from './auth';
+import {doLogout, getToken, setToken} from './auth';
 
 function getDefaultAPIURL() {
     const {protocol, hostname} = document.location;
@@ -110,19 +110,17 @@ const link = split(
 const cache = new InMemoryCache();
 
 
-const LOCALSTORAGE_AUTH_TOKEN_KEY = 'auth-token';
-
 const resolvers = {
 
     Query: {
         authToken() {
-            return localStorage.getItem(LOCALSTORAGE_AUTH_TOKEN_KEY);
+            return getToken();
         },
     },
 
     Mutation: {
         setAuthToken(_, {token}, {cache}) {
-            localStorage.setItem(LOCALSTORAGE_AUTH_TOKEN_KEY, token);
+            setToken(token);
 
             const data = {
                 __typename: 'Query',

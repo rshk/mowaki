@@ -1,7 +1,8 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import gql from 'graphql-tag';
-import {Query} from 'react-apollo';
+import { Query } from 'react-apollo';
+import { Alert } from 'reactstrap';
 
 
 const QUERY_LIST_NOTES = gql`
@@ -33,7 +34,7 @@ function NotesList({loading, error, data, refetch}) {
         return <div>Loading...</div>;
     }
     if (error) {
-        return <div>Error: {error.message}</div>;
+        return <Alert color="danger">{error.message}</Alert>;
     }
     if (!data.notes.length) {
         return <div>There are no notes.</div>;

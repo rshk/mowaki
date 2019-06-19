@@ -3,8 +3,9 @@ import PropTypes from 'prop-types';
 import {Redirect} from 'react-router-dom';
 import gql from 'graphql-tag';
 import {Mutation} from 'react-apollo';
+import {Button} from 'reactstrap';
 
-import styles from './index.scss';
+// import styles from './index.scss';
 
 
 const MUTATION_DELETE_NOTE = gql`
@@ -38,11 +39,10 @@ export default class DeleteNoteButton extends React.Component {
         if (this.state.success) {
             return <Redirect to="/" />;
         }
-        return <button type="button"
-                       className={`${styles.button} ${styles['button--danger']}`}
+        return <Button tag="button" type="button" color="danger"
                        onClick={this._onClick.bind(this, deleteNote)}>
             Delete note
-        </button>;
+        </Button>;
     }
 
     _onClick(deleteNote) {

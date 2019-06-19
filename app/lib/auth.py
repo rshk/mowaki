@@ -14,25 +14,51 @@ from werkzeug.exceptions import Unauthorized as _Unauthorized
 # choice of methods to get users / verify credentials / ...
 
 
-User = namedtuple('User', 'id,username,email')
+User = namedtuple('User', 'id,username,email,password,display_name')
+
+
+USERS = [
+
+    User(
+        id=1,
+        username='admin',
+        email='admin@example.com',
+        password='admin',
+        display_name='Site Admin'),
+
+    User(
+        id=2,
+        username='user',
+        email='user@example.com',
+        password='password',
+        display_name='Firstname Lastname'),
+]
 
 
 def get_user(uid):
-    if uid == 1:
-        return User(1, 'admin', 'admin@example.com')
+    for user in USERS:
+        if user.id == uid:
+            return user
     return None
 
 
-def get_user_by_email(email):
-    if email == 'admin@example.com':
-        return User(1, 'admin', 'admin@example.com')
+def _get_user_by_name(username):
+    for user in USERS:
+        if user.username == username:
+            return user
+    return None
+
+
+def _get_user_by_email(email):
+    for user in USERS:
+        if user.email == email:
+            return user
     return None
 
 
 def verify_credentials(username, password):
-    if username in ('admin', 'admin@example.com'):
-        return password == 'S3cur3'
-    return False
+    user = _get_user_by_email(username) or _get_user_by_name(username)
+    return user is not None and user.password == password
 
 
 logger = logging.getLogger(__name__)
@@ -156,11 +182,11 @@ def _verify_user_jwt(token):
     return jwt.decode(token.encode(), JWT_SECRET_KEY, algorithms=['HS256'])
 
 
-def get_token_for_credentials(email, password):  # -> token
-    if verify_credentials(email, password):
-        user = get_user_by_email(email)
-        return _create_user_jwt(user)
-    return None
+def get_token_for_credentials(username, password):  # -> token
+    user = verify_credentials(username, password)
+    if not user:
+        raise Unauthorized('Bad username / password')
+    return _create_user_jwt(user)
 
 
 def get_socket_context(payload):

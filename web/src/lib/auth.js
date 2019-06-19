@@ -4,7 +4,7 @@ const AFTER_LOGIN_PAGE = '/';
 
 
 export function doLogin(token, newLocation = AFTER_LOGIN_PAGE) {
-    localStorage.setItem(TOKEN_KEY_NAME, token);
+    setToken(token);
     window.location.href = newLocation;
 }
 
@@ -22,6 +22,10 @@ export function doLogout() {
 
 export function getToken() {
     return localStorage.getItem(TOKEN_KEY_NAME);
+}
+
+export function setToken(token) {
+    localStorage.setItem(TOKEN_KEY_NAME, token);
 }
 
 

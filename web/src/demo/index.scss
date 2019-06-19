@@ -1,15 +1,40 @@
+@import '~style/vars';
+
+.wrapper {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
 .header {
-    background: #3949AB;
+    background: $primary;
     color: #fff;
     padding: 20px;
     text-align: center;
     font: 20px sans-serif;
-    border-bottom: solid 4px #FFB300;
+    border-bottom: solid 4px $accent;
     min-height: 50vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     margin-bottom: 20px;
+
+    :global(.btn.btn-secondary) {
+        background-color: #fff;
+        border-color: #fff;
+        color: $primary;
+    }
+
+    :global(.btn.btn-outline-secondary) {
+        color: #fff;
+        border-color: #fff;
+
+        &:hover {
+            background-color: #fff;
+            color: $primary;
+        }
+    }
 }
 
 .button {
@@ -49,4 +74,10 @@
     font-weight: bold;
     font-size: 3em;
     margin: 1em;
+}
+
+.clock {
+    background: #ddd;
+    margin-top: 20px;
+    padding: 20px 0;
 }

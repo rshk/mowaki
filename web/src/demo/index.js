@@ -14,6 +14,7 @@ import CreateNoteForm from './create-note';
 import UpdateNoteForm from './update-note';
 import UploadNoteForm from './upload-note';
 import CurrentTime from './current-time';
+import UserLoginBar from './user-login-bar';
 
 import ICON from './img/icon.png';
 import LOGO from './img/mowaki.png';
@@ -27,16 +28,24 @@ export default function DemoApp() {
         </Helmet>
         <ApolloProvider>
             <BrowserRouter>
-                <div>
+                <div className={styles.wrapper}>
                     <MowakiIntro />
                     <Container>
-                        <div className="text-right">
-                            <Button tag="a" href={API_URL} color="primary" outline>
-                                Access GraphiQL
-                            </Button>
-                        </div>
+                        <UserLoginBar />
                         <AppRoutes />
                     </Container>
+                    <div className={styles.clock}>
+                        <Container>
+                            <div style={{textAlign: 'center'}}>
+                                <div style={{opacity: '.7'}}>
+                                    Current UTC time, via GraphQL subscription:
+                                </div>
+                                <div style={{fontSize: '2em'}}>
+                                    <CurrentTime />
+                                </div>
+                            </div>
+                        </Container>
+                    </div>
                 </div>
             </BrowserRouter>
         </ApolloProvider>
@@ -47,8 +56,8 @@ export default function DemoApp() {
 function AppRoutes() {
     return <Switch>
         <Route exact path="/" component={NotesListPage} />
-        <Route exact path="/new" component={NoteCreatePage} />
-        <Route exact path="/upload" component={NoteUploadPage} />
+        <Route exact path="/notes/new" component={NoteCreatePage} />
+        <Route exact path="/notes/upload" component={NoteUploadPage} />
         <Route exact path="/note/:noteId"
                render={({match: {params: {noteId}}}) =>
                    <NoteDisplayPage noteId={parseInt(noteId, 10)} /> } />
@@ -70,8 +79,16 @@ function MowakiIntro() {
                 Welcome to MoWAKi
             </h1>
             <div>
-                Your new project has been set up correctly.<br/>
+                Your new project has been created!<br/>
                 Feel free to play around with the demo app.
+            </div>
+            <div className="mt-3">
+                <Button tag="a" href="https://docs.mowaki.org">
+                    Read documentation
+                </Button>{' '}
+                <Button tag="a" href={API_URL} outline>
+                    Access GraphiQL
+                </Button>
             </div>
         </Container>
     </div>;
@@ -82,26 +99,15 @@ function NotesListPage() {
     return <div>
         <h1>List notes</h1>
         <div>
-            <Button tag={Link} to="/new" color="success">
+            <Button tag={Link} to="/notes/new" color="success">
                 Create new note
             </Button>
-            <Button tag={Link} to="/upload" color="secondary" className="ml-3">
+            <Button tag={Link} to="/notes/upload" color="secondary" className="ml-3">
                 Upload from file
             </Button>
         </div>
         <div style={{marginTop: '20px'}}>
             <NotesList />
-        </div>
-        <div>
-            <hr/>
-            <div style={{textAlign: 'center'}}>
-                <div style={{opacity: '.7'}}>
-                    Current UTC time, via GraphQL subscription:
-                </div>
-                <div style={{fontSize: '2em'}}>
-                    <CurrentTime />
-                </div>
-            </div>
         </div>
     </div>;
 }

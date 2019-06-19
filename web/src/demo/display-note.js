@@ -2,6 +2,7 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 import gql from 'graphql-tag';
 import {Query} from 'react-apollo';
+import {Button} from 'reactstrap';
 
 import DeleteNoteButton from './delete-note';
 
@@ -34,10 +35,14 @@ function NoteView({noteId, loading, error, data}) {
     const {id, title, body} = data.note;
     return <div>
         <h1>#{id}: {title}</h1>
-        <div style={{whiteSpace: 'pre-wrap'}}>{body}</div>
+        <div style={{whiteSpace: 'pre-wrap'}}>
+            {body}
+        </div>
         <div style={{marginTop: '20px'}}>
             <DeleteNoteButton noteId={id} />{' '}
-            <Link to={`/note/${noteId}/edit`}>Edit note</Link>
+            <Button tag={Link} to={`/note/${noteId}/edit`} color="primary" outline>
+                Edit note
+            </Button>
         </div>
     </div>;
 }

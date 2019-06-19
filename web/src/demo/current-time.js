@@ -12,6 +12,6 @@ const STATUS_UPDATES_SUBSCRIPTION = graphql`
 
 export default function CurrentTime() {
     return <Subscription subscription={STATUS_UPDATES_SUBSCRIPTION}>
-        {({data}) => data ? data.currentTime : null}
+        {({data}) => data ? data.currentTime : '- - -'}
     </Subscription>;
 }
