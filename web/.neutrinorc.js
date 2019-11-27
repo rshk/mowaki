@@ -61,6 +61,18 @@ module.exports = {
                 baseConfig: {extends: ['eslint-config-react-app']},
             }
         }],
-        ['@neutrinojs/env', ['API_URL']],
+
+        // Load environment variables
+        // ['@neutrinojs/env', ['API_URL']],
+        ({ config }) => {
+            config
+                .plugin('env')
+                .use(new EnvironmentPlugin({
+                    'NODE_ENV': null,  // required
+                    'API_URL': '',
+                    'BRANCH': null,
+                    'COMMIT_REF': null,
+                }));
+        },
     ]
 };
