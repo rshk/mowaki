@@ -1,12 +1,12 @@
 [build]
     base    = "web"
     publish = "web/build"
-    command = "yarn build"
+    command = "npm run-script build"
 
 [build.environment]
     API_URL = "https://api.example.com/graphql"
 
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+    from = "/*"
+    to = "/index.html"
+    status = 200
