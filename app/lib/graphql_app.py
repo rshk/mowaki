@@ -3,15 +3,10 @@ import logging
 from flask import Flask, redirect
 from flask_cors import CORS
 from flask_sockets import Sockets
-from gevent import monkey
 
 from .auth import load_auth_info
 from .graphql_view import GraphQLView
 from .subscriptions import SubscriptionServer
-
-# This is needed for websocket / subscription support
-monkey.patch_all()
-
 
 logger = logging.getLogger(__name__)
 

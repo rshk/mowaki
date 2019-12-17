@@ -2,15 +2,9 @@ import json
 import logging
 import os
 import threading
-import time
 
-# import gevent
 import redis as Redis
-from gevent import monkey
 from rx import Observable
-
-monkey.patch_all()
-
 
 logger = logging.getLogger(__name__)
 

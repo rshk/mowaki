@@ -16,27 +16,44 @@ def cli():
 @cli.command(name='run')
 @click.option('--host', '-h', default='127.0.0.1')
 @click.option('--port', '-p', type=int, default=5000)
-@click.option('--debugger', '-d', is_flag=True, default=False)
-def cmd_run(host, port, debugger):
-    """Replace default "run" command from flask CLI.
+@click.option('--debugger/--no-debugger', is_flag=True, default=False)
+@click.option('use_reloader', '--reload/--no-reload',
+              is_flag=True, default=True)
+def cmd_run(host, port, debugger, use_reloader):
+    """Run a development server.
 
-    Will use WebSocketHandler to properly handle websocket
-    connections.
+    This is a replacement for the default "run" command from flask CLI.
 
-    Note that this does not support reloading as werkzeug's
-    development server does; to get that you need to run gunicorn,
-    like this:
+    Will use WSGIServer and WebSocketHandler from gevent to properly
+    handle websocket connections.
 
-    gunicorn -k flask_sockets.worker app.dev:app --reload --bind localhost:5000
+    Note that reloading uses an undocumented API from werkzeug, that
+    might stop working in the future.
+
+    Another option would be to use gunicorn, but keep in mind it only
+    works on Unix-like systems::
+
+        gunicorn -k flask_sockets.worker app.dev:app \
+            --reload --bind localhost:5000
     """
 
-    from gevent import pywsgi
-    from geventwebsocket.handler import WebSocketHandler
+    from werkzeug._reloader import run_with_reloader
 
-    setup_logging()
+    def _run_development_server():
 
-    app = create_app()
-    app.debug = debugger
-    server = pywsgi.WSGIServer(
-        (host, port), app, handler_class=WebSocketHandler, log=logger)
-    server.serve_forever()
+        from gevent import pywsgi
+        from geventwebsocket.handler import WebSocketHandler
+
+        setup_logging()
+
+        app = create_app()
+        app.debug = debugger
+        server = pywsgi.WSGIServer(
+            (host, port), app, handler_class=WebSocketHandler, log=logger)
+        server.serve_forever()
+
+    if use_reloader:
+        # WARNING: This is an undocumented API
+        return run_with_reloader(_run_development_server)
+
+    return _run_development_server()
