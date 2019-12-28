@@ -1,26 +1,21 @@
-version: '2'
+version: '3.3'
 services:
 
-  # WARNING: DO NOT name this container "postgres" or it will cause
-  # things to break, for some reason.
-
-  mowaki-app-db:
-    image: postgres:10
+  database:
+    image: postgres:11
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ''
       POSTGRES_DB: 'default'
     volumes:
-      - mowaki-app-db-pgdata:/var/lib/postgresql/data
+      - db-pgdata:/var/lib/postgresql/data
     ports:
-      # HOST:CONTAINER
       - "127.0.0.1:5432:5432"
 
-  mowaki-app-redis:
+  redis:
     image: redis:4
     ports:
-      # HOST:CONTAINER
       - "127.0.0.1:6379:6379"
 
 volumes:
-  mowaki-app-db-pgdata:
+  db-pgdata:
