@@ -1,5 +1,47 @@
-version: '3.3'
+version: '3.4'
 services:
+
+  api:
+    image: mowaki-app-apiserver-dev:py3.7
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mowaki-app-apiserver-dev
+      args:
+        PYTHON_VERSION: "3.7"
+    volumes:
+      - type: bind
+        source: .
+        target: /src/api
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      # - SECRET_KEY
+      DATABASE_URL: postgres://db:@localhost:5432/default
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY:
+
+  web:
+
+    # NOTE: dependencies are installed in their own volume, so we can
+    # "shadow" the local node_modules folder.
+    # This is most useful to allow switching between locally-installed
+    # and docker-installed nodejs.
+    #
+    # To install dependencies, run:
+    #
+    # docker-compose run --entrypoint='' --rm --no-deps web npm install
+
+    image: node:10
+    volumes:
+      - ./web:/src/web
+      - nodemodules:/src/web/node_modules
+    working_dir: /src/web
+    command: npm run start
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SERVER_HOST: '0.0.0.0'
 
   database:
     image: postgres:11
@@ -22,3 +64,4 @@ services:
 volumes:
   db-pgdata:
   redis-data:
+  nodemodules:
