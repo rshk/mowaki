@@ -16,6 +16,9 @@ services:
     image: redis:4
     ports:
       - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
 
 volumes:
   db-pgdata:
+  redis-data:
