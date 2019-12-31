@@ -1,7 +1,9 @@
 import React from 'react';
-import {Redirect} from 'react-router-dom';
 import gql from 'graphql-tag';
-import {Mutation} from 'react-apollo';
+import { Mutation } from 'react-apollo';
+import { Form, FormGroup, CustomInput } from 'reactstrap';
+
+import { AppRedirect } from 'demo/approuter';
 
 
 const MUTATION_UPLOAD_NOTE = gql`
@@ -44,7 +46,7 @@ export default class UploadNoteForm extends React.Component {
 
             if (ok && noteId) {
                 // New note created -> head there
-                return <Redirect to={`/note/${noteId}`} />;
+                return <AppRedirect to={`/note/${noteId}`} />;
             }
 
             // Mostly for debugging / testing purposes
@@ -68,12 +70,16 @@ export default class UploadNoteForm extends React.Component {
             uploadNote({variables: {file}});
         };
 
-        return <form onSubmit={onSubmit}>
-            <div>
-                <label htmlFor="input-text-file">Upload text file:</label>{' '}
-                <input type="file" id="input-text-file" required onChange={onFileChange} />
-            </div>
-        </form>;
+        return <Form onSubmit={onSubmit}>
+
+            <FormGroup>
+                <CustomInput
+                    type="file" id="input-text-file"
+                    label="Pick a text file to upload"
+                    required onChange={onFileChange} />
+            </FormGroup>
+
+        </Form>;
     }
 
 }

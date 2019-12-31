@@ -11,11 +11,6 @@ import {getMainDefinition} from 'apollo-utilities';
 
 import {doLogout, getToken} from './auth';
 
-function getDefaultAPIURL() {
-    const {protocol, hostname} = document.location;
-    return `${protocol}//${hostname}:5000/graphql`;
-}
-
 function replaceLocalhost(url) {
     // If API_URL is simply http://localhost/... -> replace with current domain
     // This allows development installations to be accessed from multiple locations
