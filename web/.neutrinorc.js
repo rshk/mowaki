@@ -4,6 +4,7 @@ require('dotenv').config()
 
 // const { EnvironmentPlugin } = require('webpack');
 const SERVER_PORT = parseInt(process.env.PORT || 8000, 10);
+const SERVER_HOST = process.env.SERVER_HOST || 'localhost';
 
 
 const react = require('@neutrinojs/react');
@@ -85,11 +86,7 @@ module.exports = {
             },
 
             devServer: {
-                // Note: ``host`` doesn't seem to be honored,
-                // i.e. development server will always listen on 0.0.0.0.
-                // Make sure you have a firewall in place if
-                // connecting to a public network.
-                host: 'localhost',
+                host: SERVER_HOST,
                 port: SERVER_PORT,
                 hot: true,
             },
