@@ -1,6 +1,6 @@
 import React from 'react';
-import {BrowserRouter, Route, Switch, Redirect, Link} from 'react-router-dom';
-import {Helmet} from 'react-helmet';
+import { BrowserRouter, Route, Switch, Redirect, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { Container, Button } from 'reactstrap';
 
 import {API_URL} from '../lib/apollo';
@@ -14,6 +14,7 @@ import CreateNoteForm from './create-note';
 import UpdateNoteForm from './update-note';
 import UploadNoteForm from './upload-note';
 import CurrentTime from './current-time';
+import ErrorBoundary from './error-boundary';
 
 import ICON from './img/icon.png';
 import LOGO from './img/mowaki.png';
@@ -35,7 +36,9 @@ export default function DemoApp() {
                                 Access GraphiQL
                             </Button>
                         </div>
-                        <AppRoutes />
+                        <ErrorBoundary>
+                            <AppRoutes />
+                        </ErrorBoundary>
                     </Container>
                 </div>
             </BrowserRouter>
