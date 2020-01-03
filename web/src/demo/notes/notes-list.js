@@ -1,7 +1,8 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
 import gql from 'graphql-tag';
-import {Query} from 'react-apollo';
+import { Query } from 'react-apollo';
+
+import { AppLink } from 'demo/approuter';
 
 
 const QUERY_LIST_NOTES = gql`
@@ -50,9 +51,9 @@ function NotesListUI({notes}) {
     return <ul>
     {notes.map(note =>
         <li key={note.id} style={itemStyle}>
-            <Link to={`/note/${note.id}`}>
+            <AppLink to={`/note/${note.id}`}>
                 #{note.id}: {note.title || 'Untitled'}
-            </Link>
+            </AppLink>
             {note.body ? <span style={{opacity: '.6'}}>
                 {' '}&ndash; {note.body.slice(0, 200)}
             </span> : null}

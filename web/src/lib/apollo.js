@@ -11,12 +11,18 @@ import {getMainDefinition} from 'apollo-utilities';
 
 import {doLogout, getToken} from './auth';
 
-function getDefaultAPIURL() {
+function replaceLocalhost(url) {
+    // If API_URL is simply http://localhost/... -> replace with current domain
+    // This allows development installations to be accessed from multiple locations
+    // TODO: should we use some other domain instead of localhost?
     const {protocol, hostname} = document.location;
-    return `${protocol}//${hostname}:5000/graphql`;
+    return url.replace('http://localhost', `${protocol}//${hostname}`);
 }
 
-export const API_URL = process.env.API_URL || getDefaultAPIURL();
+
+export const API_URL = replaceLocalhost(
+    process.env.API_URL || 'http://localhost:5000/graphql');
+
 
 const WEBSOCKET_URL = (
     API_URL

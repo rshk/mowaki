@@ -1,10 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Redirect} from 'react-router-dom';
+import { AppRedirect } from 'demo/approuter';
 import gql from 'graphql-tag';
-import {Mutation} from 'react-apollo';
-
-import styles from './index.scss';
+import { Mutation } from 'react-apollo';
+import { Button } from 'reactstrap';
 
 
 const MUTATION_DELETE_NOTE = gql`
@@ -29,20 +28,19 @@ export default class DeleteNoteButton extends React.Component {
     }
 
     render() {
+        if (this.state.success) {
+            return <AppRedirect to="" />;
+        }
         return <Mutation mutation={MUTATION_DELETE_NOTE}>
             {this._renderButton.bind(this)}
         </Mutation>;
     }
 
     _renderButton(deleteNote) {
-        if (this.state.success) {
-            return <Redirect to="/" />;
-        }
-        return <button type="button"
-                       className={`${styles.button} ${styles['button--danger']}`}
+        return <Button color="danger"
                        onClick={this._onClick.bind(this, deleteNote)}>
             Delete note
-        </button>;
+        </Button>;
     }
 
     _onClick(deleteNote) {

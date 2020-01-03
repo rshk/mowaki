@@ -1,15 +1,19 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Link} from 'react-router-dom';
-
-import styles from './index.scss';
+import { AppLink } from 'demo/approuter';
+import { Button, Form, FormGroup, Input } from 'reactstrap';
 
 
 export  default function NoteForm({
     onSubmit, errorMessage, noteId, title, body,
     onTitleChange, onBodyChange, loading, error}) {
 
-    return <form onSubmit={onSubmit}>
+    const isTitleValid = !!title;
+    const isBodyValid = !!body;
+
+    const isFormValid = isTitleValid && isBodyValid;
+
+    return <Form onSubmit={onSubmit}>
 
         {loading && <div>Loading...</div>}
 
@@ -19,21 +23,24 @@ export  default function NoteForm({
         {/* Error raised by client, eg. connection error... */}
         {error && <div><strong>Error:</strong> {error.message}</div>}
 
+        <FormGroup>
+            <Input type="text" placeholder="Note title"
+                   value={title} onChange={onTitleChange} />
+        </FormGroup>
+
+        <FormGroup>
+            <Input type="textarea" rows="10"
+                   value={body} onChange={onBodyChange} />
+        </FormGroup>
+
         <div>
-            <input type="text" value={title} onChange={onTitleChange}
-                   className={styles.inputField} />
-        </div>
-        <div>
-            <textarea value={body} onChange={onBodyChange}
-                      className={styles.textareaField}/>
-        </div>
-        <div>
-            <button type="submit" className={styles.button}>
+            <Button type="submit" disabled={!isFormValid}>
                 {noteId ? 'Update note' : 'Create note'}
-            </button>{' '}
-            {noteId && <Link to={`/note/${noteId}`}>Cancel</Link>}
+            </Button>{' '}
+            {noteId && <AppLink to={`/note/${noteId}`}>Cancel</AppLink>}
         </div>
-    </form>;
+
+    </Form>;
 }
 
 

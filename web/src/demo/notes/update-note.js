@@ -1,8 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Redirect} from 'react-router-dom';
 import gql from 'graphql-tag';
-import {Query, Mutation} from 'react-apollo';
+import { Query, Mutation } from 'react-apollo';
+
+import { AppRedirect } from 'demo/approuter';
 
 import NoteForm from './note-form';
 
@@ -31,17 +32,19 @@ export default function UpdateNoteFormWrapper({noteId}) {
     // We set fetchPolicy="no-cache" as we want to make sure we have
     // fresh data for the editing form
     return <Query query={QUERY_GET_NOTE} variables={{noteId}} fetchPolicy="no-cache">
-        {({data: {note}}) => {
-             if (!note) {
-                 return 'Loading note...';
-             }
-             return <UpdateNoteForm noteId={noteId} note={note} />;
+        {({data}) => {
+            if (!(data && data.note)) {
+                return 'Loading note...';
+            }
+            const {note} = data;
+            return <UpdateNoteForm noteId={noteId} note={note} />;
         }}
     </Query>;
 }
 
 
 class UpdateNoteForm extends React.Component {
+
     static propTypes = {
         noteId: PropTypes.number.isRequired,
         note: PropTypes.shape({
@@ -54,7 +57,10 @@ class UpdateNoteForm extends React.Component {
     state = {
         title: this.props.note.title,
         body: this.props.note.body,
-    };
+        isModified: false,
+        isSuccess: false,
+        errorMessage: '',
+    }
 
     render() {
         return <Mutation mutation={MUTATION_UPDATE_NOTE}>
@@ -63,22 +69,36 @@ class UpdateNoteForm extends React.Component {
     }
 
     _renderForm(updateNote, mutationResult) {
-        const {noteId} = this.props;
-        const {title, body, errorMessage} = this.state;
+
+        const { noteId } = this.props;
+        const { title, body, isModified,
+                isSuccess, errorMessage } = this.state;
         const onSubmit = this._onSubmit.bind(this, updateNote);
-        const onTitleChange = evt => this.setState({title: evt.target.value});
-        const onBodyChange = evt => this.setState({body: evt.target.value});
+
+        const onTitleChange = evt => this.setState({
+            title: evt.target.value, isModified: true});
+
+        const onBodyChange = evt => this.setState({
+            body: evt.target.value, isModified: true});
 
         if (mutationResult.loading) {
             return <div>Saving note...</div>;
         }
 
-        if (mutationResult.data) {
-            const result = mutationResult.data.updateNote;
-            if (result.ok) {
-                return <Redirect to={`/note/${this.props.noteId}`} />;
-            }
+        if (isSuccess) {
+            return <AppRedirect to={`/note/${this.props.noteId}`} />;
         }
+
+        // This also works, but setState in updateNote(...).then(...)
+        // will throw an exception, as the component will have already
+        // been unmounted by then...
+
+        // if (mutationResult.data) {
+        //     const result = mutationResult.data.updateNote;
+        //     if (result.ok) {
+        //         return <AppRedirect to={`/note/${this.props.noteId}`} />;
+        //     }
+        // }
 
         const formProps = {
             onSubmit,
@@ -88,6 +108,8 @@ class UpdateNoteForm extends React.Component {
             body,
             onTitleChange,
             onBodyChange,
+            isModified,
+            loading: mutationResult.loading,
         };
 
         return <NoteForm {...formProps} />;
@@ -97,7 +119,13 @@ class UpdateNoteForm extends React.Component {
         evt.preventDefault();
         const {noteId: id} = this.props;
         const {title, body} = this.state;
-        updateNote({variables: {id, title, body}});
+        updateNote({variables: {id, title, body}})
+            .then(({data: {updateNote: {ok, noteId, error}}}) => {
+                this.setState({
+                    isSuccess: ok,
+                    errorMessage: ok ? '' : error,
+                });
+            });
     }
 
 }

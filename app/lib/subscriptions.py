@@ -1,5 +1,6 @@
 import logging
 
+from geventwebsocket.exceptions import WebSocketError
 from graphql_ws.gevent import GeventSubscriptionServer, SubscriptionObserver
 from rx import Observable
 
@@ -43,7 +44,14 @@ class SubscriptionServer(GeventSubscriptionServer):
 
             self._subscription = execution_result.subscribe(observer)
 
+        except WebSocketError as e:
+            logger.debug('Web socket error (assuming closed): %s', repr(e))
+
+        except BrokenPipeError:
+            logger.debug('Socked closed')
+
         except Exception as e:
+            logger.debug('Handling socket exception', exc_info=True)
             self.send_error(connection_context, op_id, str(e))
 
     def unsubscribe(self, *a, **kw):

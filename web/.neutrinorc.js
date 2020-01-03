@@ -59,7 +59,10 @@ module.exports = {
             style: {
                 test: /\.global\.(css|sass|scss)$/,
                 modulesTest: /(?<!\.global)\.(css|sass|scss)$/,
-                modules: true,
+                modules: {
+                    // localIdentName: '[path][name]__[local]--[hash:base64:5]',
+                    localIdentName: '[local]--[hash:base64:8]',
+                },
                 loaders: [
                     // WARNING: Loaders need to be in *reverse* order (for
                     // some obscure reason), i.e. postcss-loader needs to be
@@ -79,7 +82,6 @@ module.exports = {
                         useId: 'sass',
                         options: {
                             includePaths: ['node_modules', 'src'],
-                            localIdentName: '[local]--[hash:base64:8]',
                         }
                     },
                 ]
