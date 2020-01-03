@@ -1,0 +1,77 @@
+$border-color: #CFD8DC;
+
+
+.chat {
+    height: calc(100vh - 300px);
+    background: #ECEFF1;
+    border: solid 1px $border-color;
+
+    display: flex;
+    flex-direction: row;
+
+    .sidebar {
+        flex: 1;
+        border-right: solid 1px $border-color;
+    }
+
+    .main {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .noChannelMessage {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #ECEFF1;
+        color: #90A4AE;
+        font-size: 1.5em;
+        text-align: center;
+    }
+
+    .messagesContainer {
+        flex: 1;
+        background: #fff;
+        overflow: auto;
+        padding: .5em;
+    }
+
+    .messageComposeLine {
+        border-top: solid 1px $border-color;
+
+        .composeRow {
+            display: flex;
+            flex-direction: row;
+
+            .fieldUsername, .fieldMessage, .sendButton {
+                padding: .3em .5em;
+            }
+
+            .fieldUsername {
+                flex: 1;
+                max-width: 200px;
+                border: none;
+                background: mix(#ECEFF1, #fff, 50%);
+                color: #37474F;
+                border-right: solid 1px $border-color;
+            }
+
+            .fieldMessage {
+                flex: 1;
+                border: none;
+                background: #fff;
+                color: #000;
+            }
+
+            .sendButton {
+                background: #3F51B5;
+                border: none;
+                color: #fff;
+            }
+        }
+
+    }
+}
