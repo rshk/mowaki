@@ -37,7 +37,9 @@ services:
       - ./web:/src/web
       - nodemodules:/src/web/node_modules
     working_dir: /src/web
-    command: npm run start
+    command: >-
+      /src/web/node_modules/.bin/webpack-dev-server
+      --mode development --host 0.0.0.0 --port 8000
     ports:
       - "127.0.0.1:${WEB_PORT:-8000}:8000"
     environment:
