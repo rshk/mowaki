@@ -18,7 +18,7 @@ services:
     environment:
       SECRET_KEY:
       PYTHONPATH: /src/api
-      DATABASE_URL: postgres://postgres:@database:5432/default
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default
       REDIS_URL: redis://redis:6379
 
   web:
@@ -50,7 +50,7 @@ services:
     image: postgres:11
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ''
+      POSTGRES_PASSWORD:
       POSTGRES_DB: 'default'
     volumes:
       - db-pgdata:/var/lib/postgresql/data
