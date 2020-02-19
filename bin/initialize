@@ -8,7 +8,18 @@ git rev-parse HEAD > .mowaki-ref
 
 mv tpl/README.md README.md
 mv tpl/gitignore .gitignore
-cp .env.example .env
+
+# Generate .env file
+python - > .env <<EOF
+import os, base64
+
+def make_password():
+    return base64.b64encode(os.urandom(20), b'_-').rstrip(b'=').decode()
+
+print('PYTHONPATH=.')
+print('POSTGRES_PASSWORD={}'.format(make_password()))
+print('SECRET_KEY={}'.format(make_password()))
+EOF
 
 rm -rf .git bin tpl
 
