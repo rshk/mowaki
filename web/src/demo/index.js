@@ -10,6 +10,7 @@ import LandingPage from './landing';
 import Page from './page';
 import NotesApp from './notes';
 import ClockApp from './clock';
+import ChatApp from './chat';
 
 
 export default function DemoApp() {
@@ -34,6 +35,7 @@ function AppRoutes() {
         <Route path="/demo" component={DemoAppsListPage} />
         <Route path="/notes" render={props => <NotesApp prefix="/notes" />} />
         <Route path="/clock" render={props => <ClockApp prefix="/clock" />} />
+        <Route path="/chat" render={props => <ChatApp prefix="/chat" />} />
         <Redirect to="/" />
 
     </Switch>;
@@ -59,6 +61,16 @@ function DemoAppsListPage() {
                 <div>Display server time, via websocket connection.</div>
                 <div className="mt-3">
                     <Button tag={Link} to="/clock">
+                        Go to application
+                    </Button>
+                </div>
+            </Card>
+
+            <Card body className="my-3">
+                <h3>Chat</h3>
+                <div>A minimalistic IRC clone.</div>
+                <div className="mt-3">
+                    <Button tag={Link} to="/chat">
                         Go to application
                     </Button>
                 </div>
