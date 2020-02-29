@@ -19,7 +19,7 @@ RUN pip install pipenv
 RUN mkdir -p /src /src/api /src/reqs
 COPY Pipfile Pipfile.lock /src/reqs/
 WORKDIR /src/reqs
-RUN pipenv install --system
+RUN pipenv install --system --dev
 
 WORKDIR /src/api
 EXPOSE 5000/tcp
