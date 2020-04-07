@@ -25,6 +25,10 @@ pyql = "*"
 mowaki = "*"
 
 [dev-packages]
+ipython = "*"
+pytest = "*"
+pytest-cov = "*"
+pdbpp = "*"
 
 [requires]
 python_version = "3"
