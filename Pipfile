@@ -22,7 +22,7 @@ redis = "*"
 rx = "*"
 sqlalchemy = "*"
 pyql = "*"
-mowaki = "*"
+mowaki = ">=0.3"
 
 [dev-packages]
 ipython = "*"
