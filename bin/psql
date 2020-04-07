@@ -1,0 +1,4 @@
+#!/bin/bash
+
+exec docker-compose run --rm database \
+     bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
