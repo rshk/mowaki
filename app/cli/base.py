@@ -3,7 +3,7 @@ import logging
 import click
 from flask.cli import FlaskGroup
 
-from .app import create_app, setup_logging
+from app.app import create_app, setup_logging
 
 logger = logging.getLogger(__name__)
 
