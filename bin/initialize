@@ -9,18 +9,9 @@ git rev-parse HEAD > .mowaki-ref
 mv tpl/README.md README.md
 mv tpl/gitignore .gitignore
 
-# Generate .env file
-python - > .env <<EOF
-import os, base64
+./bin/create-env-file
 
-def make_password():
-    return base64.b64encode(os.urandom(20), b'_-').rstrip(b'=').decode()
-
-print('PYTHONPATH=.')
-print('POSTGRES_PASSWORD={}'.format(make_password()))
-print('SECRET_KEY={}'.format(make_password()))
-EOF
-
-rm -rf .git bin tpl
+rm -rf .git tpl
+rm -f ./bin/initialize ./bin/create
 
 echo "Done. Your new MoWAKi project is ready!"

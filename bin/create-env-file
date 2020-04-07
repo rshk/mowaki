@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import base64
+import os
+
+
+def make_password():
+    return base64.b64encode(os.urandom(20), b'_-').rstrip(b'=').decode()
+
+
+def generate_env_file(stream):
+    print('PYTHONPATH=.', file=stream)
+    print('POSTGRES_PASSWORD={}'.format(make_password()), file=stream)
+    print('SECRET_KEY={}'.format(make_password()), file=stream)
+
+
+def main():
+    bindir = os.path.dirname(__file__)
+    rootdir = os.path.dirname(bindir)
+    envfile = os.path.join(rootdir, '.env')
+
+    if os.path.exists(envfile):
+        print('Environment file exists. Not overriding.')
+        print('File path: {}'.format(os.path.abspath(envfile)))
+        return
+
+    with open(envfile, 'w') as fp:
+        generate_env_file(fp)
+
+    print('Written to: {}'.format(os.path.abspath(envfile)))
+
+
+if __name__ == '__main__':
+    main()

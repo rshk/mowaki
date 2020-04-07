@@ -10,23 +10,17 @@ Refer to [the official documentation] on how to get started making changes.
 
 ## Setting up for development
 
-Create a ``.env`` file, containing the required configuration:
+Make sure you have a ``.env`` file with suitable configuration.
 
-    SECRET_KEY=<insert-random-value>
-    POSTGRES_PASSWORD=<insert-random-value>
+You can generate one by running:
 
-You can use a command like this to generate a suitable ``.env`` file:
+```
+./bin/create-env-file
+```
 
-    python - > .env <<EOF
-    import os, base64
-
-    def make_password():
-        return base64.b64encode(os.urandom(20), b'_-').rstrip(b'=').decode()
-
-    print('PYTHONPATH=.')
-    print('POSTGRES_PASSWORD={}'.format(make_password()))
-    print('SECRET_KEY={}'.format(make_password()))
-    EOF
+Note that this is done automatically on new project initialization;
+you have to run it manually if you cloned an existing project
+repository.
 
 Several docker-compose services are defined, for running the API / web
 development servers, as well as some services (PostgreSQL and Redis).
