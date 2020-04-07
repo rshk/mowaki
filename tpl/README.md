@@ -8,28 +8,48 @@ Refer to [the official documentation] on how to get started making changes.
 [the official documentation]: https://docs.mowaki.org/en/latest/
 
 
-## Running (development mode)
+## Setting up for development
 
 Create a ``.env`` file, containing the required configuration:
 
-    SECRET_KEY=write_something_random_here
+    SECRET_KEY=<insert-random-value>
+    POSTGRES_PASSWORD=<insert-random-value>
 
+You can use a command like this to generate a suitable ``.env`` file:
+
+    python - > .env <<EOF
+    import os, base64
+
+    def make_password():
+        return base64.b64encode(os.urandom(20), b'_-').rstrip(b'=').decode()
+
+    print('PYTHONPATH=.')
+    print('POSTGRES_PASSWORD={}'.format(make_password()))
+    print('SECRET_KEY={}'.format(make_password()))
+    EOF
 
 Several docker-compose services are defined, for running the API / web
 development servers, as well as some services (PostgreSQL and Redis).
+
+Create a ``Pipfile.lock`` (required by the next step):
+
+    pipenv lock
 
 To build the API server image:
 
     docker-compose build api
 
 Nodejs dependencies are installed in a separate volume, so the local
-node_modules directory can be shadowed by mounting it on top.
+node_modules directory can be "shadowed" by mounting the volume on top.
 
 This means you need to run this to install / update changed dependencies:
 
-    docker-compose run --entrypoint='' --rm --no-deps web npm install
+    docker-compose run --rm --no-deps web npm install
 
-Finally, to start the containers:
+
+## Running (development mode)
+
+Bring up the containers via docker-compose:
 
     docker-compose up
 
@@ -42,10 +62,10 @@ You can also access GraphiQL, running on the API server at http://localhost:5000
 
 To run database migrations:
 
-    docker-compose run --entrypoint='' --rm api alembic upgrade head
+    docker-compose run --rm api alembic upgrade head
 
 
-### Customizing ports
+### Using custom ports
 
 By default, the web server will listen on ``localhost:8000``, while
 the API server will listen on ``localhost:5000``.
@@ -58,6 +78,34 @@ environment variables to change which local ports will be bound to the
 containers. For example:
 
     WEB_PORT=8080 API_PORT=5555 docker-compose up
+
+
+## Development
+
+### Creating database migrations
+
+    docker-compose run --rm --use-aliases api alembic revision --autogenerate -m 'Your message here'
+
+### Installing Python dependencies
+
+    pipenv install <name>
+    docker-compose build api
+
+Then restart docker-compose.
+
+
+### Installing Nodejs dependencies
+
+    cd web
+    npm install <name>
+    docker-compose run --rm --no-deps web npm install
+
+
+### Connecting to database
+
+To connect to the PostgreSQL database:
+
+    docker-compose run --rm database bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
 
 
 ### Connecting to a service directly
@@ -79,42 +127,14 @@ And connect to the database directly, eg:
     psql -U postgres -h 172.18.0.2
 
 
-## Running (development mode, outside docker)
+## Testing
 
-You can run the application without using Docker, if you prefer doing so.
+Make sure you have a test database setup:
 
-Make sure you have any required service running locally (or you can
-use the ones provided in the docker-compose configuration, just make
-sure you map any required port).
+    docker-compose run --rm database bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
+    default=# CREATE DATABASE test_default;
 
-Also, make sure the locally installed versions of Python and Node are
-supported.
 
-Create a configuration file (``.env``):
+To run tests:
 
-```
-PYTHONPATH=.
-SECRET_KEY=notasecret
-DATABASE_URL=postgres://postgres:@localhost:5432/default
-REDIS_URL=redis://localhost:6379
-```
-
-Install backend dependencies:
-
-    pipenv install
-
-Install frontend dependencies:
-
-    cd web && npm install
-
-Run database migrations:
-
-    pipenv run alembic upgrade head
-
-Start API server:
-
-    pipenv run start
-
-Start Web server:
-
-    cd web && npm run start
+    docker-compose run --rm -e TEST_MODE=1 api pytest -vvv ./tests
