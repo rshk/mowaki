@@ -1,7 +1,7 @@
 import logging
 
-from .lib.graphql_app import create_graphql_app
-from .schema import schema
+from app.api import schema
+from app.lib.graphql_app import create_graphql_app
 
 logger = logging.getLogger(__name__)
 
