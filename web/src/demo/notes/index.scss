@@ -1,0 +1,23 @@
+@import '~style/vars';
+
+
+.noteListItem {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.noteListTitle {
+    // font-weight: bold;
+    color: $body-color;
+}
+
+.noteListText {
+    opacity: .5;
+    font-size: .9em;
+    color: $body-color;
+}
+
+.userContent {
+    word-break: break-all;
+}

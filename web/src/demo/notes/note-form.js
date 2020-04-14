@@ -1,36 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { AppLink } from 'demo/approuter';
-import { Button, Form, FormGroup, Input } from 'reactstrap';
+import { Alert, Button, Form, FormGroup, Input } from 'reactstrap';
 
 
-export  default function NoteForm({
-    onSubmit, errorMessage, noteId, title, body,
-    onTitleChange, onBodyChange, loading, error}) {
+export default function NoteForm({
+    formData,
+    errorMessage,
+    loading,
+    onSubmit,
+    noteId,
+}) {
 
-    const isTitleValid = !!title;
-    const isBodyValid = !!body;
+    const [formState, setFormState] = useState({
+        title: '',
+        text: '',
+        ...formData,
+    });
 
-    const isFormValid = isTitleValid && isBodyValid;
+    const isFormValid = (
+        true ||
+        (validateTitle(formState.title) &&
+        validateText(formState.text))
+    );
 
-    return <Form onSubmit={onSubmit}>
+    const _onSubmit = evt=> {
+        evt.preventDefault();
+        onSubmit(formState);
+    };
+
+    return <Form onSubmit={_onSubmit}>
 
         {loading && <div>Loading...</div>}
 
         {/* Error returned in the GraphQL response */}
-        {errorMessage && <div><strong>Error:</strong> {errorMessage}</div>}
-
-        {/* Error raised by client, eg. connection error... */}
-        {error && <div><strong>Error:</strong> {error.message}</div>}
+        {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
 
         <FormGroup>
-            <Input type="text" placeholder="Note title"
-                   value={title} onChange={onTitleChange} />
+            <Input type="text"
+                   placeholder="Note title"
+                   value={formState.title}
+                   onChange={evt=> setFormState({...formState, title: evt.target.value})} />
         </FormGroup>
 
         <FormGroup>
-            <Input type="textarea" rows="10"
-                   value={body} onChange={onBodyChange} />
+            <Input type="textarea"
+                   rows="10"
+                   value={formState.text}
+                   onChange={evt=> setFormState({...formState, text: evt.target.value})} />
         </FormGroup>
 
         <div>
@@ -45,11 +62,13 @@ export  default function NoteForm({
 
 
 NoteForm.propTypes = {
-    onSubmit: PropTypes.func.isRequired,
+    formData: PropTypes.object,
     errorMessage: PropTypes.string,
+    loading: PropTypes.bool,
+    onSubmit: PropTypes.func.isRequired,
     noteId: PropTypes.number,  // Update form only
-    title: PropTypes.string.isRequired,
-    body: PropTypes.string.isRequired,
-    onTitleChange: PropTypes.func.isRequired,
-    onBodyChange: PropTypes.func.isRequired,
 };
+
+
+const validateTitle = (title)=> !!title.trim();
+const validateText = (text)=> true;  // Can be empty

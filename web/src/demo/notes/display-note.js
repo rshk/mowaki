@@ -1,49 +1,59 @@
 import React from 'react';
 import gql from 'graphql-tag';
-import { Query } from 'react-apollo';
-import { Button } from 'reactstrap';
+import { useQuery } from '@apollo/react-hooks';
+import { Alert, Button } from 'reactstrap';
 
 import { AppLink } from 'demo/approuter';
 
 import DeleteNoteButton from './delete-note';
 
+import styles from './index.scss';
 
-const QUERY_GET_NOTE = gql`
-    query getNote($noteId: Int!) {
-        note: getNote(id: $noteId) {
-            id
-            title
-            body
+
+export default function NoteView({noteId}) {
+
+    const query = gql`
+        query getNote($noteId: Int!) {
+            note: getNote(id: $noteId) {
+                id
+                title
+                text
+            }
         }
-    }
-`;
+    `;
 
+    const options = {
+        variables: { noteId },
+        fetchPolicy: 'cache-and-network',
+    };
 
-export default function DisplayNote({noteId}) {
-    return <Query query={QUERY_GET_NOTE} variables={{noteId}} fetchPolicy="cache-and-network">
-        {props => <NoteView noteId={noteId} {...props} />}
-    </Query>;
-}
+    const status = useQuery(query, options);
+    const { loading, error, data } = status;
 
-
-function NoteView({noteId, loading, error, data}) {
     if (loading) {
         return <div>Loading note...</div>;
     }
+
     if (error) {
-        return <div>Error: {error}</div>;
+        return <Alert color="danger">{error.message}</Alert>;
     }
-    const {id, title, body} = data.note;
+
+    const { id, title, text } = data.note;
     return <div>
-        <h1>#{id}: {title}</h1>
-        <div style={{whiteSpace: 'pre-wrap'}}>
-            {body}
+
+        <div className={styles.userContent}>
+            <h1>{title || `Note ${id}`}</h1>
+            <div>
+                {text}
+            </div>
         </div>
-        <div className="mt-4">
-            <DeleteNoteButton noteId={id} />{' '}
-            <Button tag={AppLink} to={`/note/${noteId}/edit`}>
+
+        <div className="mt-4 d-flex flex-row justify-content-between">
+            <Button tag={AppLink} to={`/note/${noteId}/edit`} color="secondary">
                 Edit note
             </Button>
+            <DeleteNoteButton noteId={id} />{' '}
         </div>
+
     </div>;
 }
