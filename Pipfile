@@ -23,6 +23,7 @@ rx = "*"
 sqlalchemy = "*"
 pyql = "*"
 mowaki = ">=0.3"
+tabulate = "*"
 
 [dev-packages]
 ipython = "*"

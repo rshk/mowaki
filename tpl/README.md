@@ -40,6 +40,14 @@ This means you need to run this to install / update changed dependencies:
 
     docker-compose run --rm --no-deps web npm install
 
+### Database
+
+You might also want to set up your database schema, for running the demos.
+
+    docker-compose run --rm api python -m app db create
+
+See notes below about migrations, when you're ready to start development.
+
 
 ## Running (development mode)
 
@@ -50,13 +58,6 @@ Bring up the containers via docker-compose:
 Then, head to http://localhost:8000 to see your newly created app.
 
 You can also access GraphiQL, running on the API server at http://localhost:5000/graphql
-
-
-### Running database migrations
-
-To run database migrations:
-
-    docker-compose run --rm api alembic upgrade head
 
 
 ### Using custom ports
@@ -74,11 +75,39 @@ containers. For example:
     WEB_PORT=8080 API_PORT=5555 docker-compose up
 
 
-## Development
+## Using the CLI
+
+    docker-compose run --rm api python -m app
+
+
+## Database management
+
+A database schema can be created using the following commands:
+
+    docker-compose run --rm api python -m app db create
+    docker-compose run --rm api python -m app db drop
+
+While that works, it is not recommended in production, as there is no
+support for database migrations, allowing the schema to be changed.
+
+A much better way would be to use database migrations via Alembic, as
+illustrated below.
 
 ### Creating database migrations
 
-    docker-compose run --rm --use-aliases api alembic revision --autogenerate -m 'Your message here'
+    docker-compose run --rm --use-aliases api \
+        alembic revision --autogenerate -m 'Your message here'
+
+
+### Running database migrations
+
+To run database migrations:
+
+    docker-compose run --rm --use-aliases api \
+        alembic upgrade head
+
+
+## Development
 
 ### Installing Python dependencies
 
