@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import { Route, Switch } from 'react-router-dom';
-import { Container, Card, CardBody, CardHeader, Form, FormGroup,
+import { Container, Form, FormGroup,
          Label, Input, Alert, Button} from 'reactstrap';
 import gql from 'graphql-tag';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 
 import Page from 'demo/page';
 
-// import NotesList from './notes-list';
-// import DisplayNote from './display-note';
-// import CreateNoteForm from './create-note';
-// import UpdateNoteForm from './update-note';
-// import UploadNoteForm from './upload-note';
-
-import { RouterApp, AppLink } from 'demo/approuter';
+import { RouterApp } from 'demo/approuter';
 import { doLogin, doLogout, getToken } from 'lib/auth';
 
 
@@ -39,7 +32,7 @@ function LoginPage() {
 
 function ProfilePage() {
 
-    const { data, loading, error } = useQuery(gql`
+    const { data } = useQuery(gql`
         {
             user {
                 id
