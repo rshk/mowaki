@@ -13,5 +13,8 @@ def query_users(root, info) -> List[User]:
 
 
 @schema.query.field('user')
-def query_user(root, info, id: int) -> User:
+def query_user(root, info, id: int = None) -> User:
+    if id is None:
+        # Default to current user
+        return info.context.auth_info.user
     return UsersCore.from_request().get(id)

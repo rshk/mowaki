@@ -27,18 +27,14 @@ class UsersCore(BaseCore):
         return user
 
     def list(self):
-        auth = self.get_auth_info()
-
-        if not auth.can_list_users():
+        if not self.can_list_users():
             raise AuthorizationError('Cannot list users')
 
         return self._users_db.list()
 
     def create(self, email, password, display_name=None):
 
-        auth = self.get_auth_info()
-
-        if not auth.can_create_user():
+        if not self.can_create_user():
             raise AuthorizationError('Cannot create users')
 
         return self._users_db.create(

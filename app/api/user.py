@@ -32,4 +32,4 @@ def get_name_from_email(email):
 def get_gravatar_url(email):
     _email = normalize_email_address(email).encode()
     email_hash = hashlib.md5(_email).hexdigest()
-    return 'https://www.gravatar.com/avatar/{}?s=64&d=mp'.format(email_hash)
+    return 'https://www.gravatar.com/avatar/{}?s=80&d=mp'.format(email_hash)

@@ -10,6 +10,7 @@ import LandingPage from './landing';
 import Page from './page';
 import NotesApp from './notes';
 import ClockApp from './clock';
+import AuthenticationApp from './authentication';
 
 
 export default function DemoApp() {
@@ -34,6 +35,7 @@ function AppRoutes() {
         <Route path="/demo" component={DemoAppsListPage} />
         <Route path="/notes" render={props => <NotesApp prefix="/notes" />} />
         <Route path="/clock" render={props => <ClockApp prefix="/clock" />} />
+        <Route path="/auth" render={props => <AuthenticationApp prefix="/auth" />} />
         <Redirect to="/" />
 
     </Switch>;
@@ -49,6 +51,16 @@ function DemoAppsListPage() {
                 <div>A simple note-taking application.</div>
                 <div className="mt-3">
                     <Button tag={Link} to="/notes">
+                        Go to application
+                    </Button>
+                </div>
+            </Card>
+
+            <Card body className="my-3">
+                <h3>Authentication</h3>
+                <div>Demo authentication.</div>
+                <div className="mt-3">
+                    <Button tag={Link} to="/auth">
                         Go to application
                     </Button>
                 </div>
