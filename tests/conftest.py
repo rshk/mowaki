@@ -1,5 +1,7 @@
 import pytest
 
+from app.config import TEST_MODE
+from app.core.user import UsersCore
 from app.db.schema import metadata
 
 
@@ -18,6 +20,13 @@ def db(db_schema):
 def db_schema():
     from app.db import db
 
+    if not TEST_MODE:
+        # ************************************************************
+        # TEST_MODE is used to make sure an appropriate testing
+        # database is configured, before recreating it for test data.
+        # ************************************************************
+        raise ValueError('TEST_MODE is not set')
+
     engine = db.get_engine()
 
     # Clean up, in case tables were left around from a previous run.
@@ -29,3 +38,8 @@ def db_schema():
     yield
 
     metadata.drop_all(engine)
+
+
+@pytest.fixture
+def users_core():
+    return UsersCore.for_system()

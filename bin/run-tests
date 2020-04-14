@@ -1,0 +1,2 @@
+#!/bin/bash
+exec docker-compose run --rm -e TEST_MODE=1 api pytest -vvv ./tests
