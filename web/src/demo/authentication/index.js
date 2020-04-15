@@ -46,7 +46,7 @@ function ProfilePage() {
     return <div>
         <h1>User profile</h1>
 
-        {(data && data.user) && <div className="d-flex flex-row mb-3">
+        {!!(data && data.user) && <div className="d-flex flex-row mb-3">
 
             <div className="mr-3">
                 <img src={data.user.imageUrl} alt="" style={{width: 80, height: 80}} />
