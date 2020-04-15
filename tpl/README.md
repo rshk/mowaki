@@ -154,7 +154,7 @@ And connect to the database directly, eg:
 
 Make sure you have a test database setup:
 
-    docker-compose run --rm database bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
+    ./bin/psql
     default=# CREATE DATABASE test_default;
 
 

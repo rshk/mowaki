@@ -27,9 +27,6 @@ class Test_system:
         assert user.id == uid
         assert user.email == 'foo@example.com'
         assert user.display_name == 'Foo Bar'
-        assert not user.is_superuser
-        assert not user.can_admin_users
-        assert not user.can_admin_trips
 
     def test_get_user_by_email(self, core):
         uid = core.create(email='foo@example.com', password='password')
@@ -83,129 +80,6 @@ class Test_system:
                           display_name='Old Name')
         core.update(core.get(uid), display_name='New Name')
         assert core.get(uid).display_name == 'New Name'
-
-
-class Test_superuser:
-
-    @pytest.fixture
-    def user(self):
-        core = UsersCore.for_system()
-        uid = core.create(
-            email='self@example.com',
-            password='password',
-            is_superuser=True)
-        return core.get(uid)
-
-    @pytest.fixture
-    def core(self, user):
-        return UsersCore.for_user(user)
-
-    def test_can_create_superuser(self, core):
-        uid = core.create(
-            email='foo@example.com',
-            password='p',
-            is_superuser=True)
-
-        user = core.get(uid)
-        assert user.is_superuser is True
-
-    def test_can_promote_superuser(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(email='foo@example.com', password='p')
-        core.update(core.get(uid), is_superuser=True)
-        user = _uc.get(uid)
-        assert user.is_superuser is True
-
-    def test_can_demote_superuser(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(email='foo@example.com', password='p',
-                         is_superuser=True)
-        core.update(core.get(uid), is_superuser=False)
-        user = _uc.get(uid)
-        assert user.is_superuser is False
-
-
-class Test_user_admin:
-
-    @pytest.fixture
-    def user(self):
-        core = UsersCore.for_system()
-        uid = core.create(
-            email='self@example.com',
-            password='password',
-            can_admin_users=True)
-        return core.get(uid)
-
-    @pytest.fixture
-    def core(self, user):
-        return UsersCore.for_user(user)
-
-    def test_cannot_create_superuser(self, core):
-        uid = core.create(
-            email='foo@example.com',
-            password='p',
-            is_superuser=True)
-
-        user = core.get(uid)
-        assert user.is_superuser is False
-
-    def test_cannot_update_superuser(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(
-            email='foo@example.com',
-            password='p',
-            is_superuser=True)
-
-        with pytest.raises(AuthorizationError):
-            core.update(core.get(uid), display_name='A different name')
-
-        assert _uc.get(uid).is_superuser is True
-
-    def test_cannot_promote_superuser(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(email='foo@example.com', password='p')
-        core.update(core.get(uid), is_superuser=True)
-        user = _uc.get(uid)
-        assert user.is_superuser is False
-
-    def test_cannot_demote_superuser(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(
-            email='foo@example.com',
-            password='p',
-            is_superuser=True)
-
-        with pytest.raises(AuthorizationError):
-            core.update(core.get(uid), is_superuser=False)
-
-        assert _uc.get(uid).is_superuser is True
-
-    def test_can_change_user_password(self, core):
-        uid = core.create(email='foo@example.com', password='password')
-        core.set_password(core.get(uid), 'new password')
-
-        # Old password is no longer valid
-        user = core.verify_credentials('foo@example.com', 'password')
-        assert user is None
-
-        # New password is valid
-        user = core.verify_credentials('foo@example.com', 'new password')
-        assert user is not None
-        assert user.id == uid
-
-    def test_cannot_change_superuser_password(self, core):
-        _uc = UsersCore.for_system()
-        uid = _uc.create(
-            email='foo@example.com',
-            password='password',
-            is_superuser=True)
-
-        with pytest.raises(AuthorizationError):
-            core.set_password(core.get(uid), 'new password')
-
-        # Old password is still valid
-        user = core.verify_credentials('foo@example.com', 'password')
-        assert user is not None
 
 
 class Test_normal_user:

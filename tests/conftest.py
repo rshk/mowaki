@@ -1,6 +1,6 @@
 import pytest
 
-from app.config import TEST_MODE
+from app.config import config
 from app.core.user import UsersCore
 from app.db.schema import metadata
 
@@ -20,7 +20,7 @@ def db(db_schema):
 def db_schema():
     from app.db import db
 
-    if not TEST_MODE:
+    if not config.TEST_MODE:
         # ************************************************************
         # TEST_MODE is used to make sure an appropriate testing
         # database is configured, before recreating it for test data.
