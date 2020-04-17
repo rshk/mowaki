@@ -43,28 +43,7 @@
 }
 
 .landingFooter {
-    margin: 20px auto;
-
-    .itemsRow {
-        display: flex;
-        flex-direction: row;
-    }
-
-    .item {
-        flex: 1 1 0;
-
-        &:nth-child(1) {
-            text-align: left;
-        }
-
-        &:nth-child(2) {
-            text-align: center;
-        }
-
-        &:nth-child(3) {
-            text-align: right;
-        }
-    }
+    margin: 20px auto 0;
 }
 
 

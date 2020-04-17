@@ -3,10 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Button } from 'reactstrap';
 
 import { API_URL } from 'lib/apollo';
-
-// import ICON from 'demo/img/icon.png';
 import LOGO from 'demo/img/mowaki.png';
-
 import styles from './index.scss';
 
 
@@ -28,6 +25,9 @@ function LandingHeader() {
             <h1 className={styles.siteTitle}>
                 Welcome to MoWAKi
             </h1>
+            <div className="text-center">
+                Modular Web Application Kit
+            </div>
         </Container>
     </div>;
 }
@@ -36,9 +36,29 @@ function LandingHeader() {
 function LandingContent() {
     return <Container className={styles.landingContent}>
 
-        <div className="text-center">
+        <div className="text-center mb-3">
             Your new project has been created.<br/>
-            Refer to the links below on how to get started.
+            Check the docs, or have a look at the demos.
+        </div>
+
+        <div className="d-flex flex-row justify-content-center mb-3">
+            <div className="mr-3">
+                <Button tag="a" href="https://docs.mowaki.org/" color="primary" size="lg">
+                    MoWAKi Documentation
+                </Button>
+            </div>
+
+            <div>
+                <Button tag={Link} to="/demo" color="primary" size="lg" outline>
+                    Demo applications
+                </Button>
+            </div>
+        </div>
+
+        <div className="text-center mb-3">
+            <div style={{fontSize: '.8em'}}>
+                <a href={API_URL}>Access GraphiQL</a>
+            </div>
         </div>
 
     </Container>;
@@ -48,32 +68,11 @@ function LandingContent() {
 function LandingFooter() {
     return <Container className={styles.landingFooter}>
 
-        <div className="text-center mb-3">
-            <h2>Getting started</h2>
+        <hr/>
+
+        <div className="text-center mb-3 text-muted">
+            Powered by <a href="https://www.mowaki.org">MoWAKi</a>
         </div>
-
-        <div className={styles.itemsRow}>
-            <div className={styles.item}>
-                <Button tag={Link} to="/demo" color="primary" outline>
-                    Demo applications
-                </Button>
-            </div>
-            <div className={styles.item}>
-                <Button tag="a" href="https://docs.mowaki.org/" color="primary" size="lg">
-                    MoWAKi Documentation
-                </Button>
-            </div>
-            <div className={styles.item}>
-                <Button tag="a" href={API_URL} color="primary" outline>
-                    Access GraphiQL
-                </Button>
-            </div>
-        </div>
-
-        {/*
-            <div className="text-right">
-
-            </div> */}
 
     </Container>;
 }
