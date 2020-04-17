@@ -25,7 +25,22 @@ export default function AuthenticationApp({prefix}) {
 function LoginPage() {
     return <div>
         <h1>Login</h1>
-        <LoginForm />
+        <div className="mx-auto my-3" style={{maxWidth: 400}}>
+            <LoginForm />
+        </div>
+        <Alert color="secondary">
+            <div>
+                You can use this command to create a new user:
+            </div>
+            <pre className="mb-0">
+                <code>
+                    docker-compose run --rm api python -m app user create admin@example.com
+                </code>
+            </pre>
+            <div>
+                (Feel free to use any email address of your liking).
+            </div>
+        </Alert>
     </div>;
 }
 
