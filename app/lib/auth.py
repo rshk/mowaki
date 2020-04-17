@@ -1,10 +1,7 @@
 import base64
 import functools
 import logging
-import os
-from collections import namedtuple
 
-import jwt
 from flask import request
 from jwt.exceptions import InvalidTokenError
 from mowaki.auth.jwt import TokenMaker
