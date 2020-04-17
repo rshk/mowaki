@@ -1,4 +1,4 @@
-const TOKEN_KEY_NAME = 'api-auth-token';
+export const TOKEN_KEY_NAME = 'api-auth-token';
 const LOGIN_PAGE_URL = '/login';
 const AFTER_LOGIN_PAGE = '/';
 const AFTER_LOGOUT_PAGE = LOGIN_PAGE_URL;
