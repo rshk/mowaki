@@ -6,7 +6,7 @@ from flask_sockets import Sockets
 
 from .auth import load_auth_info
 from .graphql_view import GraphQLView
-from .subscriptions import SubscriptionServer
+# from .subscriptions import SubscriptionServer
 
 logger = logging.getLogger(__name__)
 
@@ -35,12 +35,13 @@ def create_graphql_app(schema):
     # Websockets -----------------------------------------------------
 
     sockets = Sockets(app)
-    app.app_protocol = lambda environ_path_info: 'graphql-ws'
-    subscription_server = SubscriptionServer(schema)
+    # app.app_protocol = lambda environ_path_info: 'graphql-ws'
+    # subscription_server = SubscriptionServer(schema)
 
     @sockets.route('/subscriptions')
-    def echo_socket(ws):
-        subscription_server.handle(ws)
+    def subscriptions_socket(ws):
+        # subscription_server.handle(ws)
+        print(f'SUBSCRIPTION {ws}', flush=True)
         return []
 
     # Add CORS support -----------------------------------------------

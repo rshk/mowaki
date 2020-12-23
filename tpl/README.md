@@ -27,7 +27,7 @@ development servers, as well as some services (PostgreSQL and Redis).
 
 Create a ``Pipfile.lock`` (required by the next step):
 
-    pipenv lock
+    pipenv lock --pre
 
 To build the API server image:
 
@@ -128,7 +128,7 @@ Then restart docker-compose.
 
 To connect to the PostgreSQL database:
 
-    docker-compose run --rm database bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
+    docker-compose run --rm database bash -c 'psql "postgresql://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
 
 
 ### Connecting to a service directly
