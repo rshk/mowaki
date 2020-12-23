@@ -1,9 +1,9 @@
-import flask_graphql
 from flask import request
 from graphql_server import load_json_body
+from graphql_server.flask.graphqlview import GraphQLView as _GraphQLView
 
 
-class GraphQLView(flask_graphql.GraphQLView):
+class GraphQLView(_GraphQLView):
     """Patched version of GraphQLView.
 
     This fixes handling of multipart/form-data graphql requests
