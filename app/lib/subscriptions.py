@@ -1,13 +1,13 @@
+import asyncio
 import json
 import logging
 from collections import OrderedDict
 
 from geventwebsocket.exceptions import WebSocketError
 from graphql import format_error, graphql
-from graphql.execution.executors.sync import SyncExecutor
-
-# from graphql_ws.gevent import GeventSubscriptionServer, SubscriptionObserver
-from rx import Observable, Observer
+# from graphql.execution.executors.sync import SyncExecutor
+from rx import Observable
+from rx.core.typing import Observer
 
 from .auth import get_socket_context
 
@@ -198,7 +198,9 @@ class BaseSubscriptionServer(object):
         return connection_context.close(1011)
 
     def execute(self, request_context, params):
-        return graphql(self.schema, **dict(params, allow_subscriptions=True))
+        coro = graphql(self.schema, **dict(params, allow_subscriptions=True))
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(coro)
 
     def handle(self, ws, request_context=None):
         raise NotImplementedError("handle method not implemented")
@@ -239,7 +241,8 @@ class GeventSubscriptionServer(BaseSubscriptionServer):
         params = super(GeventSubscriptionServer, self).get_graphql_params(
             *args, **kwargs
         )
-        return dict(params, executor=SyncExecutor())
+        # return dict(params, executor=SyncExecutor())
+        return dict(params)
 
     def handle(self, ws, request_context=None):
         connection_context = GeventConnectionContext(ws, request_context)
