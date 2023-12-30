@@ -22,6 +22,11 @@ Misc libraries. Can be used by the whole codebase. Most of this code could resid
 Depends on: ``app.framework``.
 
 
+#### Package: ``app.root``
+
+"Root" utilities for the app. For example, configuration and resource context management.
+
+
 #### Package: ``app.models``
 
 (Or types?) Definition of the base types used in the app. Can be used by the whole codebase.
