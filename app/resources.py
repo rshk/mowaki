@@ -1,16 +1,25 @@
+from __future__ import annotations
+
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
+from app.lib.emailer import get_mailer_from_url
 
 from sqlalchemy.ext.asyncio import create_async_engine
+from typing import TYPE_CHECKING
 
 from .config import AppConfig
+
+if TYPE_CHECKING:
+    from sqlalchemy.exc.asyncio import AsyncEngine
+    from app.lib.emailer.base import BaseMailer
 
 
 @dataclass
 class AppResources:
-    database: None
-    redis: None
+    database: AsyncEngine
+    # redis: ...
+    mailer: BaseMailer
 
 
 _resources_context_var = ContextVar("resources_context")
@@ -41,6 +50,5 @@ def initialize_resources(config: AppConfig) -> AppResources:
 
     return AppResources(
         database=create_async_engine(config.database_url),
-        # TODO: initialize Redis client for redis
-        redis=None,
+        mailer=get_mailer_from_url(config.email_server_url),
     )

@@ -30,6 +30,8 @@ class AppConfig:
     database_url: str
     redis_url: str
     frontend_url: str
+    email_server_url: str
+    email_sender: str
     port: int = 8080
     bind_host: str = "0.0.0.0"
 

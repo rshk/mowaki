@@ -52,6 +52,10 @@ def generate_env_file():
     # Frontend base URL, used to generate absolute URLs
     yield "FRONTEND_URL", "http://localhost:3000/"
 
+    # Email sending
+    yield "EMAIL_SERVER", "dummy://"
+    yield "EMAIL_SENDER", "Default Sender <no-reply@example.com>"
+
 
 def serialize_env_file(variables, stream):
     for name, value in variables:
