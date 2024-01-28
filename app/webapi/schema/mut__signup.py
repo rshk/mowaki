@@ -3,33 +3,31 @@ from __future__ import annotations
 import logging
 from typing import Optional
 from urllib.parse import urlencode, urljoin
+from .generic_result import GenericResult
 
 import strawberry
 
 from app.config import get_config
 from app.core.auth import issue_login_token_for_email
+from app.core.signup import send_signup_link
 
 # from app.core.notifications import compose_login_email, send_email
 
 logger = logging.getLogger(__name__)
 
 
-async def resolve_mut_signup(data: SignupData) -> SignupResult:
+async def resolve_mut_signup(data: SignupData) -> GenericResult:
     """
     Sign up: send a "login" token to a specified email address
     """
 
-    # TODO: make sure email address passes basic validation
+    try:
+        send_signup_link(data.email)
 
-    token = issue_login_token_for_email(data.email)
-    login_url = make_login_url(token)
+    except Exception as error:
+        return GenericResult.from_exception(error)
 
-    logger.debug(f"Sending email to {data.email} with login link {login_url}")
-    # FIXME: actually send an email with the link
-    # message = compose_login_email(data.email, login_url)
-    # send_email(message)
-
-    return SignupResult(ok=True)
+    return GenericResult.ok()
 
 
 def make_login_url(token):
@@ -42,10 +40,10 @@ def make_login_url(token):
 @strawberry.input
 class SignupData:
     email: str = None
-    plain_text_password: Optional[str] = None
+    # plain_text_password: Optional[str] = None
 
 
-@strawberry.type
-class SignupResult:
-    ok: bool = True
-    error_message: Optional[str] = None
+# @strawberry.type
+# class SignupResult:
+#     ok: bool = True
+#     error_message: Optional[str] = None
