@@ -1,5 +1,5 @@
 """
-Database utilities.
+Database utilities for SQLAlchemy.
 """
 
 import logging
