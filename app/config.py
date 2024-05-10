@@ -17,11 +17,10 @@ If you need to override some configuration during testing::
 
 import dataclasses
 import os
-from contextlib import contextmanager
-from contextvars import ContextVar
 from dataclasses import dataclass
 
-from app.lib.config import create_config_from_env as _create_config_from_env
+from mowaki.lib.config import create_config_from_env as _create_config_from_env
+from mowaki.lib.context import TypedContextVar
 
 
 @dataclass
@@ -36,20 +35,15 @@ class AppConfig:
     bind_host: str = "0.0.0.0"
 
 
-_config_context_var = ContextVar("config_context")
+config_context = TypedContextVar[AppConfig]("config_context")
 
 
-@contextmanager
-def config_context(cfg: AppConfig):
-    """
-    Context manager to push a configuration object onto the stack.
-    """
+def create_config_from_env() -> AppConfig:
+    """Create configuration object from os.environ"""
+    return _create_config_from_env(AppConfig, os.environ)
 
-    token = _config_context_var.set(cfg)
-    try:
-        yield cfg
-    finally:
-        _config_context_var.reset(token)
+
+# Testing utilities --------------------------------------------------
 
 
 def override_config(**kwargs):
@@ -59,16 +53,6 @@ def override_config(**kwargs):
     Mostly useful for testing.
     """
 
-    cfg = get_config()
+    cfg = config_context.get()
     new_cfg = dataclasses.replace(cfg, **kwargs)
     return config_context(new_cfg)
-
-
-def get_config() -> AppConfig:
-    """Get the current configuration"""
-    return _config_context_var.get()
-
-
-def create_config_from_env() -> AppConfig:
-    """Create configuration object from os.environ"""
-    return _create_config_from_env(AppConfig, os.environ)

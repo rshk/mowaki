@@ -18,9 +18,9 @@ Example:
         assert cfg2 is cfg
 """
 
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import ContextVar, Token
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Iterator, TypeVar
 
 T = TypeVar("T")
 
@@ -45,9 +45,12 @@ class TypedContextVar(Generic[T]):
         return self._var.reset(token)
 
     @contextmanager
-    def context(self, value: T):
+    def context(self, value: T) -> Iterator[None]:
         token = self.set(value)
         try:
             yield
         finally:
             self.reset(token)
+
+    def __call__(self, value: T) -> AbstractContextManager[None]:
+        return self.context(value)
