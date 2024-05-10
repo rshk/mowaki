@@ -4,8 +4,7 @@ Modular Web Application Kit
 
 ## Architecture
 
-![MoWaKi Architecture](./.files/MoWaKi Architecture.png)
-
+![MoWaKi Architecture](https://raw.githubusercontent.com/rshk/mowaki/mowaki-2.0/.files/MoWaKi%20Architecture.png)
 
 
 ## Project scaffolding
