@@ -1,26 +1,24 @@
-"""
-Configuration management.
+"""Configuration management.
 
 Example usage::
 
     config = create_config_from_env()
-    with config_context(config):
+    token = config_context.set(config)
 
-        # Code can now access the configuration using:
+    try:
+
+        # Code inside this block can access the configuration using:
         config = get_config()
 
-If you need to override some configuration during testing::
-
-    with override_config(some_setting="new value"):
-        # testing code here
+    finally:
+        config_context.reset(token)
 """
 
-import dataclasses
 import os
 from dataclasses import dataclass
 
 from mowaki.lib.config import create_config_from_env as _create_config_from_env
-from mowaki.lib.context import TypedContextVar
+from contextvars import ContextVar
 
 
 @dataclass
@@ -35,7 +33,7 @@ class AppConfig:
     bind_host: str = "0.0.0.0"
 
 
-config_context = TypedContextVar[AppConfig]("config_context")
+config_context = ContextVar[AppConfig]("config_context")
 
 
 def create_config_from_env() -> AppConfig:
@@ -45,14 +43,15 @@ def create_config_from_env() -> AppConfig:
 
 # Testing utilities --------------------------------------------------
 
+# TODO: move to test fixtures
 
-def override_config(**kwargs):
-    """
-    Context manager to override some configuration settings.
+# def override_config(**kwargs):
+#     """
+#     Context manager to override some configuration settings.
 
-    Mostly useful for testing.
-    """
+#     Mostly useful for testing.
+#     """
 
-    cfg = config_context.get()
-    new_cfg = dataclasses.replace(cfg, **kwargs)
-    return config_context(new_cfg)
+#     cfg = config_context.get()
+#     new_cfg = dataclasses.replace(cfg, **kwargs)
+#     return config_context(new_cfg)
