@@ -11,6 +11,19 @@ this app accepts from the environment.
 Provides a ContextVar to access the app configuration.
 
 
+## Library functions
+
+The ``app.lib`` package contains various library-type functions that
+are specific to the application.
+
+Any of the other packages can depend on library functions.
+
+
+## Models
+
+Domain objects, used by the application business logic and the repo methods.
+
+
 ## Resources
 
 Depends on: `config`, `lib`.
@@ -22,17 +35,6 @@ Examples include databases, smtp service, API clients, ...
 
 Used by the `repo` and `io` packages to access the actual underlying
 resources.
-
-
-## Library functions
-
-The ``app.lib`` package contains various library-type functions that
-are specific to the application.
-
-
-## Models
-
-Domain objects, used by the application business logic and the repo methods.
 
 
 ## Repo
@@ -49,12 +51,12 @@ utilities used by the repo should be in `_*` modules or packages.
 
 Communication with 3rd party services.
 
-Depends on: `resources`, `models`, `config`
+Depends on: `resources`, `models`, `config`.
 
 
 ## Core
 
-Depends on: `repo`, `io`, `models`, `lib`, `config`
+Depends on: `repo`, `io`, `models`, `lib`, `config`.
 
 Main business logic.
 

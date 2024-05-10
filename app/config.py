@@ -41,6 +41,10 @@ def create_config_from_env() -> AppConfig:
     return _create_config_from_env(AppConfig, os.environ)
 
 
+def get_config() -> AppConfig:
+    return config_context.get()
+
+
 # Testing utilities --------------------------------------------------
 
 # TODO: move to test fixtures
