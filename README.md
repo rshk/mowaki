@@ -2,6 +2,12 @@
 
 Modular Web Application Kit
 
+## Architecture
+
+![MoWaKi Architecture](./.files/MoWaKi Architecture.png)
+
+
+
 ## Project scaffolding
 
 ### The ``app`` folder
