@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING
 import redis.asyncio as redis
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from mowaki.lib.emailer import get_mailer_from_url
+from mowaki.emailer import get_mailer_from_url
 
 from .config import AppConfig
 
 if TYPE_CHECKING:
     from sqlalchemy.exc.asyncio import AsyncEngine
 
-    from mowaki.lib.emailer.base import BaseMailer
+    from mowaki.emailer.base import BaseMailer
 
 
 @dataclass

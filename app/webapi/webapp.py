@@ -12,7 +12,7 @@ from strawberry.asgi import GraphQL
 from app.config import AppConfig, config_context, create_config_from_env
 from app.core.context import CoreContext, core_context
 from app.resources import initialize_resources, resources_context
-from mowaki.lib.context import contextvar_contextmanager
+from mowaki.context import contextvar_contextmanager
 
 from .auth import get_auth_info_from_request
 from .context import RequestContext, get_request_context, request_context

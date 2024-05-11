@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from mowaki.lib.config import create_config_from_env
+from mowaki.config import create_config_from_env
 
 
 class Test_dataclass_field_parsing:

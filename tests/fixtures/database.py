@@ -5,7 +5,7 @@ from sqlalchemy.engine import make_url
 
 from app.config import get_config
 from app.repo._schema import metadata
-from mowaki.lib.database import create_database, create_engine, drop_database
+from mowaki.database import create_database, create_engine, drop_database
 
 
 @pytest_asyncio.fixture(scope="session")

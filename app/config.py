@@ -17,7 +17,7 @@ Example usage::
 import os
 from dataclasses import dataclass
 
-from mowaki.lib.config import create_config_from_env as _create_config_from_env
+from mowaki.config import create_config_from_env as _create_config_from_env
 from contextvars import ContextVar
 
 
