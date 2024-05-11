@@ -2,14 +2,15 @@ import asyncio
 
 import pytest
 
-from .fixtures.config import setup_config_context
+from .fixtures.config import config, setup_config_context
 from .fixtures.database import database, database_schema
 from .fixtures.resources import setup_resources_context
 
 __all__ = [
-    "setup_config_context",
+    "config",
     "database",
     "database_schema",
+    "setup_config_context",
     "setup_resources_context",
 ]
 

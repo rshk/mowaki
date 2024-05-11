@@ -2,16 +2,7 @@ from email.message import EmailMessage
 
 from app.config import get_config
 from app.resources import get_resources
-from mowaki.email_composer import EmailComposer
-
-
-def get_composer() -> EmailComposer:
-    """Get an email composer with sender prepopulated from configuration"""
-
-    cfg = get_config()
-    composer = EmailComposer()
-    composer.set_sender(cfg.email_sender)
-    return composer
+from mowaki.email_composer import compose_html_email as _compose_html_email
 
 
 def send_email(msg: EmailMessage):
@@ -20,3 +11,9 @@ def send_email(msg: EmailMessage):
     resources = get_resources()
     mailer = resources.mailer
     mailer.send_message(msg)
+
+
+def compose_html_email(*args, **kwargs):
+    cfg = get_config()
+    kwargs.setdefault("sender", cfg.email_sender)
+    return _compose_html_email(**kwargs)

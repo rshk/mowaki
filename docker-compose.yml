@@ -10,7 +10,7 @@ services:
       args:
         PYTHON_VERSION: "3.12"
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_PORT:-8080}:8000"
     environment:
       PYTHONPATH: /app/src/
       SECRET_KEY:
@@ -19,6 +19,8 @@ services:
       TEST_DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@database:5432/testing
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      EMAIL_SERVER_URL: dummy://
+      EMAIL_SENDER: "Default Sender <no-reply@example.com>"
     volumes:
       # Mount the current working copy over the soure copied in the
       # containerized image.
@@ -26,7 +28,7 @@ services:
       # having to requild the container for each change to apply.
       # It also allows to use autoreloading to apply code changes.
       - .:/app/src/
-    command: python -m app.webapi.server
+    command: python -m app.webapi.server --port 8000 --host 0.0.0.0 --debug --reload
 
   database:
     image: postgres:16
