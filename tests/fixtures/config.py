@@ -12,6 +12,12 @@ def setup_config_context():
         database_url=os.environ["TEST_DATABASE_URL"],
         redis_url=None,
         frontend_url="https://www.example.com",
+        email_sender="Default Sender <no-reply@example.com>",
+        email_server_url="dummy://",
     )
-    with config_context(config):
+
+    token = config_context.set(config)
+    try:
         yield
+    finally:
+        config_context.reset(token)

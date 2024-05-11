@@ -6,7 +6,7 @@ requirements.txt: pyproject.toml
 	poetry export --without-hashes > $@
 
 requirements-dev.txt: pyproject.toml
-	poetry export --without-hashes --dev > $@
+	poetry export --without-hashes --with dev > $@
 
 clean:
 	rm -f $(TARGETS)
