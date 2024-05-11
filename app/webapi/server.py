@@ -1,8 +1,8 @@
 import click
 import uvicorn
+from uvicorn.config import LOGGING_CONFIG
 
-from app.config import config_context, create_config_from_env
-from app.resources import initialize_resources, resources_context
+from app.config import create_config_from_env
 
 
 def run_server(debug=False):
@@ -11,23 +11,41 @@ def run_server(debug=False):
         debug: Enable development mode
     """
 
+    # This configuration instance is only used to initialize uvicorn
     cfg = create_config_from_env()
-    with config_context(cfg):
-        resources = initialize_resources(cfg)
-        with resources_context(resources):
-            options = {
-                "host": cfg.bind_host,
-                "port": cfg.port,
-                "log_level": "debug" if debug else "info",
-            }
 
-            if debug:
-                options["reload"] = True
-            else:
-                # TODO: allow configuring number of workers
-                options["workers"] = 1
+    options = {
+        "host": cfg.bind_host,
+        "port": cfg.port,
+        "log_level": "debug" if debug else "info",
+        "log_config": get_logging_config(debug),
+    }
 
-            uvicorn.run("app.webapi.webapp:create_app", factory=True, **options)
+    if debug:
+        options["reload"] = True
+    else:
+        # TODO: allow configuring number of workers
+        options["workers"] = 1  # Mutually exclusive with "reload"
+
+    uvicorn.run("app.webapi.webapp:create_initialized_app", factory=True, **options)
+
+
+def get_logging_config(debug):
+    return {
+        **LOGGING_CONFIG,
+        "loggers": {
+            **LOGGING_CONFIG["loggers"],
+            "app": {
+                "level": "DEBUG" if debug else "INFO",
+                "handlers": ["default"],
+                "propagate": False,
+            },
+            "": {
+                "level": "DEBUG" if debug else "INFO",
+                "handlers": ["default"],
+            },
+        },
+    }
 
 
 @click.command()
