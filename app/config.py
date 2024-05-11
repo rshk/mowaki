@@ -29,8 +29,6 @@ class AppConfig:
     frontend_url: str
     email_server_url: str
     email_sender: str
-    port: int = 8080
-    bind_host: str = "0.0.0.0"
 
 
 config_context = ContextVar[AppConfig]("config_context")

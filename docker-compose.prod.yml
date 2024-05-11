@@ -17,7 +17,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@database:5432/default
       REDIS_URL: redis://redis:6379
       FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      EMAIL_SERVER_URL:
+      EMAIL_SENDER:
     restart: always
+    command: >
+      gunicorn -w 4 -k uvicorn.workers.UvicornWorker
 
   database:
     image: postgres:16

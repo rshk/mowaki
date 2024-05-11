@@ -1,11 +1,10 @@
 import click
 import uvicorn
 from uvicorn.config import LOGGING_CONFIG
+import os
 
-from app.config import create_config_from_env
 
-
-def run_server(debug=False):
+def run_server(*, host="127.0.0.1", port=8000, debug=False, reload=False, workers=1):
     """
     Args:
         debug: Enable development mode
@@ -49,9 +48,13 @@ def get_logging_config(debug):
 
 
 @click.command()
+@click.option("--host", envvar="BIND_HOST", default="127.0.0.1")
+@click.option("--port", envvar="PORT", type=int, default=8000)
 @click.option("--debug", is_flag=True, default=False)
-def main(debug):
-    run_server(debug=debug)
+@click.option("--reload", is_flag=True, default=False)
+@click.option("--workers", type=int, envvar="WEB_CONCURRENCY", default=1)
+def main(**kwargs):
+    run_server(**kwargs)
 
 
 if __name__ == "__main__":
