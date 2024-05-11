@@ -37,3 +37,7 @@ def initialize_resources(config: AppConfig) -> AppResources:
         redis=redis.from_url(config.redis_url),
         mailer=get_mailer_from_url(config.email_server_url),
     )
+
+
+def get_resources():
+    return resources_context.get()

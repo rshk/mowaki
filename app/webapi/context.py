@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 import uuid
-from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Optional, Union
@@ -18,8 +17,6 @@ if TYPE_CHECKING:
 
     # from app.graphapi.loaders import Loader
     # from app.repo import Repo
-
-_current_request_context = ContextVar("request_context")
 
 
 @dataclass
@@ -48,17 +45,8 @@ class RequestContext:
     )
 
 
-@contextmanager
-def request_context(obj: RequestContext):
-    token = _current_request_context.set(obj)
-    try:
-        yield obj
-    finally:
-        _current_request_context.reset(token)
+request_context = ContextVar[RequestContext]("request_context")
 
 
 def get_request_context() -> RequestContext:
-    try:
-        return _current_request_context.get()
-    except LookupError:
-        return None
+    return request_context.get()

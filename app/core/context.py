@@ -29,3 +29,11 @@ class CoreContext:  # TODO: can we find a better name for this class?
 
 
 core_context = ContextVar[CoreContext]("core_context")
+
+
+def get_core_context() -> CoreContext:
+    return core_context.get()
+
+
+def get_auth_info() -> AuthInfo:
+    return get_core_context().auth_info
