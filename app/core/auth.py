@@ -2,9 +2,9 @@ import logging
 
 import app.repo.users as user_repo
 from app.config import get_config
-from app.lib.jwt import TokenMaker
 from app.models.auth_info import AuthInfo
 from app.models.user import User
+from mowaki.jwt import TokenMaker
 
 logger = logging.getLogger(__name__)
 

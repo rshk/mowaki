@@ -1,8 +1,8 @@
 from email.message import EmailMessage
 
 from app.config import get_config
-from app.lib.email_composer import EmailComposer
 from app.resources import get_resources
+from mowaki.email_composer import EmailComposer
 
 
 def get_composer() -> EmailComposer:
