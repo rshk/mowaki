@@ -141,29 +141,17 @@ eventually split into a completely separate library.
 
 
 
-
-
-
-
-
-
-## Build and run configuration (prod, testing, dev)
-
-- Docker and docker-compose
-- Utilities from the ``bin`` folder
-
-
-
-
-
-
-
 ## Development
+
+A development setup can be started using `docker compose`.
 
 ### Installation
 
 
 ### Configuration
+
+The development setup relies on a `.env` file to pass environment
+variables to the application via `docker compose`.
 
 
 ### Database migrations
@@ -171,34 +159,60 @@ eventually split into a completely separate library.
 
 ### Running a development server
 
-The development setup relies on a `.env` file to pass environment
-variables to the application via `docker compose`.
+Start all the docker containers using:
+
+    docker compose up
 
 
 ## Testing
 
-
 ### Running the test suite
+
+Tests can be run inside a docker container:
+
+    docker compose run --rm api pytest -vvv ./tests/
+
+For convenience, the `./bin/docker/pytest` wrapper script can be used instead.
 
 
 ### Writing tests
 
+Tests are contained in the `tests` package.
+
 
 ## Debugging
+
+TODO: add instructions on setting up a debugger
 
 
 ## Integrating a front-end
 
+TODO
+
 
 ## Production
 
+The application can be deployed in many different ways for production.
+
+It can be deployed easily on a single server using `docker compose`,
+or more complex setups can be created, possibly leveraging a cloud
+provider.
+
 ### Installation
+
+TODO
 
 
 ### Configuration
 
+TODO
+
 
 ### Database migrations
 
+TODO
+
 
 ### Running a production server
+
+TODO
