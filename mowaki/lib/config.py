@@ -6,6 +6,7 @@ import dataclasses
 from typing import Type, TypeVar
 
 AppConfigType = TypeVar("AppConfigType")
+T = TypeVar("T")
 
 
 def create_config_from_env(
@@ -49,7 +50,7 @@ def create_config_from_env(
                 raise
             value = _get_field_default(field)
 
-        kwargs[field.name] = value
+        kwargs[field.name] = _parse_value(value, field.type)
 
     return config_type(**kwargs)
 
@@ -59,18 +60,49 @@ def _is_required_field(field):
     If the field doesn't have either a default value or default
     factory, then it must be supplied.
     """
-    return (field.default is dataclasses._MISSING_TYPE) and (
-        field.default_factory is dataclasses._MISSING_TYPE
+    return (field.default is dataclasses.MISSING) and (
+        field.default_factory is dataclasses.MISSING
     )
 
 
 def _get_field_default(field):
     """Get the default value for a dataclass field"""
 
-    if field.default is not dataclasses._MISSING_TYPE:
+    if field.default is not dataclasses.MISSING:
         return field.default
 
-    if field.default_factory is not dataclasses._MISSING_TYPE:
+    if field.default_factory is not dataclasses.MISSING:
         return field.default_factory()
 
     return None
+
+
+def _parse_value(value: str, type_: Type[T]) -> T:
+    if type_ is str:
+        return value
+
+    if type_ is int:
+        return int(value)
+
+    if type_ is float:
+        return float(value)
+
+    if type_ is bool:
+        return _parse_bool(value)
+
+    raise ValueError(f"Unsupported configuration variable type: {type_}")
+
+
+def _parse_bool(value: str) -> bool:
+    TRUTHY = {"true", "yes", "on", "1"}
+    FALSEY = {"false", "no", "off", "0", ""}
+
+    _value = value.lower()
+
+    if _value in TRUTHY:
+        return True
+
+    if _value in FALSEY:
+        return False
+
+    raise ValueError(f"Unable to parse boolean value: {value}")
