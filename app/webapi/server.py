@@ -1,7 +1,6 @@
 import click
 import uvicorn
 from uvicorn.config import LOGGING_CONFIG
-import os
 
 
 def run_server(*, host="127.0.0.1", port=8000, debug=False, reload=False, workers=1):
@@ -10,21 +9,18 @@ def run_server(*, host="127.0.0.1", port=8000, debug=False, reload=False, worker
         debug: Enable development mode
     """
 
-    # This configuration instance is only used to initialize uvicorn
-    cfg = create_config_from_env()
-
     options = {
-        "host": cfg.bind_host,
-        "port": cfg.port,
+        "host": host,
+        "port": port,
         "log_level": "debug" if debug else "info",
         "log_config": get_logging_config(debug),
     }
 
-    if debug:
+    if debug or reload:
         options["reload"] = True
-    else:
-        # TODO: allow configuring number of workers
-        options["workers"] = 1  # Mutually exclusive with "reload"
+
+    if not debug:
+        options["workers"] = workers  # Mutually exclusive with "reload"
 
     uvicorn.run("app.webapi.webapp:create_initialized_app", factory=True, **options)
 
