@@ -770,6 +770,17 @@ files = [
 ]
 
 [[package]]
+name = "mowaki"
+version = "2.0"
+description = "Utilities for MoWaKi (and other) apps"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "mowaki-2.0-py3-none-any.whl", hash = "sha256:98829ed78d4c2f950504908cac2c024ca32dfffcf2d3650bbd5e492b49919097"},
+    {file = "mowaki-2.0.tar.gz", hash = "sha256:7ae1cf092960616ac2fc55f0380b08e6965fefdd9ce4e45a1cf3465c63dc4225"},
+]
+
+[[package]]
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
@@ -1645,4 +1656,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "fcf18884b1a910eaf6c7661fbadbd0cf8a1c9c76d62ae2141505dac1ac6f5a79"
+content-hash = "ecb98fd9a9055ffaf275c7a374ea653b6e760143955a1d38fa55c6ca1719254f"
