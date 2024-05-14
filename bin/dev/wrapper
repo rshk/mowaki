@@ -1,0 +1,26 @@
+#!/bin/bash
+
+COMMAND="$( basename "$0" )"
+SOURCE_FOLDERS=(app tests migrations)
+
+case "$COMMAND" in
+    cli)
+        exec python -m app.cli "$@"
+        ;;
+
+    pytest|ipython|alembic)
+        exec "${COMMAND}" "$@"
+        ;;
+
+    migrate)
+        exec alembic upgrade head
+        ;;
+
+    isort|black)
+        exec "${COMMAND}" "${SOURCE_FOLDERS[@]}"
+        ;;
+
+    *)
+        echo "Do not call this command directly, use a qualified symlink instead"
+        exit 1
+esac

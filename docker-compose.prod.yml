@@ -1,0 +1,44 @@
+version: '3.4'
+services:
+
+  api:
+    image: myapp:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        PYTHON_VERSION: "3.12"
+    ports:
+      - "${API_PORT:-8080}:8000"
+    environment:
+      PYTHONPATH: /app/src/
+      SECRET_KEY:
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD}@database:5432/default
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: "${FRONTEND_URL:-http://localhost:3000}"
+      EMAIL_SERVER_URL:
+      EMAIL_SENDER:
+    restart: always
+    command: >
+      gunicorn -w 4 -k uvicorn.workers.UvicornWorker "app.webapi.webapp:create_initialized_app()" --port 8000
+
+  database:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD:
+      POSTGRES_DB: 'default'
+    volumes:
+      - db-pgdata:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:7
+    volumes:
+      - redis-data:/data
+    restart: always
+
+volumes:
+  db-pgdata:
+  redis-data:

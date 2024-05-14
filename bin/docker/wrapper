@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Wrapper to invoke a dev script inside a docker container
+
+COMMAND="$( basename "$0" )"
+
+case "$COMMAND" in
+    up|down|start|stop|ps|build|kill|run|exec)
+	# Forward to docker compose
+        exec docker compose "$COMMAND" "$@"
+        ;;
+
+    psql)
+	# This is run in the database container, not app
+        exec docker compose run --rm database \
+             bash -c 'psql "postgres://postgres:${POSTGRES_PASSWORD}@database:5432/default"'
+        ;;
+
+    redis-cli)
+	# This is run in the redis container, not app
+        exec docker compose exec redis redis-cli
+        ;;
+
+    *)
+	exec docker compose run --rm api ./bin/dev/"${COMMAND}" "$@"
+esac

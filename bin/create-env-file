@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+
+"""
+Generate a .env file for dev (or prod) deployments.
+"""
+
+
+from contextlib import contextmanager
+import base64
+import os
+import sys
+
+
+def make_password(size=40):
+    return base64.b64encode(os.urandom(size), b"_-").rstrip(b"=").decode()
+
+
+def generate_env_file():
+
+    # Secret key for encrypting HMAC messages (eg. JWT tokens for authentication).
+    yield "SECRET_KEY", make_password()
+
+    POSTGRES_PASSWORD = make_password()
+
+    # This is used by docker compose, which is also reading the .env file
+    yield "POSTGRES_PASSWORD", POSTGRES_PASSWORD
+
+    # PostgreSQL database connection URL
+    yield (
+        "DATABASE_URL",
+        f"postgresql+asyncpg://postgres:{POSTGRES_PASSWORD}@database:5432/default",
+    )
+
+    # PostgreSQL connection URL used to create databases for testing.
+    # This user needs to have sufficient privileges to create and drop databases.
+    yield (
+        "TEST_DATABASE_ADMIN_URL",
+        f"postgresql+asyncpg://postgres:{POSTGRES_PASSWORD}@database:5432/default",
+    )
+
+    # PostgreSQL connection URL used for testing. Must connect to the
+    # same server as TEST_DATABASE_ADMIN_URL for the automatic
+    # database creation to work.
+    yield (
+        "TEST_DATABASE_URL",
+        f"postgresql+asyncpg://postgres:{POSTGRES_PASSWORD}@database:5432/testing",
+    )
+
+    # Redis connection URL
+    yield "REDIS_URL", "redis://redis:6379"
+
+    # Frontend base URL, used to generate absolute URLs
+    yield "FRONTEND_URL", "http://localhost:3000/"
+
+    # Email sending
+    yield "EMAIL_SERVER_URL", "dummy://"
+    yield "EMAIL_SENDER", "Default Sender <no-reply@example.com>"
+
+
+def serialize_env_file(variables, stream):
+    for name, value in variables:
+        print(f"{name}={value}", file=stream)
+
+
+@contextmanager
+def stdout_stream():
+    yield sys.stdout
+
+
+def open_destination(filename):
+    if filename == "-":
+        return stdout_stream()
+    return open(filename, "w")
+
+
+def main():
+    args = sys.argv[1:]
+
+    if len(args) >= 1:
+        destination_file = args[0]
+    else:
+        bindir = os.path.dirname(__file__)
+        rootdir = os.path.dirname(bindir)
+        destination_file = os.path.join(rootdir, ".env")
+
+        if os.path.exists(destination_file):
+            print("Environment file exists. Not overriding.")
+            print("File path: {}".format(os.path.abspath(destination_file)))
+            return
+
+    variables = generate_env_file()
+
+    if destination_file == "-":
+        serialize_env_file(variables, sys.stdout)
+        return
+
+    with open(destination_file, "w") as stream:
+        serialize_env_file(variables, stream)
+        print("Written to: {}".format(os.path.abspath(destination_file)))
+
+
+if __name__ == "__main__":
+    main()
