@@ -1,11 +1,11 @@
 import os
 
 import pytest_asyncio
+from mowaki.database import create_database, create_engine, drop_database
 from sqlalchemy.engine import make_url
 
 from app.config import get_config
 from app.repo._schema import metadata
-from mowaki.database import create_database, create_engine, drop_database
 
 
 @pytest_asyncio.fixture(scope="session")

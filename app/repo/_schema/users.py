@@ -1,5 +1,7 @@
-from sqlalchemy import BigInteger, Column, DateTime, Table, Text
 from datetime import datetime, timezone
+
+from sqlalchemy import BigInteger, Column, DateTime, Table, Text
+
 from .metadata import metadata
 
 UsersTable = Table(

@@ -5,16 +5,14 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import redis.asyncio as redis
-from sqlalchemy.ext.asyncio import create_async_engine
-
 from mowaki.emailer import get_mailer_from_url
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from .config import AppConfig
 
 if TYPE_CHECKING:
-    from sqlalchemy.exc.asyncio import AsyncEngine
-
     from mowaki.emailer.base import BaseMailer
+    from sqlalchemy.exc.asyncio import AsyncEngine
 
 
 @dataclass

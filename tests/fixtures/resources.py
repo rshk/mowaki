@@ -1,8 +1,8 @@
 import pytest
+from mowaki.context import contextvar_contextmanager
 
 from app.config import get_config
 from app.resources import initialize_resources, resources_context
-from mowaki.context import contextvar_contextmanager
 
 
 @pytest.fixture(scope="session", autouse=True)

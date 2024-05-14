@@ -1,8 +1,9 @@
 from email.message import EmailMessage
 
+from mowaki.email_composer import compose_html_email as _compose_html_email
+
 from app.config import get_config
 from app.resources import get_resources
-from mowaki.email_composer import compose_html_email as _compose_html_email
 
 
 def send_email(msg: EmailMessage):

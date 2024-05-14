@@ -1,9 +1,10 @@
 from typing import Any
 
+from mowaki.crypto import create_encrypted_password
+
 from app.models.user import User, UserID
 from app.repo._schema import UsersTable
 from app.resources import get_resources
-from mowaki.crypto import create_encrypted_password
 
 
 async def create_user(email, password=None) -> UserID:

@@ -3,13 +3,14 @@ from __future__ import annotations
 import logging
 from typing import Optional
 from urllib.parse import urlencode, urljoin
-from .generic_result import GenericResult
 
 import strawberry
 
 from app.config import get_config
 from app.core.auth import issue_login_token_for_email
 from app.core.signup import send_signup_link
+
+from .generic_result import GenericResult
 
 # from app.core.notifications import compose_login_email, send_email
 

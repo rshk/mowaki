@@ -1,9 +1,9 @@
 import os
 
 import pytest
+from mowaki.context import contextvar_contextmanager
 
 from app.config import AppConfig, config_context
-from mowaki.context import contextvar_contextmanager
 
 
 @pytest.fixture(scope="session")

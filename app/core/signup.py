@@ -1,9 +1,10 @@
 import logging
+
+from app.io.email import send_email
 from app.lib.normalize import normalize_email_address
 
-from .notifications.signup import compose_signup_email
-from app.io.email import send_email
 from .auth import issue_login_token_for_email
+from .notifications.signup import compose_signup_email
 
 logger = logging.getLogger(__name__)
 

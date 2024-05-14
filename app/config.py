@@ -15,10 +15,10 @@ Example usage::
 """
 
 import os
+from contextvars import ContextVar
 from dataclasses import dataclass
 
 from mowaki.config import create_config_from_env as _create_config_from_env
-from contextvars import ContextVar
 
 
 @dataclass
