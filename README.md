@@ -2,6 +2,8 @@
 
 Modular Web Application Kit
 
+[Documentation](https://rshk.github.io/mowaki/)
+
 ## Architecture
 
 ![MoWaKi Architecture](https://raw.githubusercontent.com/rshk/mowaki/mowaki-2.0/.files/MoWaKi%20Architecture.png)
