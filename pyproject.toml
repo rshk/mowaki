@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "myapp"
+name = "app"
 version = "0.1.0"
 description = "My application built with MoWaKi 2.0"
 authors = ["Samuele Santi <samuele@samuelesanti.com>"]
