@@ -3,13 +3,16 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MoWAKi's documentation!
-==================================
+MoWAKi Documentation
+====================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   quickstart
+   architecture
+   development
 
 
 Indices and tables
