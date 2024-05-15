@@ -7,12 +7,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-strawberry-graphql = {extras = ["asgi", "debug-server"], version = "^0.215.1"}
-starlette = "^0.32.0.post1"
+strawberry-graphql = "^0.229.0"
+starlette = "^0.37.2"
 uvicorn = {extras = ["standard"], version = "^0.29.0"}
 python-dotenv = "^1.0.0"
 pyjwt = "^2.8.0"
-pytz = "^2023.3.post1"
+pytz = "^2024.1"
 sqlalchemy = {extras = ["asyncio"], version = "^2.0.23"}
 asyncpg = "^0.29.0"
 alembic = "^1.12.1"
