@@ -1,0 +1,4 @@
+---
+include:
+  - ./api/compose.yml
+  - ./web/compose.yml
