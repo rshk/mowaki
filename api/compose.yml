@@ -51,11 +51,9 @@ services:
   # PostgreSQL database
   # ==================================================================
   db:
-    image: postgres
+    image: postgres:18-trixie
     # restart: always
     user: postgres
-    secrets:
-      - db-password
     volumes:
       - db-data:/var/lib/postgresql/data
     environment:
