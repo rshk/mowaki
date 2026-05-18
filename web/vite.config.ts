@@ -7,8 +7,8 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [react()],
         server: {
+            host: true,  // Expose on 0.0.0.0
             port: env.APP_PORT ? Number(env.APP_PORT) : 5173,
-            /* port: 8888, */
         },
     };
 });
