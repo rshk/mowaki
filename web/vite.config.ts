@@ -12,7 +12,6 @@ export default defineConfig(({ mode }) => {
         },
         resolve: {
             alias: {
-                lib: "./src/lib/",
             }
         }
     };

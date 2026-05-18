@@ -6,7 +6,7 @@ import {
     useParams,
     Link,
 } from "react-router";
-import { API_URL } from "/lib/config";
+import { API_URL } from "/src/lib/config";
 
 function App() {
     return (
@@ -92,6 +92,7 @@ function Navigation() {
             <Link to="/map">Map</Link>
             <Link to="/login">Login</Link>
             <Link to="/signup">Signup</Link>
+            <Link to={API_URL} target="_blank">API</Link>
         </div>
     );
 }
