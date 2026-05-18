@@ -7,9 +7,9 @@ services:
 
   api:
     ports:  # host:container
-      - "8100:8000"
+      - "8100:8100"
     environment:
-      PORT: "8000"
+      PORT: "8100"
       FRONTEND_URL: "http://localhost:8000"
       CORS_ALLOW_ORIGINS: ""
 
@@ -20,7 +20,7 @@ services:
 
   web:
     ports:
-      - "8000:3000"
+      - "8000:8000"
     environment:
-      PORT: "3000"
+      APP_PORT: "8000"
       VITE_API_URL: "http://localhost:8100"

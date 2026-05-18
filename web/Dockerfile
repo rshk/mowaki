@@ -11,6 +11,7 @@ ARG NODE_VERSION=26
 FROM node:${NODE_VERSION}-alpine
 
 ENV NODE_ENV development
+ENV APP_PORT
 
 WORKDIR /app
 
@@ -32,7 +33,7 @@ USER node
 COPY --chown=node:node . .
 
 # Expose the port that the application listens on.
-EXPOSE 5173
+# EXPOSE 5173
 
 # Reset the entrypoint
 ENTRYPOINT []
