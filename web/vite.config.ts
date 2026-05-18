@@ -10,5 +10,10 @@ export default defineConfig(({ mode }) => {
             host: true,  // Expose on 0.0.0.0
             port: env.APP_PORT ? Number(env.APP_PORT) : 5173,
         },
+        resolve: {
+            alias: {
+                lib: "./src/lib/",
+            }
+        }
     };
 });

@@ -1,4 +1,12 @@
-import { BrowserRouter, Routes, Route, Outlet, useParams, Link } from "react-router";
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+    Outlet,
+    useParams,
+    Link,
+} from "react-router";
+import { API_URL } from "/lib/config";
 
 function App() {
     return (
@@ -78,7 +86,7 @@ function WideLayout() {
 
 function Navigation() {
     return (
-        <div style={{display:"flex"}}>
+        <div style={{ display: "flex" }}>
             <Link to="/">Home</Link>
             <Link to="/items">Items</Link>
             <Link to="/map">Map</Link>
@@ -86,7 +94,7 @@ function Navigation() {
             <Link to="/signup">Signup</Link>
         </div>
     );
-};
+}
 
 function Homepage() {
     return (
@@ -116,12 +124,15 @@ function ItemDisplay() {
 function Login() {
     return <div>login form</div>;
 }
+
 function Signup() {
     return <div>sign up</div>;
 }
+
 function Logout() {
     return <div>log out</div>;
 }
+
 function Map() {
     return <div>Wide map</div>;
 }
