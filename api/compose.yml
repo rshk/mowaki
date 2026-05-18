@@ -55,9 +55,9 @@ services:
     # restart: always
     user: postgres
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - db-data:/var/lib/postgresql
     environment:
-      - POSTGRES_DB=example
+      - POSTGRES_DB=default
       - POSTGRES_PASSWORD=not-a-secure-password
     expose:
       - 5432
