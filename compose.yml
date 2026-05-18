@@ -2,3 +2,25 @@
 include:
   - ./api/compose.yml
   - ./web/compose.yml
+
+services:
+
+  api:
+    ports:  # host:container
+      - "8100:8000"
+    environment:
+      PORT: "8000"
+      FRONTEND_URL: "http://localhost:8000"
+      CORS_ALLOW_ORIGINS: ""
+
+  db:
+    environment:
+      POSTGRES_DB: default
+      POSTGRES_PASSWORD: "not-a-secure-password"
+
+  web:
+    ports:
+      - "8000:3000"
+    environment:
+      PORT: "3000"
+      VITE_API_URL: "http://localhost:8100"
