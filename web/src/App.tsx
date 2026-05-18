@@ -6,13 +6,23 @@ import {
     useParams,
     Link,
 } from "react-router";
-import { API_URL } from "/src/lib/config";
+import ResponsiveAppBar from "./demo/_components/app-bar";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import Container from "@mui/material/Container";
+
+const theme = createTheme({
+    colorSchemes: {
+        dark: true,
+    },
+});
 
 function App() {
     return (
-        <BrowserRouter>
-            <AppRoutes />
-        </BrowserRouter>
+        <ThemeProvider theme={theme}>
+            <BrowserRouter>
+                <AppRoutes />
+            </BrowserRouter>
+        </ThemeProvider>
     );
 }
 
@@ -44,30 +54,31 @@ export default App;
 
 function MainLayout() {
     return (
-        <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+        <Container maxWidth="lg">
             <div>
-                <div>SomeApp - Main layout</div>
                 <Navigation />
             </div>
             <Outlet />
-        </div>
+        </Container>
     );
 }
 
 function LoginLayout() {
     return (
-        <div
-            style={{
-                maxWidth: "600px",
-                margin: "100px auto",
-                border: "solid 1px #008",
-            }}
-        >
-            <div>
-                <div>SomeApp - Login layout</div>
-                <Navigation />
+        <div>
+            <Navigation />
+            <div
+                style={{
+                    maxWidth: "600px",
+                    margin: "100px auto",
+                    border: "solid 1px #008",
+                }}
+            >
+                <div>
+                    <div>SomeApp - Login layout</div>
+                </div>
+                <Outlet />
             </div>
-            <Outlet />
         </div>
     );
 }
@@ -85,16 +96,7 @@ function WideLayout() {
 }
 
 function Navigation() {
-    return (
-        <div style={{ display: "flex" }}>
-            <Link to="/">Home</Link>
-            <Link to="/items">Items</Link>
-            <Link to="/map">Map</Link>
-            <Link to="/login">Login</Link>
-            <Link to="/signup">Signup</Link>
-            <Link to={API_URL} target="_blank">API</Link>
-        </div>
-    );
+    return <ResponsiveAppBar />;
 }
 
 function Homepage() {
