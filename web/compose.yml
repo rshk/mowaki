@@ -9,28 +9,28 @@
 # database or a cache. For examples, see the Awesome Compose repository:
 # https://github.com/docker/awesome-compose
 services:
-  web:
-    build:
-      context: .
-    environment:
-      # NODE_ENV: production
-      NODE_ENV: development
-      VITE_API_URL: "http://localhost:8000"
-    develop:
-      # Create a `watch` configuration to update the app
-      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
-      watch:
-        # Sync the working directory with the `/app` directory
-        # in the container
-        - action: sync
-          path: .
-          target: /app
-          # Exclude the project node_modules — it could be for a
-          # different platform in the container
-          ignore:
-            - node_modules/
+    web:
+        build:
+            context: .
+        environment:
+            # NODE_ENV: production
+            NODE_ENV: development
+            VITE_API_URL: "http://localhost:8000"
+        develop:
+            # Create a `watch` configuration to update the app
+            # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+            watch:
+                # Sync the working directory with the `/app` directory
+                # in the container
+                - action: sync
+                  path: .
+                  target: /app
+                  # Exclude the project node_modules — it could be for a
+                  # different platform in the container
+                  ignore:
+                      - node_modules/
 
-        # Rebuild the image if dependencies change by checking
-        # package-lock.json
-        - action: rebuild
-          path: ./package-lock.json
+                # Rebuild the image if dependencies change by checking
+                # package-lock.json
+                - action: rebuild
+                  path: ./package-lock.json
