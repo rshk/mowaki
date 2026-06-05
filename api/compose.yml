@@ -17,8 +17,8 @@ services:
       UV_NO_DEV: "0"
 
       # App configuration
-      FRONTEND_URL: "http://localhost:5174"
-      CORS_ALLOW_ORIGINS: ""  # Other origins
+      FRONTEND_URL: "http://localhost:8000"
+      CORS_ALLOW_ORIGINS: "http://localhost:8000"
 
     # Run as root during development so the environment is mutable
     # Alternatively, you could set `UV_PROJECT_ENVIRONMENT` to a path
