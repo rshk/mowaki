@@ -1,3 +1,10 @@
+# MoWAKi App - development containers
+#
+# Exposed ports:
+# - 8000 - Fontend
+# - 8001 - Backend API
+# - 8025 - MailSlurper SMTP
+# - 8026 - MailSlurper UI
 ---
 include:
   - ./api/compose.yml
@@ -7,7 +14,7 @@ services:
 
   api:
     ports:  # host:container
-      - "8100:8100"
+      - "8001:8100"
     environment:
       PORT: "8100"
       FRONTEND_URL: "http://localhost:8000"
@@ -23,4 +30,16 @@ services:
       - "8000:8000"
     environment:
       APP_PORT: "8000"
-      VITE_API_URL: "http://localhost:8100"
+      VITE_API_URL: "http://localhost:8001"
+
+  mailslurper:
+    image: oryd/mailslurper:smtps-latest
+    ports:
+      - "8025:8025"  # www
+      - "8026:8026"  # service
+      - "8027:8027"  # smtp
+    volumes:
+      - type: bind
+        source: ./etc/mailslurper.json
+        target: >-
+          /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/config.json
