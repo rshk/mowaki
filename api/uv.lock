@@ -43,11 +43,17 @@ name = "api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "click" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "pydantic-settings" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "fastapi", extras = ["standard"], specifier = ">=0.136.1" }]
+requires-dist = [
+    { name = "click", specifier = ">=8.4.1" },
+    { name = "fastapi", extras = ["standard"], specifier = ">=0.136.1" },
+    { name = "pydantic-settings", specifier = ">=2.14.1" },
+]
 
 [[package]]
 name = "certifi"

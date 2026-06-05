@@ -16,46 +16,47 @@ router = APIRouter(tags=["authentication"])
 
 @router.post("/")
 async def authenticate(params: AuthParams) -> AuthResponse:
-    if params.flow_id is None:
-        # Create a new flow for this request
+    pass
+    # if params.flow_id is None:
+    #     # Create a new flow for this request
 
-        if params.session_id is not None:
-            # Fail if session is invalid
-            session = await storage.get_session(params.session_id)
-            assert session is not None
+    #     if params.session_id is not None:
+    #         # Fail if session is invalid
+    #         session = await storage.get_session(params.session_id)
+    #         assert session is not None
 
-        flow_obj = {
-            "session_id": params.session_id,
-            "scopes": params.scopes,
-        }
-        flow_id = await storage.create_flow(flow_obj)
-        flow = await storage.get_flow(flow_id)
+    #     flow_obj = {
+    #         "session_id": params.session_id,
+    #         "scopes": params.scopes,
+    #     }
+    #     flow_id = await storage.create_flow(flow_obj)
+    #     flow = await storage.get_flow(flow_id)
 
-    else:
+    # else:
 
-        flow_id = params.flow_id
-        flow = await storage.get_flow(flow_id)
+    #     flow_id = params.flow_id
+    #     flow = await storage.get_flow(flow_id)
 
-        if params.scopes is not None:
-            raise HTTPException(
-                status_code=BAD_REQUEST,
-                detail="Cannot specify scopes for an existing flow",
-            )
+    #     if params.scopes is not None:
+    #         raise HTTPException(
+    #             status_code=BAD_REQUEST,
+    #             detail="Cannot specify scopes for an existing flow",
+    #         )
 
-        if params.session_id is not None:
-            raise HTTPException(
-                status_code=BAD_REQUEST,
-                detail="Cannot specify session_id for an existing flow",
-            )
+    #     if params.session_id is not None:
+    #         raise HTTPException(
+    #             status_code=BAD_REQUEST,
+    #             detail="Cannot specify session_id for an existing flow",
+    #         )
 
-        if params.responses is not None:
-            # TODO: process responses
-            pass
+    #     if params.responses is not None:
+    #         # TODO: process responses
+    #         pass
 
-    # TODO: generate new challenges based on flow state
-    # TODO: return the challenges
+    # # TODO: generate new challenges based on flow state
+    # # TODO: return the challenges
 
-    return AuthResponse(flow_id=flow_id)
+    # return AuthResponse(flow_id=flow_id)
 
 
 
@@ -74,7 +75,7 @@ class AuthResponse(BaseModel):
     # scopes: list[Scope] = Field(default_factory=list)
 
 
-Scope = Any
+Scope = str | dict[str, Any]
 
 
 class FlowStatus(Enum):
@@ -83,13 +84,13 @@ class FlowStatus(Enum):
     DENIED = "denied"
 
 
-class Challenge:
+class Challenge(BaseModel):
     kind: str
     challenge_id: str
     params: dict[str, Any]
 
 
-class ChallengeResponse:
+class ChallengeResponse(BaseModel):
     kind: str
     challenge_id: str
     params: dict[str, Any]
