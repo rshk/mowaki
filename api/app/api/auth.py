@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from enum import Enum
 from typing import Any, AsyncIterable, AsyncIterator, Callable, Iterable, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel, Field
 
 NOT_FOUND = 404
@@ -15,7 +15,7 @@ router = APIRouter(tags=["authentication"])
 
 
 @router.post("/")
-async def authenticate(params: AuthParams) -> AuthResponse:
+async def authenticate(response: Response, params: AuthParams) -> AuthResponse:
     pass
     # if params.flow_id is None:
     #     # Create a new flow for this request

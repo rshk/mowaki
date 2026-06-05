@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import Annotated
 
 from pydantic import (
@@ -6,7 +7,7 @@ from pydantic import (
     Field,
     HttpUrl,
     PostgresDsn,
-    RedisDsn,
+    # RedisDsn,
 )
 from pydantic_settings import BaseSettings
 
@@ -26,7 +27,9 @@ class DevConfig(BaseModel):
 
 def get_config_from_env() -> Config:
     # Workaround to make linters happy.
+    #
     # Using Config() will complain that required constructor arguments
     # are not passed, but BaseSettings will actually load omitted
     # arguments from the environment.
+
     return Config.model_validate({})
