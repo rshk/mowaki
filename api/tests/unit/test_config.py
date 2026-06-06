@@ -2,5 +2,8 @@
 Test configuration loading machinery
 """
 
-def test_load_default_config():
+import pytest
+
+def test_load_minimal_config(monkeypatch: pytest.MonkeyPatch):
+
     pass

@@ -15,7 +15,8 @@ from pydantic_settings import BaseSettings
 class Config(BaseSettings):
     database_url: PostgresDsn
     # redis_url: RedisDsn
-    frontend_url: HttpUrl
+    smtp_url: str = "dummy://"
+    frontend_url: HttpUrl = Field()
     development_mode: bool = False
     dev: Annotated[DevConfig, Field(default_factory=lambda: DevConfig())]
 
