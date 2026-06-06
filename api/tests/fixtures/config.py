@@ -1,4 +1,5 @@
 import pytest
+import sqlalchemy
 from app.lib.context import scoped_context
 from app.config import Config, config_context
 from pydantic import AnyUrl, HttpUrl, PostgresDsn
@@ -16,10 +17,10 @@ class TestingConfig(BaseSettings):
 
 
 @pytest.fixture(scope="session")
-def config():
+def config(database_url: sqlalchemy.URL):
     return Config(
         # Database URL will be overwritten when a database is actually set up
-        database_url=PostgresDsn("postgresql://host/db"),
+        database_url=PostgresDsn(str(database_url)),
         frontend_url=HttpUrl("https://www.example.com"),
         email_sender="Test Sender <no-reply@example.com>",
         smtp_url=AnyUrl("dummy://"),

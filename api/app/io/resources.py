@@ -6,41 +6,67 @@ Initialized from configuration at setup time.
 
 from __future__ import annotations
 
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from dataclasses import dataclass
+import dataclasses
 from typing import TYPE_CHECKING
 
-# import redis.asyncio as redis
-# from mowaki.emailer import get_mailer_from_url
+from api.app.exceptions import UninitializedResourceError
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.config import Config
+from app.lib.mailer import get_mailer_from_url
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncEngine
 
+    from app.config import Config
+    from app.lib.mailer import BaseMailer
+
 
 @dataclass
 class Resources:
-    database: AsyncEngine
-    # redis: redis.Redis
-    # mailer: BaseMailer
+    database: AsyncEngine | None = None
+    # redis: redis.Redis | None = None
+    mailer: BaseMailer | None = None
 
 
 resources_context = ContextVar[Resources]("resources_context")
 
 
 def initialize_resources(config: Config) -> Resources:
-    """
-    Initialize resources from configuration.
-    """
+    resources = Resources()
 
-    return Resources(
-        database=create_async_engine(str(config.database_url)),
-        # redis=redis.from_url(config.redis_url),
-        # mailer=get_mailer_from_url(config.email_server_url),
-    )
+    if config.database_url is not None:
+        resources.database = create_async_engine(str(config.database_url))
+
+    if config.smtp_url is not None:
+        resources.mailer = get_mailer_from_url(str(config.smtp_url))
+
+    return resources
 
 
-def get_resources():
-    return resources_context.get()
+def get_resources() -> Resources:
+    try:
+        return resources_context.get()
+    except LookupError:
+        return Resources()
+
+
+def get_database() -> AsyncEngine:
+    resources = get_resources()
+    if (value := resources.database) is None:
+        raise UninitializedResourceError("database is not initialized")
+    return value
+
+
+def get_mailer() -> BaseMailer:
+    resources = get_resources()
+    if (value := resources.mailer) is None:
+        raise UninitializedResourceError("mailer is not initialized")
+    return value
+
+
+def update_resources(**updates) -> Token:
+    resources = get_resources()
+    new_resources = dataclasses.replace(resources, **updates)
+    return resources_context.set(new_resources)

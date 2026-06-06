@@ -13,12 +13,18 @@ services:
     #   - "8000:8000"
 
     environment:
-      # Include development dependencies when working locally
-      UV_NO_DEV: "0"
+      # Tool configuration
+      UV_NO_DEV: "0"  # Include development dependencies when working locally
 
       # App configuration
+      DATABASE_URL: "postgresql://postgres:not-a-secret@db/default"
+      REDIS_URL: ""
       FRONTEND_URL: "http://localhost:8000"
       CORS_ALLOW_ORIGINS: "http://localhost:8000"
+
+      # Testing configuration
+      TESTING_ADMIN_DATABASE_URL: >-
+        postgresql://postgres:not-a-secret@db/default
 
     # Run as root during development so the environment is mutable
     # Alternatively, you could set `UV_PROJECT_ENVIRONMENT` to a path
@@ -33,8 +39,8 @@ services:
         - action: sync
           path: .
           target: /app
-          # Exclude the project virtual environment — it could be for a
-          # different platform in the container
+          # Exclude the project virtual environment - it could be for
+          # a different platform in the container
           ignore:
             - .venv/
 
@@ -58,7 +64,8 @@ services:
       - db-data:/var/lib/postgresql
     environment:
       POSTGRES_DB: "default"
-      # POSTGRES_PASSWORD: "not-a-secure-password"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "not-a-secret"
     expose:
       - 5432
     healthcheck:

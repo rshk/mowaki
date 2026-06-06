@@ -17,8 +17,6 @@ services:
       - "8001:8100"
     environment:
       PORT: "8100"  # Port to listen to
-      DATABASE_URL: "postgres://postgres:@db/default"
-      REDIS_URL: ""
       FRONTEND_URL: "http://localhost:8000"
       CORS_ALLOW_ORIGINS: "http://localhost:8000"
 
