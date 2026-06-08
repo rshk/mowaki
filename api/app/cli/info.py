@@ -3,6 +3,7 @@ import json
 
 from app.config import get_config_from_env
 
+
 @click.group(name="info")
 def grp_info():
     pass

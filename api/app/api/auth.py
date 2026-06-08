@@ -59,7 +59,6 @@ async def authenticate(response: Response, params: AuthParams) -> AuthResponse:
     # return AuthResponse(flow_id=flow_id)
 
 
-
 class AuthParams(BaseModel):
     flow_id: str | None = None
     session_id: str | None = None

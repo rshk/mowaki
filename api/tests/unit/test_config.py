@@ -11,7 +11,9 @@ def test_load_minimal_config(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@database/dbname")
     monkeypatch.delenv("SMTP_URL", raising=False)
     monkeypatch.setenv("FRONTEND_URL", "https://www.example.com")
-    monkeypatch.setenv("CORS_ORIGINS", "https://www.example.com https://www2.example.com")
+    monkeypatch.setenv(
+        "CORS_ORIGINS", "https://www.example.com https://www2.example.com"
+    )
 
     config = get_config_from_env()
     assert config.database_url == PostgresDsn("postgres://user:pass@database/dbname")
