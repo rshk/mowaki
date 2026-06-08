@@ -6,7 +6,7 @@ from app.io.resources import (
 from app.lib.context import scoped_context
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def resources(config, setup_config_context):
     resources = initialize_resources(config)
     with scoped_context(resources_context, resources):

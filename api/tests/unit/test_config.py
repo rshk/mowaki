@@ -23,3 +23,7 @@ def test_load_minimal_config(monkeypatch: pytest.MonkeyPatch):
         "https://www.example.com",
         "https://www2.example.com",
     ]
+
+
+def test_last():
+    pass

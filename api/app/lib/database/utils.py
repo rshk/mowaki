@@ -4,7 +4,7 @@ Database utilities for SQLAlchemy.
 
 import logging
 
-from sqlalchemy import URL, String, text
+from sqlalchemy import URL, NullPool, String, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
@@ -83,7 +83,7 @@ class DbOps:
         ):
             kwargs["isolation_level"] = "AUTOCOMMIT"
 
-        return create_async_engine(url, **kwargs)
+        return create_async_engine(url, poolclass=NullPool, **kwargs)
 
     @property
     def engine(self):
