@@ -6,14 +6,14 @@ Initialized from configuration at setup time.
 
 from __future__ import annotations
 
+import dataclasses
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
-import dataclasses
 from typing import TYPE_CHECKING
 
-from api.app.exceptions import UninitializedResourceError
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from app.exceptions import UninitializedResourceError
 from app.lib.mailer import get_mailer_from_url
 
 if TYPE_CHECKING:

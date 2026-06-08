@@ -40,8 +40,8 @@ if typing.TYPE_CHECKING:
 class BaseMailer(metaclass=abc.ABCMeta):
     """Base for mailer implementations"""
 
-    @abc.abstractmethod
     @classmethod
+    @abc.abstractmethod
     def from_url(cls, url: ParseResult) -> typing.Self:
         pass
 
