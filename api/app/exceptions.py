@@ -4,3 +4,7 @@ class BaseAppException(Exception):
 
 class UninitializedResourceError(BaseAppException):
     pass
+
+
+class ObjectNotFound(BaseAppException):
+    pass

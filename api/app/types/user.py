@@ -1,18 +1,31 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import NewType
+
+from typing import Any, NewType, Self
 from uuid import UUID
 
+import sqlalchemy
 from pydantic import BaseModel
+from ._protocols import FromRow, JsonSerializable
 
 UserID = NewType("UserID", UUID)
 
 
-@dataclass(slots=True)
-class User:
+class User(BaseModel):
     id: UserID
     email: str
     metadata: UserMetadata
+    is_active: bool
+
+    @classmethod
+    def from_row(cls, row: sqlalchemy.Row) -> Self:
+        return cls.model_validate(row)
+
+    @classmethod
+    def from_json(cls, data: dict[str, Any]):
+        return cls.model_validate(data)
+
+    def to_json(self) -> dict[str, Any]:
+        return self.model_dump(mode="json")
 
 
 class UserMetadata(BaseModel):

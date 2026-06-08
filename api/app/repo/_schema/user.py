@@ -6,10 +6,11 @@ from app.types.user import UserMetadata
 from .metadata import metadata
 from .utils import primary_key_column
 
-sa.Table(
+UserTable = sa.Table(
     "user",
     metadata,
     primary_key_column(),
     sa.Column("email", sa.Text, nullable=False, unique=True, index=True),
     sa.Column("metadata", JsonWithSchema(UserMetadata), nullable=False, default=dict),
+    sa.Column("is_active", sa.Boolean, nullable=False, default=True),
 )
