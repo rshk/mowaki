@@ -31,12 +31,12 @@ class JsonWithSchema(types.TypeDecorator):
     def process_bind_param(self, value, dialect: Dialect):
         if value is None:
             return None
-        return self._dump(value)
+        return self._serializer.dump(value)
 
     def process_result_value(self, value, dialect: Dialect):
         if value is None:
             return None
-        return self._load(value)
+        return self._serializer.load(value)
 
     def copy(self, **kw):
         return self.__class__(self._model_class)
@@ -59,11 +59,13 @@ class PydanticModelSerializer(ModelSerializer):
     def __init__(self, model: Type[BaseModel]):
         self._model = model
 
-    def load(self, value) -> Any:
+    def load(self, value: Any) -> Any:
         return self._model.model_validate(value)
 
-    def dump(self, value) -> Any:
-        return value.model_dump_json()
+    def dump(self, value: BaseModel | Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump_json()
+        return value
 
 
 class PydanticTypeAdapterSerializer(ModelSerializer):

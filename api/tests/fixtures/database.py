@@ -1,17 +1,14 @@
-from typing import Annotated
-
 import pytest_asyncio
 from app.config import Config
 from app.lib.database.utils import DbOps, create_async_engine
 from app.repo._schema import metadata
-from pytest_annotated import Fixture
-from sqlalchemy import URL, make_url
+from sqlalchemy import make_url
 
 from .config import TestingConfig
 
 
 @pytest_asyncio.fixture(scope="session")
-async def database(testing_config: TestingConfig, config: Config):
+async def database(testing_config: TestingConfig, config: Config, resources):
     """
     Create (and drop) a new database for testing.
 
@@ -36,12 +33,13 @@ async def database(testing_config: TestingConfig, config: Config):
 
 
 @pytest_asyncio.fixture()
-async def database_schema(database_url: Annotated[URL, Fixture(database)]):
+async def database_schema(database):
     """
     Ficture to actually create and drop the database schema
     before/after each test execution.
     """
 
+    database_url = database
     engine = create_async_engine(database_url, isolation_level="AUTOCOMMIT")
 
     async with engine.begin() as conn:

@@ -12,7 +12,7 @@ from ._schema.user import UserTable
 _crud = TableCrud[User](UserTable, model=User)
 
 
-async def get(user_id: UserID):
+async def get(user_id: UserID) -> User:
     return await get_by_id(user_id)
 
 
@@ -21,6 +21,7 @@ async def get_by_id(user_id: UserID) -> User:
 
 
 async def get_by_email(email: str) -> User:
+    email = validate_email(email, check_deliverability=False).normalized
     return await _crud.get_by(email=email)
 
 

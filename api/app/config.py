@@ -35,6 +35,9 @@ class Config(BaseSettings):
         PlainSerializer(lambda x: " ".join(x), return_type=str),
     ]
 
+    # Enable development features
+    development_mode: bool = False
+
 
 def get_config_from_env() -> Config:
     # Workaround to make linters happy.

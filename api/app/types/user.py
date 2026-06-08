@@ -5,7 +5,6 @@ from uuid import UUID
 
 import sqlalchemy
 from pydantic import BaseModel
-from ._protocols import FromRow, JsonSerializable
 
 UserID = NewType("UserID", UUID)
 
@@ -18,7 +17,7 @@ class User(BaseModel):
 
     @classmethod
     def from_row(cls, row: sqlalchemy.Row) -> Self:
-        return cls.model_validate(row)
+        return cls.model_validate(row._asdict())
 
     @classmethod
     def from_json(cls, data: dict[str, Any]):

@@ -4,7 +4,7 @@ Database utilities for SQLAlchemy.
 
 import logging
 
-from sqlalchemy import URL, text
+from sqlalchemy import URL, String, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine as _create_async_engine
@@ -92,6 +92,9 @@ class DbOps:
     def quote_ident(self, ident: str):
         return self._preparer.quote(ident)
 
+    def quote_literal_string(self, text: str):
+        return String().literal_processor(dialect=self._engine.dialect)(value=text)
+
     async def create_database(
         self, db_name: str, encoding: str = "utf8", owner: str | None = None
     ):
@@ -100,13 +103,17 @@ class DbOps:
 
         if dialect_name == "postgresql":
             query_text = f"CREATE DATABASE {quoted_db_name}"
-            query_text += " ENCODING :encoding"
+
+            # No parameters allowed in this query, need to manually
+            # escape and interpolate.
+            quoted_encoding = self.quote_literal_string(encoding)
+            query_text += f" ENCODING {quoted_encoding}"
 
             if owner is not None:
                 quoted_owner = self.quote_ident(owner)
                 query_text += f" OWNER {quoted_owner}"
 
-            query = text(query_text).bindparams(encoding=encoding)
+            query = text(query_text)
             async with self.engine.begin() as conn:
                 await conn.execute(query)
 
@@ -145,25 +152,36 @@ class DbOps:
         if dialect_name == "postgresql":
             query_text = f"CREATE ROLE {quoted_role_name}"
             query_text += " NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN"
-            query_text += " PASSWORD :password"
 
-            query = text(query_text).bindparams(password=password)
+            if password is None:
+                query_text += " PASSWORD NULL"
+            else:
+                # Password cannot be passed as a parameter in
+                # PostgreSQL, but it must be written as a literal in
+                # the query.
+                # So we need to manually escape it and interpolate in
+                # the query itself.
+                quoted_password = self.quote_literal_string(password)
+                query_text += f" PASSWORD {quoted_password}"
+
+            query = text(query_text)
             async with self.engine.begin() as conn:
                 await conn.execute(query)
 
+            return
+
         raise ValueError(f"Dialect {dialect_name} is not supported yet")
 
-    async def drop_role(self, role_name: str, password: str | None = None):
+    async def drop_role(self, role_name: str):
         dialect_name = self.engine.dialect.name
         quoted_role_name = self.quote_ident(role_name)
 
         if dialect_name == "postgresql":
-            query_text = f"CREATE ROLE {quoted_role_name}"
-            query_text += " NOSUPERUSER NOCREATEDB NOCREATEROLE LOGIN"
-            query_text += " PASSWORD :password"
-
-            query = text(query_text).bindparams(password=password)
+            query_text = f"DROP ROLE {quoted_role_name}"
+            query = text(query_text)
             async with self.engine.begin() as conn:
                 await conn.execute(query)
+
+            return
 
         raise ValueError(f"Dialect {dialect_name} is not supported yet")

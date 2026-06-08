@@ -19,11 +19,7 @@ services:
       PORT: "8100"  # Port to listen to
       FRONTEND_URL: "http://localhost:8000"
       CORS_ALLOW_ORIGINS: "http://localhost:8000"
-
-  db:
-    environment:
-      POSTGRES_DB: default
-      POSTGRES_PASSWORD: "not-a-secure-password"
+      DEVELOPMENT_MODE: "true"
 
   web:
     ports:
