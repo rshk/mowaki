@@ -4,6 +4,7 @@ from app.lib.context import scoped_context
 from app.config import Config, config_context
 from pydantic import AnyUrl, HttpUrl, PostgresDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import secrets
 
 
 class TestingConfig(BaseSettings):
@@ -17,9 +18,9 @@ class TestingConfig(BaseSettings):
 
 
 @pytest.fixture(scope="session")
-def config(database_url: sqlalchemy.URL):
+def config(testing_config: TestingConfig):
+    database_url = get_database_url(testing_config)
     return Config(
-        # Database URL will be overwritten when a database is actually set up
         database_url=PostgresDsn(str(database_url)),
         frontend_url=HttpUrl("https://www.example.com"),
         email_sender="Test Sender <no-reply@example.com>",
@@ -38,3 +39,21 @@ def testing_config():
 def setup_config_context(config):
     with scoped_context(config_context, config):
         yield
+
+
+def get_database_url(testing_config: TestingConfig) -> sqlalchemy.URL:
+    role_name = f"test_user_{secrets.token_urlsafe(8)}"
+    password = secrets.token_urlsafe(32)
+    db_name = f"test_database_{secrets.token_urlsafe(8)}"
+
+    # pydantic.PostgresDsn is wonky, use more reliable parsing
+    admin_url = sqlalchemy.make_url(str(testing_config.admin_database_url))
+
+    return sqlalchemy.URL.create(
+        drivername="postgresql+asyncpg",
+        username=role_name,
+        password=password,
+        host=admin_url.host,
+        port=admin_url.port,
+        database=db_name,
+    )

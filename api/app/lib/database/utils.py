@@ -3,7 +3,6 @@ Database utilities for SQLAlchemy.
 """
 
 import logging
-import os
 
 from sqlalchemy import URL, text
 from sqlalchemy.engine import make_url
@@ -111,6 +110,8 @@ class DbOps:
             async with self.engine.begin() as conn:
                 await conn.execute(query)
 
+            return
+
         raise ValueError(f"Dialect {dialect_name} is not supported yet")
 
     async def drop_database(self, db_name: str):
@@ -123,6 +124,8 @@ class DbOps:
             async with self.engine.begin() as conn:
                 await self._terminate_backend(conn, db_name)
                 await conn.execute(query)
+
+            return
 
         raise ValueError(f"Dialect {dialect_name} is not supported yet")
 
@@ -164,15 +167,3 @@ class DbOps:
                 await conn.execute(query)
 
         raise ValueError(f"Dialect {dialect_name} is not supported yet")
-
-
-def create_test_database_name() -> str:
-    return "test_database_{}".format(os.urandom(8).hex())
-
-
-def create_test_role_name() -> str:
-    return "test_user_{}".format(os.urandom(8).hex())
-
-
-def create_test_password() -> str:
-    return os.urandom(8).hex()
