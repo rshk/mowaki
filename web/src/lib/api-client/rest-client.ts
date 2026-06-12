@@ -1,3 +1,15 @@
+/*********************************************************************
+
+   Generic RESTful API client.
+
+   Provides convenient facilities for making requests to a RESTful
+   API, sending and returning JSON objects.
+
+   Also provides facilities for attaching authorization headers, and
+   handling errors from the response.
+
+*********************************************************************/
+
 const MIME_JSON = "application/json";
 
 

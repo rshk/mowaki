@@ -1,9 +1,10 @@
 import secrets
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Header, Response
+from fastapi import Depends, FastAPI, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic.main import BaseModel
 
 from app.config import load_config
@@ -23,7 +24,46 @@ app.add_middleware(
     expose_headers=["x-set-session-id"],
 )
 
-print(f"CORS Allow Origins: {config.cors_origins}")
+bearer_token = HTTPBearer(auto_error=False)
+BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_token)]
+
+
+class AuthSession(BaseModel):  # DUMMY
+    session_id: str | None
+
+    # Whether the session was created during this request.
+    # Controls whether the X-Set-Session-Id header will be set.
+    is_new_session: bool = False
+
+    @classmethod
+    def new(cls):
+        return AuthSession(session_id=generate_session_id(), is_new_session=True)
+
+
+def get_auth_session(credentials: BearerToken) -> AuthSession:
+    if credentials is None:
+        return AuthSession.new()
+    return AuthSession(session_id=credentials.credentials)
+
+
+AuthSessionDep = Annotated[AuthSession, Depends(get_auth_session)]
+
+
+def generate_session_id() -> str:
+    return secrets.token_urlsafe(32)
+
+
+# @app.middleware("http")
+async def ensure_session_id(response: Response, session: AuthSessionDep):
+    if session.is_new_session and (session.session_id is not None):
+        response.headers["X-Set-Session-Id"] = session.session_id
+
+
+app.router.dependencies.append(Depends(ensure_session_id))
+
+
+# --------------------------------------------------------------------
+
 
 app.include_router(auth.router, prefix="/auth")
 
@@ -79,27 +119,6 @@ async def handle_authorization_error(request, exc: AuthorizationError):
 
 
 # Dev stuff ----------------------------------------------------------
-
-
-class AuthSession(BaseModel):  # DUMMY
-    session_id: str | None
-
-
-def get_auth_session(
-    authorization: Annotated[str | None, Header()] = None,
-) -> AuthSession:  # DUMMY
-    if authorization is not None:
-        kind, token = authorization.split(" ", 1)
-        if kind.lower() == "bearer":
-            return AuthSession(session_id=token)
-    return AuthSession(session_id=None)
-
-
-AuthSessionDep = Annotated[AuthSession, Depends(get_auth_session)]
-
-
-def generate_session_id() -> str:
-    return secrets.token_urlsafe(32)
 
 
 @app.get("/_dev")
