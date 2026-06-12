@@ -18,7 +18,7 @@ services:
     environment:
       PORT: "8100"  # Port to listen to
       FRONTEND_URL: "http://localhost:8000"
-      CORS_ALLOW_ORIGINS: "http://localhost:8000"
+      CORS_ORIGINS: "http://localhost:8000"
       DEVELOPMENT_MODE: "true"
 
   web:

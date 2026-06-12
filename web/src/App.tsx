@@ -1,3 +1,4 @@
+import * as React from "react";
 import {
     BrowserRouter,
     Routes,
@@ -9,6 +10,8 @@ import {
 import ResponsiveAppBar from "./demo/_components/app-bar";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Container from "@mui/material/Container";
+import apiClient from "/src/lib/api-client";
+import { Button } from "@mui/material";
 
 const theme = createTheme({
     colorSchemes: {
@@ -103,6 +106,7 @@ function Homepage() {
     return (
         <div>
             <h1>Dashboard</h1>
+            <DemoRequests />
         </div>
     );
 }
@@ -138,4 +142,42 @@ function Logout() {
 
 function Map() {
     return <div>Wide map</div>;
+}
+
+function DemoRequests() {
+    type ReqState = {
+        data?: object;
+        error?: object;
+    };
+
+    const [state, setState] = React.useState<ReqState>({});
+    const doRequest = () => {
+        apiClient._client
+            .get("/_dev")
+            .then((data) => setState({ data }))
+            .catch((error) => setState({ error }));
+    };
+
+    React.useEffect(() => doRequest(), []);
+
+    const doNewSession = () => {
+        apiClient._client
+            .post("/_dev/new-session", {})
+            .then((data) => setState({ data }))
+            .catch((error) => setState({ error }));
+    };
+
+    return (
+        <div>
+            {!!state.data && <pre>{JSON.stringify(state.data, null, 4)}</pre>}
+            <div>
+                <Button variant="contained" onClick={doRequest}>
+                    Refresh
+                </Button>
+                <Button variant="contained" onClick={doNewSession}>
+                    New session
+                </Button>
+            </div>
+        </div>
+    );
 }

@@ -52,6 +52,12 @@ def get_config_from_env() -> Config:
 config_context = ContextVar[Config]("config_context")
 
 
+def load_config() -> Config:
+    config = get_config_from_env()
+    config_context.set(config)
+    return config
+
+
 def get_config() -> Config:
     """Get current application configuration"""
     return config_context.get()

@@ -19,8 +19,8 @@ services:
       # App configuration
       DATABASE_URL: "postgresql://postgres:not-a-secret@db/default"
       REDIS_URL: ""
-      FRONTEND_URL: "http://localhost:8000"
-      CORS_ALLOW_ORIGINS: "http://localhost:8000"
+      # FRONTEND_URL: ""
+      # CORS_ORIGINS: ""
 
       # Testing configuration
       TESTING_ADMIN_DATABASE_URL: >-

@@ -1,17 +1,28 @@
 import { API_URL } from "../config";
 import { RestClient } from "./rest-client";
+import * as tokenStorage from "../token-storage";
 
 export class ApiClient {
     _client: RestClient;
 
     constructor(baseUrl: string) {
         this._client = new RestClient(baseUrl);
-        this._client.setExtraHeadersGetter(() => {
-            let headers = new Headers();
 
-            // TODO: set Authorization from token, if available
+        this._client.addRequestMiddleware(request => {
+            const token = tokenStorage.getToken();
+            console.log("Adding token", token);
+            if (token) {
+                // request.headers["Authorization"] = `Bearer ${token}`;
+                request.headers.set("Authorization", `Bearer ${token}`);
+            }
+        });
 
-            return headers;
+        this._client.addResponseHandler(response => {
+            const newSessionId = response.headers.get("x-set-session-id");
+            if (newSessionId) {
+                console.log("New session Id: ", newSessionId);  // FIXME: remove
+                tokenStorage.setSessionToken(newSessionId);
+            }
         });
     }
 
