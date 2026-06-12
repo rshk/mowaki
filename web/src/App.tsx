@@ -5,7 +5,6 @@ import {
     Route,
     Outlet,
     useParams,
-    Link,
 } from "react-router";
 import ResponsiveAppBar from "./demo/_components/app-bar";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -167,15 +166,36 @@ function DemoRequests() {
             .catch((error) => setState({ error }));
     };
 
+    const doGet403 = () => {
+        apiClient._client
+            .post("/_dev/403", {})
+            .then((data) => setState({ data }))
+            .catch((error) => setState({ error }));
+    };
+
+    const doGet403Upgrade = () => {
+        apiClient._client
+            .post("/_dev/403-upgrade", {})
+            .then((data) => setState({ data }))
+            .catch((error) => setState({ error }));
+    };
+
     return (
         <div>
             {!!state.data && <pre>{JSON.stringify(state.data, null, 4)}</pre>}
+            {!!state.error && <pre>{"=== ERROR ===\n"}{JSON.stringify(state.error, null, 4)}</pre>}
             <div>
                 <Button variant="contained" onClick={doRequest}>
                     Refresh
                 </Button>
                 <Button variant="contained" onClick={doNewSession}>
                     New session
+                </Button>
+                <Button variant="contained" onClick={doGet403}>
+                    Permanent 403
+                </Button>
+                <Button variant="contained" onClick={doGet403Upgrade}>
+                    403 with upgrade
                 </Button>
             </div>
         </div>

@@ -10,9 +10,7 @@ export class ApiClient {
 
         this._client.addRequestMiddleware(request => {
             const token = tokenStorage.getToken();
-            console.log("Adding token", token);
             if (token) {
-                // request.headers["Authorization"] = `Bearer ${token}`;
                 request.headers.set("Authorization", `Bearer ${token}`);
             }
         });
@@ -20,7 +18,6 @@ export class ApiClient {
         this._client.addResponseHandler(response => {
             const newSessionId = response.headers.get("x-set-session-id");
             if (newSessionId) {
-                console.log("New session Id: ", newSessionId);  // FIXME: remove
                 tokenStorage.setSessionToken(newSessionId);
             }
         });

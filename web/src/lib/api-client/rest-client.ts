@@ -12,7 +12,6 @@
 
 const MIME_JSON = "application/json";
 
-
 type RequestMiddleware = (request: Request) => void;
 type ResponseHandler = (response: Response) => void;
 
@@ -50,7 +49,7 @@ export class RestClient {
         let options: RequestInit = {
             method,
             headers: {
-                "Accept": MIME_JSON,
+                Accept: MIME_JSON,
             },
         };
 
@@ -65,24 +64,32 @@ export class RestClient {
         }
 
         let request = new Request(url, options);
-        this.requestMiddleware.forEach(fn => fn(request));
+        this.requestMiddleware.forEach((fn) => fn(request));
 
         let response = await fetch(request);
 
         if (response.ok) {
-            this.responseHandlers.forEach(handler => handler(response));
+            this.responseHandlers.forEach((handler) => handler(response));
             return response.json();
         }
 
         if (response.status == 403) {
-            throw new AuthorizationError(response);
+            throw new AuthorizationError(await response.json());
         }
 
-        throw new HttpError(response);
+        let responseData = null;
+        try {
+            responseData = await response.json();
+        } catch {}
+
+        throw new HttpError({
+            status: response.status,
+            data: responseData,
+        });
     }
 
     async get(path: string): Promise<object> {
-        return this._fetchJson(path, "GET")
+        return this._fetchJson(path, "GET");
     }
 
     async post(path: string, data: object): Promise<object> {
@@ -102,15 +109,15 @@ export class RestClient {
     }
 }
 
-
 export class HttpError extends Error {
-    response: Response;
+    status: number;
+    data: object | null;
 
-    constructor(response: Response) {
+    constructor(obj: { data: object | null; status: number }) {
         super();
-        this.response = response;
+        this.data = obj.data;
+        this.status = obj.status;
     }
 }
-
 
 export class AuthorizationError extends HttpError {}

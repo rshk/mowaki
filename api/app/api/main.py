@@ -1,7 +1,8 @@
 import secrets
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, Header, Request, Response
+from fastapi import Depends, FastAPI, Request, Response
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -41,9 +42,11 @@ class AuthSession(BaseModel):  # DUMMY
 
 
 def get_auth_session(credentials: BearerToken) -> AuthSession:
-    if credentials is None:
-        return AuthSession.new()
-    return AuthSession(session_id=credentials.credentials)
+    if credentials is not None:
+        # TODO: retrieve session from storage. If no valid session was
+        # found, simply create a new one
+        return AuthSession(session_id=credentials.credentials)
+    return AuthSession.new()
 
 
 AuthSessionDep = Annotated[AuthSession, Depends(get_auth_session)]
@@ -53,13 +56,12 @@ def generate_session_id() -> str:
     return secrets.token_urlsafe(32)
 
 
-# @app.middleware("http")
-async def ensure_session_id(response: Response, session: AuthSessionDep):
+async def add_set_session_id_header(response: Response, session: AuthSessionDep):
     if session.is_new_session and (session.session_id is not None):
         response.headers["X-Set-Session-Id"] = session.session_id
 
 
-app.router.dependencies.append(Depends(ensure_session_id))
+app.router.dependencies.append(Depends(add_set_session_id_header))
 
 
 # --------------------------------------------------------------------
@@ -108,17 +110,26 @@ class AuthorizationErrorResponse(BaseModel):
 
 
 @app.exception_handler(AuthorizationError)
-async def handle_authorization_error(request, exc: AuthorizationError):
+async def handle_authorization_error(request: Request, exc: AuthorizationError):
+    obj = AuthorizationErrorResponse(
+        upgrade_possible=exc.upgrade_possible,
+        require_scopes=exc.require_scopes,
+    )
     return JSONResponse(
         status_code=403,
-        content=AuthorizationErrorResponse(
-            upgrade_possible=exc.upgrade_possible,
-            require_scopes=exc.require_scopes,
-        ),
+        content=obj.model_dump(),
     )
 
 
 # Dev stuff ----------------------------------------------------------
+
+responses = {
+    403: {
+        "model": AuthorizationErrorResponse,
+    }
+}
+
+app.router.responses[403] = {"model": AuthorizationErrorResponse}
 
 
 @app.get("/_dev")
