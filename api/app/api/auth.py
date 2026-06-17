@@ -107,6 +107,13 @@ def verify_email(payload: VerifyOtpSchema):
 @router.post("/passkey/register/options")
 def get_registration_options(payload: EmailSchema):
     """Step 3: Generate WebAuthn options for the browser to call navigator.credentials.create()"""
+
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    # WARNING: this does not currently verify the user identity!
+    # This poses a HUGE security risk in production, needs to be
+    # refactored!!!
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     user = db_users.get(payload.email)
     if not user or not user["verified"]:
         raise HTTPException(status_code=401, detail="Email must be verified first")
