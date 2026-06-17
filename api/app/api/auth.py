@@ -1,32 +1,53 @@
 from __future__ import annotations
 
+import dataclasses
 import secrets
-import uuid
-from contextlib import asynccontextmanager
-from enum import Enum
-from typing import (
-    Annotated,
-    Any,
-    AsyncIterable,
-    AsyncIterator,
-    Callable,
-    Iterable,
-    Literal,
-)
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Request, Response
-from fastapi.exception_handlers import http_exception_handler
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel, Field
-from pydantic.main import BaseModel
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, EmailStr
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
+from webauthn.helpers.structs import (
+    AttestationConveyancePreference,
+    AuthenticatorAttachment,
+    AuthenticatorSelectionCriteria,
+    UserVerificationRequirement,
+)
 
 # Objects ------------------------------------------------------------
 
-bearer_token = HTTPBearer(auto_error=False)
-BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_token)]
+RP_ID = "localhost"  # Relying Party ID (Domain)
+RP_NAME = "My Python App"
+ORIGIN = "http://localhost:8000"
 
+# Mock Databases
+db_users: dict[str, dict] = {}  # email -> {id, email, verified, passkeys: []}
+db_otps: dict[str, str] = {}  # email -> otp_code
+db_challenges: dict[str, str] = {}  # user_id -> challenge_string
+
+
+# Schemas ------------------------------------------------------------
+
+
+class EmailSchema(BaseModel):
+    email: EmailStr
+
+
+class VerifyOtpSchema(BaseModel):
+    email: EmailStr
+    otp: str
+
+
+# Helpers ------------------------------------------------------------
+
+
+def generate_otp(length: int = 6) -> str:
+    return "".join(secrets.choice("0123456789") for _ in range(length))
 
 
 # Methods ------------------------------------------------------------
@@ -34,178 +55,184 @@ BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_toke
 router = APIRouter(tags=["authentication"])
 
 
-# @router.post("/")
-# async def authenticate(response: Response, params: AuthParams) -> AuthResponse:
-#     pass
-# if params.flow_id is None:
-#     # Create a new flow for this request
-
-#     if params.session_id is not None:
-#         # Fail if session is invalid
-#         session = await storage.get_session(params.session_id)
-#         assert session is not None
-
-#     flow_obj = {
-#         "session_id": params.session_id,
-#         "scopes": params.scopes,
-#     }
-#     flow_id = await storage.create_flow(flow_obj)
-#     flow = await storage.get_flow(flow_id)
-
-# else:
-
-#     flow_id = params.flow_id
-#     flow = await storage.get_flow(flow_id)
-
-#     if params.scopes is not None:
-#         raise HTTPException(
-#             status_code=BAD_REQUEST,
-#             detail="Cannot specify scopes for an existing flow",
-#         )
-
-#     if params.session_id is not None:
-#         raise HTTPException(
-#             status_code=BAD_REQUEST,
-#             detail="Cannot specify session_id for an existing flow",
-#         )
-
-#     if params.responses is not None:
-#         # TODO: process responses
-#         pass
-
-# # TODO: generate new challenges based on flow state
-# # TODO: return the challenges
-
-# return AuthResponse(flow_id=flow_id)
+# -------------------------------------------------------------------------
+# PHASE 1: EMAIL VERIFICATION
+# -------------------------------------------------------------------------
 
 
-# class AuthParams(BaseModel):
-#     flow_id: str | None = None
-#     session_id: str | None = None
-#     scopes: list[Scope] | None = None
-#     responses: list[ChallengeResponse] | None = None
+@router.post("/register/start")
+def start_registration(payload: EmailSchema):
+    """Step 1: User submits email. Generate and 'send' OTP."""
+    email = payload.email
+
+    # Generate a secure 6-digit OTP
+    otp = generate_otp()
+    db_otps[email] = otp
+
+    # NOTE: Integrate your SMTP/SendGrid library here to mail the OTP
+    print(f"[EMAIL SIMULATION] To: {email} | Your OTP is: {otp}")
+
+    return {"message": "Verification code sent to your email."}
 
 
-# class AuthResponse(BaseModel):
-#     flow_id: str
-#     session_id: str | None = None
-#     status: FlowStatus = Field(default_factory=lambda: FlowStatus.PENDING)
-#     challenges: list[Challenge] = Field(default_factory=list)
-#     # scopes: list[Scope] = Field(default_factory=list)
+@router.post("/register/verify-email")
+def verify_email(payload: VerifyOtpSchema):
+    """Step 2: Verify the OTP and create a pending user profile."""
+    email = payload.email
+    otp = payload.otp
+
+    if db_otps.get(email) != otp:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+
+    # Clean up OTP after successful verification
+    del db_otps[email]
+
+    # Create user profile if it doesn't exist
+    user_id = secrets.token_hex(16)
+    db_users[email] = {
+        "id": user_id,
+        "email": email,
+        "verified": True,
+        "passkeys": [],  # Will hold public keys
+    }
+
+    return {"message": "Email verified successfully.", "user_id": user_id}
 
 
-# Scope = str | dict[str, Any]
+# -------------------------------------------------------------------------
+# PHASE 2: WEBAUTHN PASSKEY ENROLLMENT
+# -------------------------------------------------------------------------
 
 
-# class FlowStatus(Enum):
-#     PENDING = "pending"
-#     GRANTED = "granted"
-#     DENIED = "denied"
+@router.post("/passkey/register/options")
+def get_registration_options(payload: EmailSchema):
+    """Step 3: Generate WebAuthn options for the browser to call navigator.credentials.create()"""
+    user = db_users.get(payload.email)
+    if not user or not user["verified"]:
+        raise HTTPException(status_code=401, detail="Email must be verified first")
+
+    # Generate server options
+    options = generate_registration_options(
+        rp_id=RP_ID,
+        rp_name=RP_NAME,
+        user_id=user["id"],
+        user_name=user["email"],
+        attestation=AttestationConveyancePreference.NONE,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            authenticator_attachment=AuthenticatorAttachment.PLATFORM,  # Enforces device passkeys (TouchID/FaceID/Windows Hello)
+            user_verification=UserVerificationRequirement.REQUIRED,
+        ),
+    )
+
+    # Save the challenge temporarily to verify the upcoming browser response
+    db_challenges[user["id"]] = bytes_to_base64url(options.challenge)
+
+    # Return JSON structure directly compatible with front-end libraries
+    return dataclasses.asdict(options)
 
 
-# class Challenge(BaseModel):
-#     kind: str
-#     challenge_id: str
-#     params: dict[str, Any]
+@router.post("/passkey/register/verify")
+def verify_passkey_registration(email: str, credential_payload: dict):
+    """Step 4: Receive public key payload from browser and cryptographically verify it."""
+    user = db_users.get(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    expected_challenge = db_challenges.get(user["id"])
+    if not expected_challenge:
+        raise HTTPException(status_code=400, detail="Missing registration challenge")
+
+    try:
+        # Validate the cryptographic signature sent back by the browser hardware
+        verification = verify_registration_response(
+            credential=credential_payload,
+            expected_challenge=base64url_to_bytes(expected_challenge),
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+            require_user_verification=True,
+        )
+
+        # Save the credential details to the user record
+        passkey_data = {
+            "credential_id": bytes_to_base64url(verification.credential_id),
+            "public_key": bytes_to_base64url(verification.credential_public_key),
+            "sign_count": verification.sign_count,
+        }
+        user["passkeys"].append(passkey_data)
+
+        # Clean up challenge
+        del db_challenges[user["id"]]
+
+        return {
+            "status": "success",
+            "message": "Passkey registered successfully. Account setup complete.",
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Passkey verification failed: {str(e)}"
+        )
 
 
-# class ChallengeResponse(BaseModel):
-#     kind: str
-#     challenge_id: str
-#     params: dict[str, Any]
+# -------------------------------------------------------------------------
+# PHASE 3: SUBSEQUENT LOGIN FLOW (Passwordless)
+# -------------------------------------------------------------------------
 
 
-# class UsernameChallenge:
-#     kind: Literal["email"]
-#     challenge_id: str
-#     require_email: bool = False
+@router.post("/login/options")
+def get_login_options(payload: EmailSchema):
+    """Step 1 of Login: Generate options for browser navigator.credentials.get()"""
+    user = db_users.get(payload.email)
+    if not user or not user["passkeys"]:
+        raise HTTPException(
+            status_code=400, detail="No passkeys registered for this account"
+        )
+
+    options = generate_authentication_options(
+        rp_id=RP_ID, user_verification=UserVerificationRequirement.REQUIRED
+    )
+
+    db_challenges[user["id"]] = bytes_to_base64url(options.challenge)
+    return dataclasses.asdict(options)
 
 
-# class UsernameChallengeResponse:
-#     kind: Literal["email"]
-#     challenge_id: str
-#     username: str
+@router.post("/login/verify")
+def verify_login(email: str, credential_payload: dict):
+    """Step 2 of Login: Validate signature with stored public key and issue session."""
+    user = db_users.get(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="User profile mismatch")
 
+    expected_challenge = db_challenges.get(user["id"])
+    if expected_challenge is None:
+        raise HTTPException(status_code=404, detail="Challenge not found for the user")
 
-# Challenge = UsernameChallenge | ...
+    # Retrieve the credential object matching what the browser provided
+    provided_cred_id = credential_payload.get("id")
+    stored_passkey = next(
+        (p for p in user["passkeys"] if p["credential_id"] == provided_cred_id), None
+    )
 
+    if not stored_passkey:
+        raise HTTPException(status_code=400, detail="Unrecognized device passkey")
 
-# class Storage:
-#     """
-#     Handle storage of Json objects for flows and sessions
-#     """
+    try:
+        verification = verify_authentication_response(
+            credential=credential_payload,
+            expected_challenge=base64url_to_bytes(expected_challenge),
+            expected_origin=ORIGIN,
+            expected_rp_id=RP_ID,
+            credential_public_key=base64url_to_bytes(stored_passkey["public_key"]),
+            credential_current_sign_count=stored_passkey["sign_count"],
+            require_user_verification=True,
+        )
 
-#     def __init__(self):
-#         self.flows = InMemoryDB()
-#         self.sessions = InMemoryDB()
+        # Update stored signature counter to prevent replay attacks
+        stored_passkey["sign_count"] = verification.new_sign_count
+        del db_challenges[user["id"]]
 
-#     # ----------------------------------------------------------------
+        # NOTE: Generate your standard JWT or cookie session helper here
+        return {"status": "success", "token": "MOCK_JWT_SESSION_TOKEN"}
 
-#     async def create_flow(self, data: Any) -> str:
-#         return await self.flows.create(data)
-
-#     async def get_flow(self, flow_id: str) -> dict:
-#         return await self.flows.get(flow_id)
-
-#     @asynccontextmanager
-#     async def get_flow_for_update(self, flow_id) -> AsyncIterator[dict]:
-#         async with self.flows.get_for_update(flow_id) as flow:
-#             yield flow
-
-#     async def update_flow(self, flow_id: str, updater: Callable[[Any], Any]):
-#         return await self.flows.update(flow_id, updater)
-
-#     async def delete_flow(self, flow_id: str):
-#         return await self.flows.delete(flow_id)
-
-#     # ----------------------------------------------------------------
-
-#     async def create_session(self, data: Any) -> str:
-#         return await self.sessions.create(data)
-
-#     async def get_session(self, session_id: str) -> dict:
-#         return await self.sessions.get(session_id)
-
-#     @asynccontextmanager
-#     async def get_session_for_update(self, session_id) -> AsyncIterator[dict]:
-#         async with self.sessions.get_for_update(session_id) as session:
-#             yield session
-
-#     async def update_session(self, session_id: str, updater: Callable[[Any], Any]):
-#         return await self.sessions.update(session_id, updater)
-
-#     async def delete_session(self, session_id: str):
-#         return await self.sessions.delete(session_id)
-
-
-# class InMemoryDB:
-#     """Store objects in a dictionary, in-memory"""
-
-#     def __init__(self):
-#         self.objects: dict[str, dict] = {}
-
-#     async def create(self, data: Any) -> str:
-#         key = str(uuid.uuid4())
-#         self.objects[key] = data
-#         return key
-
-#     async def get(self, key: str) -> dict:
-#         return self.objects[key]
-
-#     async def list(self) -> Iterable[tuple[str, dict]]:
-#         return self.objects.items()
-
-#     @asynccontextmanager
-#     async def get_for_update(self, key) -> AsyncIterator[dict]:
-#         yield self.objects[key]
-#         # TODO: in an actual database, update object to reflect changes
-
-#     async def update(self, key: str, updater: Callable[[Any], Any]):
-#         async with self.get_for_update(key) as obj:
-#             updater(obj)
-
-#     async def delete(self, key: str):
-#         self.objects.pop(key, None)
-
-
-# storage = Storage()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")

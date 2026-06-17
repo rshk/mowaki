@@ -7,6 +7,7 @@ from typing import Annotated, Literal, NewType
 
 from pydantic import BaseModel, Field
 
+from app.core.auth.session import generate_session_id
 from app.types.user import UserID
 
 SessionID = NewType("SessionID", str)
@@ -32,8 +33,6 @@ class AuthSession(BaseModel):  # DUMMY
         return AuthSession(session_id=generate_session_id(), is_new_session=True)
 
 
-def generate_session_id() -> SessionID:
-    return SessionID(secrets.token_urlsafe(32))
 
 
 class AuthSessionMetadata(BaseModel):

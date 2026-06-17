@@ -11,6 +11,7 @@ dependencies = [
     "fastapi[standard]>=0.136.1",
     "pydantic-settings>=2.14.1",
     "sqlalchemy[asyncio]>=2.0.50",
+    "webauthn>=2.8.0",
 ]
 
 [dependency-groups]

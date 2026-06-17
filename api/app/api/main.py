@@ -2,13 +2,15 @@ import secrets
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Request, Response
-from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic.main import BaseModel
 
 from app.config import load_config
+from app.core.auth.exceptions import AuthorizationError
+from app.core.auth.session import generate_session_id
+from app.types.session import AuthSession, SessionID
 
 from . import auth
 
@@ -29,31 +31,15 @@ bearer_token = HTTPBearer(auto_error=False)
 BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_token)]
 
 
-class AuthSession(BaseModel):  # DUMMY
-    session_id: str | None
-
-    # Whether the session was created during this request.
-    # Controls whether the X-Set-Session-Id header will be set.
-    is_new_session: bool = False
-
-    @classmethod
-    def new(cls):
-        return AuthSession(session_id=generate_session_id(), is_new_session=True)
-
-
 def get_auth_session(credentials: BearerToken) -> AuthSession:
     if credentials is not None:
         # TODO: retrieve session from storage. If no valid session was
         # found, simply create a new one
-        return AuthSession(session_id=credentials.credentials)
+        return AuthSession(session_id=SessionID(credentials.credentials))
     return AuthSession.new()
 
 
 AuthSessionDep = Annotated[AuthSession, Depends(get_auth_session)]
-
-
-def generate_session_id() -> str:
-    return secrets.token_urlsafe(32)
 
 
 async def add_set_session_id_header(response: Response, session: AuthSessionDep):
@@ -81,27 +67,6 @@ def read_item(item_id: int, q: str | None = None):
 
 
 # Exception handling -------------------------------------------------
-
-
-class AuthorizationError(Exception):
-    upgrade_possible: bool
-    require_scopes: list[Any]
-
-    def __init__(
-        self, upgrade_possible: bool = False, require_scopes: list[Any] | None = None
-    ):
-        self.upgrade_possible = upgrade_possible
-        if require_scopes is None:
-            require_scopes = []
-        self.require_scopes = require_scopes
-
-    @classmethod
-    def definitive(cls):
-        return AuthorizationError(upgrade_possible=False)
-
-    @classmethod
-    def require_upgrade(cls, require_scopes: list[Any]):
-        return AuthorizationError(upgrade_possible=True, require_scopes=require_scopes)
 
 
 class AuthorizationErrorResponse(BaseModel):
