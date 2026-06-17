@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING: Check all this code, including webauthn options
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 import dataclasses
 import secrets
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from pydantic import BaseModel, EmailStr
 from webauthn import (
     generate_authentication_options,
@@ -29,6 +33,8 @@ ORIGIN = "http://localhost:8000"
 db_users: dict[str, dict] = {}  # email -> {id, email, verified, passkeys: []}
 db_otps: dict[str, str] = {}  # email -> otp_code
 db_challenges: dict[str, str] = {}  # user_id -> challenge_string
+# Session store mapping secure session tokens to verified emails
+db_sessions: dict[str, str] = {}
 
 
 # Schemas ------------------------------------------------------------
@@ -44,6 +50,15 @@ class VerifyOtpSchema(BaseModel):
 
 
 # Helpers ------------------------------------------------------------
+
+
+# Helper to enforce that a valid session exists before allowing passkey changes
+def get_current_verified_email(session_id: str = Cookie(None)) -> str:
+    if not session_id or session_id not in db_sessions:
+        raise HTTPException(
+            status_code=401, detail="Unauthorized: Complete email verification first"
+        )
+    return db_sessions[session_id]
 
 
 def generate_otp(length: int = 6) -> str:
@@ -75,28 +90,31 @@ def start_registration(payload: EmailSchema):
     return {"message": "Verification code sent to your email."}
 
 
-@router.post("/register/verify-email")
-def verify_email(payload: VerifyOtpSchema):
-    """Step 2: Verify the OTP and create a pending user profile."""
+@router.post("/auth/register/verify-email")
+def verify_email(payload: VerifyOtpSchema, response: Response):
+    """Step 2: Verify OTP and drop a secure session cookie."""
     email = payload.email
-    otp = payload.otp
+    if db_otps.get(email) != payload.otp:
+        raise HTTPException(status_code=400, detail="Invalid OTP")
 
-    if db_otps.get(email) != otp:
-        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
-
-    # Clean up OTP after successful verification
     del db_otps[email]
 
-    # Create user profile if it doesn't exist
-    user_id = secrets.token_hex(16)
-    db_users[email] = {
-        "id": user_id,
-        "email": email,
-        "verified": True,
-        "passkeys": [],  # Will hold public keys
-    }
+    if email not in db_users:
+        db_users[email] = {"id": secrets.token_hex(16), "email": email, "passkeys": []}
 
-    return {"message": "Email verified successfully.", "user_id": user_id}
+    # 1. Establish the session server-side
+    session_id = secrets.token_urlsafe(32)
+    db_sessions[session_id] = email
+
+    # 2. Issue a secure, HTTP-only cookie that the browser cannot tamper with
+    response.set_cookie(
+        key="session_id",
+        value=session_id,
+        httponly=True,
+        secure=True,  # Set to False only for local development over HTTP
+        samesite="lax",
+    )
+    return {"message": "Email verified."}
 
 
 # -------------------------------------------------------------------------
@@ -105,16 +123,10 @@ def verify_email(payload: VerifyOtpSchema):
 
 
 @router.post("/passkey/register/options")
-def get_registration_options(payload: EmailSchema):
+def get_registration_options(email: str = Depends(get_current_verified_email)):
     """Step 3: Generate WebAuthn options for the browser to call navigator.credentials.create()"""
 
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    # WARNING: this does not currently verify the user identity!
-    # This poses a HUGE security risk in production, needs to be
-    # refactored!!!
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    user = db_users.get(payload.email)
+    user = db_users.get(email)
     if not user or not user["verified"]:
         raise HTTPException(status_code=401, detail="Email must be verified first")
 
@@ -124,6 +136,7 @@ def get_registration_options(payload: EmailSchema):
         rp_name=RP_NAME,
         user_id=user["id"],
         user_name=user["email"],
+        # TODO: check the options below!
         attestation=AttestationConveyancePreference.NONE,
         authenticator_selection=AuthenticatorSelectionCriteria(
             authenticator_attachment=AuthenticatorAttachment.PLATFORM,  # Enforces device passkeys (TouchID/FaceID/Windows Hello)
@@ -139,7 +152,9 @@ def get_registration_options(payload: EmailSchema):
 
 
 @router.post("/passkey/register/verify")
-def verify_passkey_registration(email: str, credential_payload: dict):
+def verify_passkey_registration(
+    credential_payload: dict, email: str = Depends(get_current_verified_email)
+):
     """Step 4: Receive public key payload from browser and cryptographically verify it."""
     user = db_users.get(email)
     if not user:

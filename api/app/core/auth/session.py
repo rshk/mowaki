@@ -19,6 +19,7 @@ def get_session(session_id: SessionID) -> AuthSession:
 
 
 def invalidate_session(session_id: SessionID):
+    """Delete this session from database"""
     pass
 
 

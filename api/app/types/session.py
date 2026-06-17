@@ -27,11 +27,10 @@ class AuthSession(BaseModel):  # DUMMY
     )
     data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
 
-    @classmethod
-    def new(cls):
-        from app.core.auth.session import generate_session_id
-
-        return AuthSession(session_id=generate_session_id(), is_new_session=True)
+    # @classmethod
+    # def new(cls):
+    #     from app.core.auth.session import generate_session_id
+    #     return AuthSession(session_id=generate_session_id(), is_new_session=True)
 
 
 class AuthSessionMetadata(BaseModel):
