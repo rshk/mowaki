@@ -23,3 +23,6 @@ dev = [
     "pytest-annotated>=0.1.1",
     "pytest-asyncio>=1.4.0",
 ]
+
+[project.scripts]
+app-cli = "app.cli:cli"

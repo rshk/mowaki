@@ -11,10 +11,8 @@ from contextvars import ContextVar, Token
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import create_async_engine
-
 from app.exceptions import UninitializedResourceError
+from app.lib.database.utils import create_async_engine
 from app.lib.mailer import get_mailer_from_url
 
 if TYPE_CHECKING:
