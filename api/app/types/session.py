@@ -12,12 +12,10 @@ from app.types.user import UserID
 SessionID = NewType("SessionID", str)
 
 
-class AuthSession(BaseModel):  # DUMMY
-    session_id: SessionID
+class AuthSession(BaseModel):
+    """Authentication session"""
 
-    # Whether the session was created during this request.
-    # Controls whether the X-Set-Session-Id header will be set.
-    is_new_session: bool = False
+    session_id: SessionID
 
     soft_expiration_date: datetime | None = None
     hard_expiration_date: datetime | None = None
@@ -26,11 +24,6 @@ class AuthSession(BaseModel):  # DUMMY
         default_factory=lambda: AuthSessionMetadata.empty()
     )
     data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
-
-    # @classmethod
-    # def new(cls):
-    #     from app.core.auth.session import generate_session_id
-    #     return AuthSession(session_id=generate_session_id(), is_new_session=True)
 
 
 class AuthSessionMetadata(BaseModel):

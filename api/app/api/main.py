@@ -7,9 +7,9 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic.main import BaseModel
 
+from app.api._utils.session_mgr import CurrentSessionManager
 from app.config import load_config
 from app.core.auth.exceptions import AuthorizationError
-from app.core.auth.session import generate_session_id
 from app.types.session import AuthSession, SessionID
 
 from . import auth
@@ -27,43 +27,14 @@ app.add_middleware(
     expose_headers=["x-set-session-id"],
 )
 
-bearer_token = HTTPBearer(auto_error=False)
-BearerToken = Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_token)]
+
+async def ensure_session(session_mgr: CurrentSessionManager):
+    await session_mgr.ensure()
 
 
-def get_auth_session(credentials: BearerToken) -> AuthSession:
-    if credentials is not None:
-        # TODO: retrieve session from storage. If no valid session was
-        # found, simply create a new one
-        return AuthSession(session_id=SessionID(credentials.credentials))
-    return AuthSession.new()
-
-
-AuthSessionDep = Annotated[AuthSession, Depends(get_auth_session)]
-
-
-async def add_set_session_id_header(response: Response, session: AuthSessionDep):
-    if session.is_new_session and (session.session_id is not None):
-        response.headers["X-Set-Session-Id"] = session.session_id
-
-
-app.router.dependencies.append(Depends(add_set_session_id_header))
-
-
-# --------------------------------------------------------------------
-
+app.router.dependencies.append(Depends(ensure_session))
 
 app.include_router(auth.router, prefix="/auth")
-
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
 
 
 # Exception handling -------------------------------------------------
@@ -85,9 +56,6 @@ async def handle_authorization_error(request: Request, exc: AuthorizationError):
         content=obj.model_dump(),
     )
 
-
-# Dev stuff ----------------------------------------------------------
-
 responses = {
     403: {
         "model": AuthorizationErrorResponse,
@@ -97,40 +65,31 @@ responses = {
 app.router.responses[403] = {"model": AuthorizationErrorResponse}
 
 
+# Dev stuff ----------------------------------------------------------
+
+
 @app.get("/_dev")
-def get_dev(session: AuthSessionDep):
-    return {"session_id": session.session_id}
-
-
-@app.post("/_dev")
-def post_dev(response: Response, session: AuthSessionDep):
-    # if session.session_id is None:
-    #     # Create new session
-    #     response.headers["X-Set-Session-Id"] = generate_session_id()
-    return {"session_id": session.session_id}
+def get_dev(session_mgr: CurrentSessionManager):
+    return {"session_id": session_mgr.current_session_id}
 
 
 @app.post("/_dev/new-session")
-def post_dev_new_session(response: Response, session: AuthSessionDep):
-    # Create new session
-    session_id = generate_session_id()
-    response.headers["X-Set-Session-Id"] = session_id
-    return {"session_id": session_id}
+async def post_dev_new_session(session_mgr: CurrentSessionManager):
+    session = await session_mgr.invalidate()
+    return {"session_id": session.session_id}
 
 
 @app.post("/_dev/logout")
-def post_dev_logout(response: Response, session: AuthSessionDep):
-    if session.session_id is None:
-        # Create new session
-        response.headers["X-Set-Session-Id"] = ""
+async def post_dev_logout(session_mgr: CurrentSessionManager):
+    session = await session_mgr.invalidate()
     return {"session_id": session.session_id}
 
 
 @app.post("/_dev/403")
-def post_dev_403(response: Response, session: AuthSessionDep):
+def post_dev_403():
     raise AuthorizationError.definitive()
 
 
 @app.post("/_dev/403-upgrade")
-def post_dev_403_upgrade(response: Response, session: AuthSessionDep):
+def post_dev_403_upgrade():
     raise AuthorizationError.require_upgrade(["scope1", ["scope2", "foobar"]])

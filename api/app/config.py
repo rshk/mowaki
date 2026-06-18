@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextvars import ContextVar, Token
 from typing import Annotated
 
+from publicsuffixlist import PublicSuffixList
 from pydantic import (
     AnyUrl,
     BeforeValidator,
@@ -16,6 +17,7 @@ from pydantic_settings import BaseSettings, NoDecode
 
 DEFAULT_MAILER = "dummy://"
 DEFAULT_EMAIL_SENDER = "Default Sender <no-reply@example.com>"
+PUBLIC_SUFFIX_LIST = PublicSuffixList()
 
 
 class Config(BaseSettings):
@@ -29,14 +31,37 @@ class Config(BaseSettings):
     # Allowed origins for CORS
     cors_origins: Annotated[
         list[str],
-        Field(default_factory=list),
+        Field(default_factory=lambda data: [str(data["frontend_url"])]),
         NoDecode,
         BeforeValidator(lambda x: (x.split() if isinstance(x, str) else x)),
         PlainSerializer(lambda x: " ".join(x), return_type=str),
     ]
 
+    # Authentication options
+    auth_relying_party_id: Annotated[
+        str,
+        Field(
+            default_factory=lambda data: get_url_private_suffix(data["frontend_url"])
+        ),
+    ]
+    auth_relying_party_name: Annotated[
+        str, Field(default_factory=lambda data: data["auth_relying_party_id"])
+    ]
+
     # Enable development features
     development_mode: bool = False
+
+
+def get_url_private_suffix(url: HttpUrl) -> str:
+    domain = url.host
+    assert domain is not None, "FRONTEND_URL must include a domain name"
+
+    result = PUBLIC_SUFFIX_LIST.privatesuffix(domain)
+    if result is not None:
+        return result
+
+    # Default to the full domain
+    return domain
 
 
 def get_config_from_env() -> Config:

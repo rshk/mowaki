@@ -9,6 +9,7 @@ dependencies = [
     "click>=8.4.1",
     "email-validator>=2.3.0",
     "fastapi[standard]>=0.136.1",
+    "publicsuffixlist>=1.0.2.20260615",
     "pydantic-settings>=2.14.1",
     "sqlalchemy[asyncio]>=2.0.50",
     "webauthn>=2.8.0",

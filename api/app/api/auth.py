@@ -22,12 +22,13 @@ from webauthn.helpers.structs import (
     AuthenticatorSelectionCriteria,
     UserVerificationRequirement,
 )
+from app.config import get_config
 
 # Objects ------------------------------------------------------------
 
-RP_ID = "localhost"  # Relying Party ID (Domain)
-RP_NAME = "My Python App"
-ORIGIN = "http://localhost:8000"
+# RP_ID = "localhost"  # Relying Party ID (Domain)
+# RP_NAME = "My Python App"
+# ORIGIN = "http://localhost:8000"
 
 # Mock Databases
 db_users: dict[str, dict] = {}  # email -> {id, email, verified, passkeys: []}
@@ -130,10 +131,12 @@ def get_registration_options(email: str = Depends(get_current_verified_email)):
     if not user or not user["verified"]:
         raise HTTPException(status_code=401, detail="Email must be verified first")
 
+    config = get_config()
+
     # Generate server options
     options = generate_registration_options(
-        rp_id=RP_ID,
-        rp_name=RP_NAME,
+        rp_id=config.auth_relying_party_id,
+        rp_name=config.auth_relying_party_name,
         user_id=user["id"],
         user_name=user["email"],
         # TODO: check the options below!
@@ -164,13 +167,15 @@ def verify_passkey_registration(
     if not expected_challenge:
         raise HTTPException(status_code=400, detail="Missing registration challenge")
 
+    config = get_config()
+
     try:
         # Validate the cryptographic signature sent back by the browser hardware
         verification = verify_registration_response(
             credential=credential_payload,
             expected_challenge=base64url_to_bytes(expected_challenge),
-            expected_origin=ORIGIN,
-            expected_rp_id=RP_ID,
+            expected_origin=str(config.frontend_url),
+            expected_rp_id=config.auth_relying_party_id,
             require_user_verification=True,
         )
 
@@ -210,8 +215,10 @@ def get_login_options(payload: EmailSchema):
             status_code=400, detail="No passkeys registered for this account"
         )
 
+    config = get_config()
+
     options = generate_authentication_options(
-        rp_id=RP_ID, user_verification=UserVerificationRequirement.REQUIRED
+        rp_id=config.auth_relying_party_id, user_verification=UserVerificationRequirement.REQUIRED,
     )
 
     db_challenges[user["id"]] = bytes_to_base64url(options.challenge)
@@ -238,12 +245,14 @@ def verify_login(email: str, credential_payload: dict):
     if not stored_passkey:
         raise HTTPException(status_code=400, detail="Unrecognized device passkey")
 
+    config = get_config()
+
     try:
         verification = verify_authentication_response(
             credential=credential_payload,
             expected_challenge=base64url_to_bytes(expected_challenge),
-            expected_origin=ORIGIN,
-            expected_rp_id=RP_ID,
+            expected_origin=str(config.frontend_url),
+            expected_rp_id=config.auth_relying_party_id,
             credential_public_key=base64url_to_bytes(stored_passkey["public_key"]),
             credential_current_sign_count=stored_passkey["sign_count"],
             require_user_verification=True,

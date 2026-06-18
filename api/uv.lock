@@ -47,6 +47,7 @@ dependencies = [
     { name = "click" },
     { name = "email-validator" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "publicsuffixlist" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy", extra = ["asyncio"] },
     { name = "webauthn" },
@@ -67,6 +68,7 @@ requires-dist = [
     { name = "click", specifier = ">=8.4.1" },
     { name = "email-validator", specifier = ">=2.3.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.136.1" },
+    { name = "publicsuffixlist", specifier = ">=1.0.2.20260615" },
     { name = "pydantic-settings", specifier = ">=2.14.1" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.50" },
     { name = "webauthn", specifier = ">=2.8.0" },
@@ -911,6 +913,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/20/e5/16ff212c1e452235a90aeb09066144d0c5a6a8c0834397e03f5224495c4e/ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220", size = 70762 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/22/a6/858897256d0deac81a172289110f31629fc4cee19b6f01283303e18c8db3/ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35", size = 13993 },
+]
+
+[[package]]
+name = "publicsuffixlist"
+version = "1.0.2.20260615"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/8a/44/7b65b2042b3ff44478557ca05bde5320c19b2c91b51e11600c390707c8cc/publicsuffixlist-1.0.2.20260615.tar.gz", hash = "sha256:8d52b7b5b5b75f11bac4c034a7b181d1fd1cb27dd440a208e11c2266e631898b", size = 108754 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bb/3d/4d9d61bd960bf7c2992de34fe88c444631a725f2484c1023a0bd18848265/publicsuffixlist-1.0.2.20260615-py2.py3-none-any.whl", hash = "sha256:6566afa2f6183a8d1daabc27185f6bb11583091e87a7a2b3cc7d9c9fe1d3de69", size = 108588 },
 ]
 
 [[package]]
