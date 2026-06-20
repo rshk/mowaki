@@ -45,6 +45,7 @@ class WebAuthnChallenge(BaseModel):
 class WebAuthnState(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["webauthn"]
+    expires_at: datetime
     # TODO: add webauthn parameters
 
 
@@ -66,6 +67,7 @@ class TotpChallenge(BaseModel):
 class TotpChallengeState(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["totp"]
+    expires_at: datetime
     # TODO
 
 

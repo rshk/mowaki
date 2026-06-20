@@ -4,6 +4,7 @@ import secrets
 from datetime import timedelta
 
 from app.core.auth.exceptions import SessionInvalid, SessionNotFound
+from app.repo.session import hash_session_secret
 from app.types.session import AuthSession, HashedSessionSecret, SessionID, SessionSecret, SessionToken
 from app import repo
 
@@ -22,32 +23,26 @@ async def create_session() -> tuple[AuthSession, SessionToken]:
     the client, and used as Bearer token in subsequent requests.
     """
 
-    session_id = generate_session_id()
-    session_secret = generate_session_secret()
-    secret_hash = hash_session_secret(session_secret)
-    await repo.session.create(session_id=session_id, secret_hash=secret_hash)
+    session_id, session_secret = await repo.session.create()
     token = create_session_token(session_id, session_secret)
     session = await repo.session.get(session_id)
     return session, token
 
 
-def create_session_token(session_id: SessionID, session_secret: SessionSecret) -> SessionToken:
-    return SessionToken(f"{session_id}.{session_secret}")
-
-
 async def get_from_session_token(token: SessionToken) -> AuthSession:
+    """
+    Get an AuthSession from a Bearer token.
+
+    The token secret is validated, and SessionNotFound raised if
+    either the session doesn't exist, or the secret is invalid.
+    """
     try:
         session_id, session_secret = parse_session_token(token)
     except Exception as exc:
         raise SessionNotFound("Invalid session token") from exc
 
     try:
-        session = await get_session(session_id)
-        secret_hash = hash_session_secret(session_secret)
-        if session.session_secret != secret_hash:
-            # Hide this from the user, but we might want to log it as
-            # a security event.
-            raise SessionInvalid("Invalid session secret")
+        session = await repo.session.get_with_secret(session_id, session_secret)
     except Exception:
         raise SessionNotFound("Session not found for token")
 
@@ -58,15 +53,13 @@ async def get_session(session_id: SessionID) -> AuthSession:
     return await repo.session.get(session_id)
 
 
-def hash_session_secret(secret: SessionSecret) -> HashedSessionSecret:
-    """Hash the session secret for storing in the database"""
-
-    digest = hashlib.sha256(str(secret).encode()).digest()
-    result = base64.urlsafe_b64encode(digest).decode("ascii")
-    return HashedSessionSecret(result)
+def create_session_token(session_id: SessionID, session_secret: SessionSecret) -> SessionToken:
+    """Format a session token for returning to the client"""
+    return SessionToken(f"{session_id}.{session_secret}")
 
 
 def parse_session_token(token: SessionToken) -> tuple[SessionID, SessionSecret]:
+    """Parse a session token into a a(id, secret) pair"""
     session_id, session_secret = token.split(".")
     return SessionID(session_id), SessionSecret(session_secret)
 
@@ -102,17 +95,12 @@ def parse_session_token(token: SessionToken) -> tuple[SessionID, SessionSecret]:
 
 async def invalidate_session(session_id: SessionID):
     """Delete this session from database"""
-
-    DUMMY_SESSION_DB.pop(session_id, None)
-
-
-async def refresh_soft_expiration_date(session_id: SessionID):
-    pass
+    await repo.session.invalidate(session_id)
 
 
-def generate_session_id() -> SessionID:
-    return SessionID(secrets.token_urlsafe(16))
+# def generate_session_id() -> SessionID:
+#     return SessionID(secrets.token_urlsafe(16))
 
 
-def generate_session_secret() -> SessionSecret:
-    return SessionSecret(secrets.token_urlsafe(16))
+# def generate_session_secret() -> SessionSecret:
+#     return SessionSecret(secrets.token_urlsafe(16))

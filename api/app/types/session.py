@@ -63,7 +63,6 @@ class AuthSessionMetadata(BaseModel):
 
 
 class AuthSessionData(BaseModel):
-
     # User who performed the authentication for this session. Immutable.
     authenticated_user_id: UserID | None = None
 
@@ -82,10 +81,20 @@ class AuthSessionData(BaseModel):
         return AuthSessionData()
 
 
+class SessionTokenData(BaseModel):
+    __slots__ = ["session_id", "session_secret"]
+
+    session_id: SessionID
+    session_secret: SessionSecret
+
+
+AuthGrantId = NewType("AuthGrantId", uuid.UUID)
+
+
 class BaseAuthGrant(BaseModel):
     """Base for auth grants"""
 
-    id: uuid.UUID
+    id: AuthGrantId
     expires_at: datetime | None
 
 
