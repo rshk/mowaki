@@ -30,34 +30,48 @@ UpdaterFn = Callable[..., Coroutine[Any, Any, sa.CursorResult[Any]]]
 
 
 class TableCrud(Generic[T]):
-    """
-    Perform CRUD operations on a table
-    """
+    """Helper class for performing basic CRUD operations on a table."""
 
-    def __init__(
-        self,
-        table: sa.Table,
-        model: Type[T],
-        engine: AsyncEngine | None = None,
-        conn: AsyncConnection | None = None,
-    ):
+    __slots__ = ["_table", "_model", "_engine", "_connection"]
+
+    _table: sa.Table
+    _model: Type[T]
+    _engine: AsyncEngine | None
+    _connection: AsyncConnection | None
+
+    def __init__(self, table: sa.Table, model: Type[T]):
+        """
+        Args:
+            table: SQLAlchemy Table to use to perform operations
+            model: pydantic model to use for wrapping results
+        """
         self._table = table
         self._model = model
-        self._engine = engine
-        self._connection = conn
+        self._engine = None
+        self._connection = None
 
     def bind(
         self,
         conn: AsyncConnection | None = None,
         engine: AsyncEngine | None = None,
     ) -> Self:
+        """
+        Return a clone of this TableCrud, "bound" to a connection or engine.
+        """
+
+        new = self.__class__(table=self._table, model=self._model)
+
         if conn is not None:
-            return self.__class__(table=self._table, model=self._model, conn=conn)
-        elif engine is not None:
-            return self.__class__(table=self._table, model=self._model, engine=engine)
+            # Bind to a connection
+            new._connection = conn
+
         else:
-            engine = get_database()
-            return self.__class__(table=self._table, model=self._model, engine=engine)
+            # Bind to an engine
+            if engine is None:
+                engine = get_database()
+            new._engine = engine
+
+        return new
 
     async def _execute(self, query, *args, **kwargs) -> WrappedResult[T]:
         """Wrapper for AsyncConnection.execute()"""
@@ -151,6 +165,12 @@ class TableCrud(Generic[T]):
         query = self._table.insert().values(**values)
         result = await self._execute(query)
         return result.inserted_primary_key
+
+    async def update(self, *key, **updates):
+        where_clause = self._get_pk_filter(*key)
+        query = self._table.update().where(where_clause).values(**updates)
+        async with self._transaction() as conn:
+            await conn.execute(query)
 
     @asynccontextmanager
     async def for_update(self, *key) -> AsyncIterator[tuple[T, UpdaterFn]]:

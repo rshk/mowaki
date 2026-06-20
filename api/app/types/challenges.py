@@ -1,63 +1,48 @@
-from typing import Literal, NewType
+from datetime import datetime
+from typing import Annotated, Literal, NewType
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Discriminator
 
 ChallengeID = NewType("ChallengeID", str)
 
 
-class EmailChallenge(BaseModel):
-    """Request an email address"""
+# *Challenge -> sent to the user
+# *State -> stored in the session
+# *Response -> sent by the client
 
+
+# Email OTP challenge ------------------------------------------------
+
+
+class EmailOtpChallenge(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["email"]
 
 
-class EmailChallengeResponse(BaseModel):
+class EmailOtpState(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["email"]
+    expires_at: datetime
     email: str
+    otp: str
 
 
-class PasswordChallenge(BaseModel):
-    """Request a password"""
-
+class EmailOtpResponse(BaseModel):
     challenge_id: ChallengeID
-    kind: Literal["password"]
+    kind: Literal["email"]
+    otp: str
 
 
-class PasswordChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["password"]
-    password: str
-
-
-class OobaCodeChallenge(BaseModel):
-    """Out of band authentication code"""
-
-    challenge_id: ChallengeID
-    kind: Literal["ooba"]
-
-
-class OobaCodeChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["ooba"]
-    code: str
-
-
-class OAuthChallenge(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["oauth"]
-    redirect_url: str
-
-
-class OAuthChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["oauth"]
-    oauth_token: str
-    # TODO: do we need extra fields?
+# WebAuthn -----------------------------------------------------------
 
 
 class WebAuthnChallenge(BaseModel):
+    challenge_id: ChallengeID
+    kind: Literal["webauthn"]
+    # TODO: add webauthn parameters
+
+
+class WebAuthnState(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["webauthn"]
     # TODO: add webauthn parameters
@@ -69,10 +54,19 @@ class WebAuthnChallengeResponse(BaseModel):
     # TODO: add webauthn fields
 
 
+# Time-based OTP -----------------------------------------------------
+
+
 class TotpChallenge(BaseModel):
     challenge_id: ChallengeID
     kind: Literal["totp"]
-    # TODO: do we need to provide any fields
+    # TODO
+
+
+class TotpChallengeState(BaseModel):
+    challenge_id: ChallengeID
+    kind: Literal["totp"]
+    # TODO
 
 
 class TotpChallengeResponse(BaseModel):
@@ -81,46 +75,18 @@ class TotpChallengeResponse(BaseModel):
     code: str
 
 
-class CaptchaChallenge(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["captcha"]
-    captcha_url: str  # TODO: is this enough?
+# --------------------------------------------------------------------
 
 
-class CaptchaChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["captcha"]
-    code: str
-
-
-class SendEmailOobaChallenge(BaseModel):
-    """Request an Out Of Band Authentication code to be sent"""
-
-    challenge_id: ChallengeID
-    kind: Literal["init-email-ooba"]
-
-
-class SendEmailOobaChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["init-email-ooba"]
-
-
-Challenge = (
-    EmailChallenge
-    | PasswordChallenge
-    | OobaCodeChallenge
-    | OAuthChallenge
-    | WebAuthnChallenge
-    | TotpChallenge
-    | CaptchaChallenge
-)
-
-Response = (
-    EmailChallengeResponse
-    | PasswordChallengeResponse
-    | OobaCodeChallengeResponse
-    | OAuthChallengeResponse
-    | WebAuthnChallengeResponse
-    | TotpChallengeResponse
-    | CaptchaChallengeResponse
-)
+AuthChallenge = Annotated[
+    EmailOtpChallenge | WebAuthnChallenge | TotpChallenge,
+    Discriminator("kind"),
+]
+AuthChallengeState = Annotated[
+    EmailOtpState | WebAuthnState | TotpChallengeState,
+    Discriminator("kind"),
+]
+AuthChallengeResponse = Annotated[
+    EmailOtpResponse | WebAuthnChallengeResponse | TotpChallengeResponse,
+    Discriminator("kind"),
+]

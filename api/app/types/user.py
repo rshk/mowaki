@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Any, NewType, Self
+from typing import Any, NewType, Self, TYPE_CHECKING
 from uuid import UUID
 
-import sqlalchemy
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    import sqlalchemy
 
 UserID = NewType("UserID", UUID)
 
