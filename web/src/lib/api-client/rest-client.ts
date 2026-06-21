@@ -73,19 +73,18 @@ export class RestClient {
             return response.json();
         }
 
+        let responseData = await (response.json().catch(() => null));
+
+        const exceptionArgs = {
+            data: responseData,
+            status: response.status,
+        };
+
         if (response.status == 403) {
-            throw new AuthorizationError(await response.json());
+            throw new AuthorizationError(exceptionArgs);
         }
 
-        let responseData = null;
-        try {
-            responseData = await response.json();
-        } catch {}
-
-        throw new HttpError({
-            status: response.status,
-            data: responseData,
-        });
+        throw new HttpError(exceptionArgs);
     }
 
     async get(path: string): Promise<object> {

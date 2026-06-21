@@ -12,6 +12,7 @@ import {
     QueryClient,
     QueryClientProvider,
 } from "@tanstack/react-query";
+import { AuthorizationError } from "./lib/api-client/rest-client";
 
 const queryClient = new QueryClient();
 
@@ -150,6 +151,7 @@ function Map() {
 
 function DemoRequests() {
     const queryClient = useQueryClient();
+
     const query = useQuery({
         queryKey: ["_dev"],
         queryFn: () => apiClient._client.get("/_dev"),
@@ -164,46 +166,55 @@ function DemoRequests() {
         },
     });
 
-    type ReqState = {
-        data?: object;
-        error?: object;
-    };
+    const rotateMutation = useMutation({
+        mutationFn: () => apiClient._client.post("/_dev/rotate", {}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ["_dev"],
+            });
+        },
+    });
 
-    const [state, setState] = React.useState<ReqState>({});
+    const get403Mutation = useMutation({
+        mutationFn: () => apiClient._client.post("/_dev/403", {}),
+    });
+    const get403upMutation = useMutation({
+        mutationFn: () => apiClient._client.post("/_dev/403-upgrade", {}),
+    });
+
     const doRequest = () => {
-        apiClient._client
-            .get("/_dev")
-            .then((data) => setState({ data }))
-            .catch((error) => setState({ error }));
+        query.refetch();
     };
-
-    /* React.useEffect(() => doRequest(), []); */
 
     const doLogout = () => {
         logoutMutation.mutate();
     };
 
     const doGet403 = () => {
-        apiClient._client
-            .post("/_dev/403", {})
-            .then((data) => setState({ data }))
-            .catch((error) => setState({ error }));
+        get403Mutation.mutate();
     };
 
     const doGet403Upgrade = () => {
-        apiClient._client
-            .post("/_dev/403-upgrade", {})
-            .then((data) => setState({ data }))
-            .catch((error) => setState({ error }));
+        get403upMutation.mutate();
     };
+
+    if (get403Mutation.error) {
+        console.log("ERROR", get403Mutation.error);
+    }
 
     return (
         <div>
             {!!query.data && <pre>{JSON.stringify(query.data, null, 4)}</pre>}
-            {!!state.error && (
+            {get403Mutation.error instanceof AuthorizationError && (
                 <pre>
                     {"=== ERROR ===\n"}
-                    {JSON.stringify(state.error, null, 4)}
+                    {JSON.stringify(get403Mutation.error, null, 4)}
+                </pre>
+            )}
+            {!!get403upMutation.error && (
+                <pre>
+                    {"=== ERROR ===\n"}
+                    {JSON.stringify(get403upMutation.error, null, 4)}
                 </pre>
             )}
             <div>
@@ -212,6 +223,14 @@ function DemoRequests() {
                 </Button>
                 <Button variant="contained" onClick={doLogout}>
                     New session
+                </Button>
+                <Button
+                    variant="contained"
+                    onClick={() => {
+                        rotateMutation.mutate();
+                    }}
+                >
+                    Rotate secret
                 </Button>
                 <Button variant="contained" onClick={doGet403}>
                     Permanent 403

@@ -61,7 +61,7 @@ export class ApiClient {
     }
 
     async deleteItem(id: string): Promise<null> {
-        return (await this._client.delete(`/item/${id}`)) as null;
+        return (await this._client.delete_(`/item/${id}`)) as null;
     }
 }
 
