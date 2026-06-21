@@ -10,6 +10,7 @@ from app.config import load_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.auth.exceptions import AuthorizationError
 from app.core.auth.session import (
+    current_session_updater,
     get_or_create_session_from_token,
     invalidate_current_session,
 )
@@ -128,6 +129,15 @@ def get_dev():
 @app.post("/_dev/logout")
 async def post_dev_logout():
     await invalidate_current_session()
+    session = get_current_session()
+    return {"session_id": session.session_id}
+
+
+@app.post("/_dev/rotate")
+async def post_dev_rotate_secret():
+    async with current_session_updater() as upd:
+        upd.rotate_secret()
+
     session = get_current_session()
     return {"session_id": session.session_id}
 

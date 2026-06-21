@@ -151,7 +151,7 @@ class TableCrud(Generic[T]):
         where_clause = self._get_pk_filter(*key)
         query = self._table.select().where(where_clause).with_for_update()
 
-        async with self._connect() as conn, conn.begin():
+        async with self._connect() as conn:
             result = await conn.execute(query)
 
             async def update_object(**updates):

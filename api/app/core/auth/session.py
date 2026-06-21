@@ -107,6 +107,8 @@ async def current_session_updater() -> AsyncIterator[SessionUpdater]:
     async with repo.session.for_update(session.session_id) as upd:
         try:
             yield upd
+            await upd.run()  # ensure all updates are applied!
+
         finally:
             if upd.new_secret is not None:
                 token = create_session_token(session.session_id, upd.new_secret)
