@@ -1,16 +1,19 @@
 import * as React from "react";
-import {
-    BrowserRouter,
-    Routes,
-    Route,
-    Outlet,
-    useParams,
-} from "react-router";
+import { BrowserRouter, Routes, Route, Outlet, useParams } from "react-router";
 import ResponsiveAppBar from "./demo/_components/app-bar";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import apiClient from "/src/lib/api-client";
 import { Button } from "@mui/material";
+import {
+    useQuery,
+    useMutation,
+    useQueryClient,
+    QueryClient,
+    QueryClientProvider,
+} from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 const theme = createTheme({
     colorSchemes: {
@@ -20,11 +23,13 @@ const theme = createTheme({
 
 function App() {
     return (
-        <ThemeProvider theme={theme}>
-            <BrowserRouter>
-                <AppRoutes />
-            </BrowserRouter>
-        </ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider theme={theme}>
+                <BrowserRouter>
+                    <AppRoutes />
+                </BrowserRouter>
+            </ThemeProvider>
+        </QueryClientProvider>
     );
 }
 
@@ -144,6 +149,21 @@ function Map() {
 }
 
 function DemoRequests() {
+    const queryClient = useQueryClient();
+    const query = useQuery({
+        queryKey: ["_dev"],
+        queryFn: () => apiClient._client.get("/_dev"),
+    });
+
+    const logoutMutation = useMutation({
+        mutationFn: () => apiClient._client.post("/_dev/logout", {}),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({
+                queryKey: ["_dev"],
+            });
+        },
+    });
+
     type ReqState = {
         data?: object;
         error?: object;
@@ -160,10 +180,7 @@ function DemoRequests() {
     /* React.useEffect(() => doRequest(), []); */
 
     const doLogout = () => {
-        apiClient._client
-            .post("/_dev/logout", {})
-            .then((data) => setState({ data }))
-            .catch((error) => setState({ error }));
+        logoutMutation.mutate();
     };
 
     const doGet403 = () => {
@@ -182,8 +199,13 @@ function DemoRequests() {
 
     return (
         <div>
-            {!!state.data && <pre>{JSON.stringify(state.data, null, 4)}</pre>}
-            {!!state.error && <pre>{"=== ERROR ===\n"}{JSON.stringify(state.error, null, 4)}</pre>}
+            {!!query.data && <pre>{JSON.stringify(query.data, null, 4)}</pre>}
+            {!!state.error && (
+                <pre>
+                    {"=== ERROR ===\n"}
+                    {JSON.stringify(state.error, null, 4)}
+                </pre>
+            )}
             <div>
                 <Button variant="contained" onClick={doRequest}>
                     Refresh
