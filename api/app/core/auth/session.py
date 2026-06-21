@@ -5,6 +5,7 @@ from typing import AsyncIterator
 from app import repo
 from app.core.auth.exceptions import SessionNotFound
 from app.core.context import get_current_session, get_request_context
+from app.exceptions import ObjectNotFound
 from app.repo.session import SessionUpdater
 from app.types.session import (
     AuthSession,
@@ -49,7 +50,7 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
 
     try:
         session = await repo.session.get_for_token(session_token)
-    except Exception:
+    except ObjectNotFound:
         raise SessionNotFound("Session not found for token")
 
     return session

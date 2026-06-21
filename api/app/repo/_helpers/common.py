@@ -107,32 +107,6 @@ class TableCrud(Generic[T]):
         async with context as conn:
             yield conn
 
-    @asynccontextmanager
-    async def _transaction(self) -> AsyncIterator[AsyncConnection]:
-        @asynccontextmanager
-        async def _begin_from_connection(conn: AsyncConnection):
-            async with conn.begin():
-                yield conn
-
-        @asynccontextmanager
-        async def _begin_from_engine(engine: AsyncEngine):
-            async with engine.begin() as conn:
-                async with conn.begin():
-                    yield conn
-
-        context = None
-
-        if self._connection is not None:
-            context = _begin_from_connection(self._connection)
-
-        elif self._engine is not None:
-            context = _begin_from_engine(self._engine)
-        else:
-            context = _begin_from_engine(get_database())
-
-        async with context as conn:
-            yield conn
-
     def _get_name(self):
         return self._model.__name__
 
@@ -169,7 +143,7 @@ class TableCrud(Generic[T]):
     async def update(self, *key, **updates):
         where_clause = self._get_pk_filter(*key)
         query = self._table.update().where(where_clause).values(**updates)
-        async with self._transaction() as conn:
+        async with self._connect() as conn:
             await conn.execute(query)
 
     @asynccontextmanager
@@ -177,7 +151,7 @@ class TableCrud(Generic[T]):
         where_clause = self._get_pk_filter(*key)
         query = self._table.select().where(where_clause).with_for_update()
 
-        async with self._transaction() as conn:
+        async with self._connect() as conn, conn.begin():
             result = await conn.execute(query)
 
             async def update_object(**updates):
@@ -190,7 +164,7 @@ class TableCrud(Generic[T]):
     async def delete(self, *key):
         where_clause = self._get_pk_filter(*key)
         query = self._table.delete().where(where_clause)
-        async with self._transaction() as conn:
+        async with self._connect() as conn:
             await conn.execute(query)
 
 

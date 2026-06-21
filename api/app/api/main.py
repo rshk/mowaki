@@ -1,24 +1,37 @@
 from typing import Any
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security.utils import get_authorization_scheme_param
 from pydantic.main import BaseModel
 
-from app.api._utils.request_context import setup_request_context
 from app.config import load_config
+from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.auth.exceptions import AuthorizationError
-from app.core.auth.session import invalidate_current_session
-from app.core.context import get_current_session
-from app.io.resources import initialize_resources, resources_context
+from app.core.auth.session import (
+    get_or_create_session_from_token,
+    invalidate_current_session,
+)
+from app.core.context import RequestContext, get_current_session, request_context
+from app.io.resources import initialize_resources
+from app.lib.context import scoped_context
+from app.types.session import SessionToken
 
 from . import auth
 
+# Initialize configuration and resources -----------------------------
+
 config = load_config()
-resources = initialize_resources(config)
-resources_context.set(resources)
+resources = initialize_resources(config, set_context=True)
+
+
+# Create FastAPI app -------------------------------------------------
 
 app = FastAPI()
+
+
+# CORS middleware ----------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,14 +39,37 @@ app.add_middleware(
     allow_credentials=False,  # We don't use cookies
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["x-set-session-token"],
+    expose_headers=CUSTOM_HEADERS,
 )
 
 
-# Set up RequestContext to make AuthSession available to the core.
-app.router.dependencies.append(Depends(setup_request_context))
+# Middleware to setup context ----------------------------------------
 
-app.include_router(auth.router, prefix="/auth")
+
+@app.middleware("http")
+async def setup_request_context_middleware(request: Request, call_next):
+    token = get_request_session_token(request)
+    session, new_token = await get_or_create_session_from_token(token)
+    ctx = RequestContext(auth_session=session, new_session_token=new_token)
+    with scoped_context(request_context, ctx):
+        response: Response = await call_next(request)
+
+    # If a new session was created at any point during request
+    # processing, return the new token to the user.
+    if (value := ctx.new_session_token) is not None:
+        response.headers[SESSION_TOKEN_HEADER] = value
+
+    return response
+
+
+def get_request_session_token(request: Request) -> SessionToken | None:
+    authorization = request.headers.get("Authorization")
+    scheme, credentials = get_authorization_scheme_param(authorization)
+    if not (authorization and scheme and credentials):
+        return None
+    if scheme.lower() != "bearer":
+        return None
+    return SessionToken(credentials)
 
 
 # Exception handling -------------------------------------------------
@@ -63,6 +99,11 @@ responses = {
 }
 
 app.router.responses[403] = {"model": AuthorizationErrorResponse}
+
+
+# Include routers ----------------------------------------------------
+
+app.include_router(auth.router, prefix="/auth")
 
 
 # Dev stuff ----------------------------------------------------------

@@ -32,7 +32,7 @@ class Resources:
 resources_context = ContextVar[Resources]("resources_context")
 
 
-def initialize_resources(config: Config) -> Resources:
+def initialize_resources(config: Config, set_context=False) -> Resources:
     resources = Resources()
 
     if config.database_url is not None:
@@ -40,6 +40,9 @@ def initialize_resources(config: Config) -> Resources:
 
     if config.smtp_url is not None:
         resources.mailer = get_mailer_from_url(str(config.smtp_url))
+
+    if set_context:
+        resources_context.set(resources)
 
     return resources
 
