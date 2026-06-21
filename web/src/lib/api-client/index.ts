@@ -16,7 +16,7 @@ export class ApiClient {
         });
 
         this._client.addResponseHandler(response => {
-            const newSessionId = response.headers.get("x-set-session-id");
+            const newSessionId = response.headers.get("x-set-session-token");
             if (newSessionId) {
                 tokenStorage.setSessionToken(newSessionId);
             }

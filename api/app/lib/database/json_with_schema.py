@@ -5,6 +5,7 @@ SQLAlchemy column type to store a Pydantic model as JSON
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
+import json
 from typing import Any, Type
 
 import sqlalchemy.types as types
@@ -33,9 +34,13 @@ class JsonWithSchema(types.TypeDecorator):
             return None
         return self._serializer.dump(value)
 
-    def process_result_value(self, value, dialect: Dialect):
+    def process_result_value(self, value: Any, dialect: Dialect):
         if value is None:
             return None
+        if isinstance(value, str):
+            # TODO: investigate why "value" is not a dict, as returned
+            # by the JSONB type.
+            value = json.loads(value)
         return self._serializer.load(value)
 
     def copy(self, **kw):

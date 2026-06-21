@@ -1,12 +1,18 @@
-import base64
-import hashlib
-import secrets
+from contextlib import asynccontextmanager
 from datetime import timedelta
+from typing import AsyncIterator
 
-from app.core.auth.exceptions import SessionInvalid, SessionNotFound
-from app.repo.session import hash_session_secret
-from app.types.session import AuthSession, HashedSessionSecret, SessionID, SessionSecret, SessionToken
 from app import repo
+from app.core.auth.exceptions import SessionNotFound
+from app.core.context import get_current_session, get_request_context
+from app.repo.session import SessionUpdater
+from app.types.session import (
+    AuthSession,
+    SessionID,
+    SessionSecret,
+    SessionToken,
+    SessionTokenData,
+)
 
 DUMMY_SESSION_DB: dict[SessionID, AuthSession] = {}
 
@@ -29,7 +35,7 @@ async def create_session() -> tuple[AuthSession, SessionToken]:
     return session, token
 
 
-async def get_from_session_token(token: SessionToken) -> AuthSession:
+async def get_session_from_token(token: SessionToken) -> AuthSession:
     """
     Get an AuthSession from a Bearer token.
 
@@ -37,60 +43,48 @@ async def get_from_session_token(token: SessionToken) -> AuthSession:
     either the session doesn't exist, or the secret is invalid.
     """
     try:
-        session_id, session_secret = parse_session_token(token)
+        session_token = parse_session_token(token)
     except Exception as exc:
         raise SessionNotFound("Invalid session token") from exc
 
     try:
-        session = await repo.session.get_with_secret(session_id, session_secret)
+        session = await repo.session.get_for_token(session_token)
     except Exception:
         raise SessionNotFound("Session not found for token")
 
     return session
 
 
+async def get_or_create_session_from_token(token: SessionToken | None) -> tuple[AuthSession, SessionToken | None]:
+    if token is not None:
+        try:
+            session = await get_session_from_token(token)
+        except SessionNotFound:
+            pass
+        else:
+            return session, None  # Existing session
+
+    return await create_session()
+
+
 async def get_session(session_id: SessionID) -> AuthSession:
     return await repo.session.get(session_id)
 
 
-def create_session_token(session_id: SessionID, session_secret: SessionSecret) -> SessionToken:
+def create_session_token(
+    session_id: SessionID, session_secret: SessionSecret
+) -> SessionToken:
     """Format a session token for returning to the client"""
     return SessionToken(f"{session_id}.{session_secret}")
 
 
-def parse_session_token(token: SessionToken) -> tuple[SessionID, SessionSecret]:
+def parse_session_token(token: SessionToken) -> SessionTokenData:
     """Parse a session token into a a(id, secret) pair"""
     session_id, session_secret = token.split(".")
-    return SessionID(session_id), SessionSecret(session_secret)
-
-
-# async def recreate_session(session: AuthSession) -> AuthSession:
-#     """
-#     Invalidate a session and create a new one with a different id.
-
-#     Used when adding authorization grants to a session, to preven
-#     session fixation attacks.
-#     """
-
-#     # TODO: do this atomically instead?
-#     if session.session_id is not None:
-#         await invalidate_session(session.session_id)
-
-#     new_session_id = generate_session_id()
-#     new_session = deepcopy(session)
-#     new_session.session_id = new_session_id
-#     DUMMY_SESSION_DB[new_session_id] = new_session
-#     return new_session
-
-
-# async def duplicate_session(session: AuthSession) -> AuthSession:
-#     """Create a new copy of this session"""
-
-#     new_session_id = generate_session_id()
-#     new_session = deepcopy(session)
-#     new_session.session_id = new_session_id
-#     DUMMY_SESSION_DB[new_session_id] = new_session
-#     return new_session
+    return SessionTokenData(
+        session_id=SessionID(session_id),
+        session_secret=SessionSecret(session_secret),
+    )
 
 
 async def invalidate_session(session_id: SessionID):
@@ -98,9 +92,29 @@ async def invalidate_session(session_id: SessionID):
     await repo.session.invalidate(session_id)
 
 
-# def generate_session_id() -> SessionID:
-#     return SessionID(secrets.token_urlsafe(16))
+# Current session ----------------------------------------------------
 
 
-# def generate_session_secret() -> SessionSecret:
-#     return SessionSecret(secrets.token_urlsafe(16))
+# Explicit re-export
+get_current_session = get_current_session
+
+
+@asynccontextmanager
+async def current_session_updater() -> AsyncIterator[SessionUpdater]:
+    ctx = get_request_context()
+    session = ctx.auth_session
+    async with repo.session.for_update(session.session_id) as upd:
+        try:
+            yield upd
+        finally:
+            if upd.new_secret is not None:
+                token = create_session_token(session.session_id, upd.new_secret)
+                ctx.new_session_token = token
+
+
+async def invalidate_current_session():
+    ctx = get_request_context()
+    await invalidate_session(ctx.auth_session.session_id)
+    new_session, new_token = await create_session()
+    ctx.auth_session = new_session
+    ctx.new_session_token = new_token

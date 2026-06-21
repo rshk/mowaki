@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Annotated, Literal, NewType, Self
 
 from pydantic import BaseModel, Field
 
+from .challenges import AuthChallengeState
+from .user import UserID
+
 if TYPE_CHECKING:
     import sqlalchemy
-
-    from app.types.challenges import AuthChallengeState
-    from app.types.user import UserID
 
 SessionID = NewType("SessionID", str)
 SessionSecret = NewType("SessionSecret", str)

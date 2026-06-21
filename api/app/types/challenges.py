@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Annotated, Literal, NewType
 
@@ -11,23 +13,37 @@ ChallengeID = NewType("ChallengeID", str)
 # *Response -> sent by the client
 
 
+class BaseChallengeState(BaseModel):
+    challenge_id: ChallengeID
+    created_at: datetime
+    expires_at: datetime
+    response: BaseChallengeResponse | None = None
+
+
+class BaseChallengeRequest(BaseModel):
+    challenge_id: ChallengeID
+
+
+class BaseChallengeResponse(BaseModel):
+    challenge_id: ChallengeID
+
+
 # Email OTP challenge ------------------------------------------------
 
 
-class EmailOtpChallenge(BaseModel):
+class EmailOtpChallenge(BaseChallengeRequest):
     challenge_id: ChallengeID
     kind: Literal["email"]
 
 
-class EmailOtpState(BaseModel):
+class EmailOtpState(BaseChallengeState):
     challenge_id: ChallengeID
     kind: Literal["email"]
-    expires_at: datetime
     email: str
     otp: str
 
 
-class EmailOtpResponse(BaseModel):
+class EmailOtpResponse(BaseChallengeResponse):
     challenge_id: ChallengeID
     kind: Literal["email"]
     otp: str
