@@ -10,7 +10,7 @@
 
 *********************************************************************/
 
-import { SESSION_ID_KEY } from "./config";
+import { SESSION_TOKEN_KEY } from "./config";
 
 type TokenString = string;
 
@@ -19,8 +19,8 @@ type TokenString = string;
  */
 export function getToken(): TokenString | null {
     return (
-        sessionStorage.getItem(SESSION_ID_KEY) ||
-        localStorage.getItem(SESSION_ID_KEY) ||
+        sessionStorage.getItem(SESSION_TOKEN_KEY) ||
+        localStorage.getItem(SESSION_TOKEN_KEY) ||
         null
     );
 }
@@ -41,17 +41,17 @@ export function setToken(
 }
 
 export function setSessionToken(token: TokenString): void {
-    localStorage.removeItem(SESSION_ID_KEY);
-    sessionStorage.setItem(SESSION_ID_KEY, token);
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    sessionStorage.setItem(SESSION_TOKEN_KEY, token);
 }
 
 export function setPersistentToken(token: TokenString): void {
-    sessionStorage.removeItem(SESSION_ID_KEY);
-    localStorage.setItem(SESSION_ID_KEY, token);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.setItem(SESSION_TOKEN_KEY, token);
 }
 
 export function updateToken(token: TokenString): void {
-    if (localStorage.getItem(SESSION_ID_KEY)) {
+    if (localStorage.getItem(SESSION_TOKEN_KEY)) {
         setPersistentToken(token);
     } else {
         setSessionToken(token);
@@ -59,8 +59,8 @@ export function updateToken(token: TokenString): void {
 }
 
 export function removeToken(): void {
-    sessionStorage.removeItem(SESSION_ID_KEY);
-    localStorage.removeItem(SESSION_ID_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    localStorage.removeItem(SESSION_TOKEN_KEY);
 }
 
 /**
