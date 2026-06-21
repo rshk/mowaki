@@ -48,8 +48,12 @@ app.add_middleware(
 
 @app.middleware("http")
 async def setup_request_context_middleware(request: Request, call_next):
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     token = get_request_session_token(request)
     session, new_token = await get_or_create_session_from_token(token)
+
     ctx = RequestContext(auth_session=session, new_session_token=new_token)
     with scoped_context(request_context, ctx):
         response: Response = await call_next(request)

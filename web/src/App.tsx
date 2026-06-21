@@ -157,11 +157,11 @@ function DemoRequests() {
             .catch((error) => setState({ error }));
     };
 
-    React.useEffect(() => doRequest(), []);
+    /* React.useEffect(() => doRequest(), []); */
 
-    const doNewSession = () => {
+    const doLogout = () => {
         apiClient._client
-            .post("/_dev/new-session", {})
+            .post("/_dev/logout", {})
             .then((data) => setState({ data }))
             .catch((error) => setState({ error }));
     };
@@ -188,7 +188,7 @@ function DemoRequests() {
                 <Button variant="contained" onClick={doRequest}>
                     Refresh
                 </Button>
-                <Button variant="contained" onClick={doNewSession}>
+                <Button variant="contained" onClick={doLogout}>
                     New session
                 </Button>
                 <Button variant="contained" onClick={doGet403}>
