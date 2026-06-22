@@ -73,9 +73,6 @@ class AuthSessionData(BaseModel):
     # Authorization grants associated with this session.
     grants: list[AuthGrant] = Field(default_factory=list)
 
-    # Authentication challenges associated with this session.
-    challenges: list[AuthChallengeState] = Field(default_factory=list)
-
     @classmethod
     def empty(cls) -> AuthSessionData:
         return AuthSessionData()

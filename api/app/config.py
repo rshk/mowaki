@@ -31,22 +31,18 @@ class Config(BaseSettings):
     # Allowed origins for CORS
     cors_origins: Annotated[
         list[str],
-        Field(default_factory=lambda data: [str(data["frontend_url"])]),
         NoDecode,
         BeforeValidator(lambda x: (x.split() if isinstance(x, str) else x)),
         PlainSerializer(lambda x: " ".join(x), return_type=str),
-    ]
+    ] = Field(default_factory=lambda data: [str(data["frontend_url"])])
 
     # Authentication options
-    auth_relying_party_id: Annotated[
-        str,
-        Field(
-            default_factory=lambda data: get_url_private_suffix(data["frontend_url"])
-        ),
-    ]
-    auth_relying_party_name: Annotated[
-        str, Field(default_factory=lambda data: data["auth_relying_party_id"])
-    ]
+    auth_relying_party_id: str = Field(
+        default_factory=lambda data: get_url_private_suffix(data["frontend_url"])
+    )
+    auth_relying_party_name: str = Field(
+        default_factory=lambda data: data["auth_relying_party_id"]
+    )
 
     # Enable development features
     development_mode: bool = False
