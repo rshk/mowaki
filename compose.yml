@@ -7,8 +7,8 @@
 # - 8026 - MailSlurper UI
 ---
 include:
-  - ./api/compose.yml
-  - ./web/compose.yml
+  - ./api/_compose.yml
+  - ./web/_compose.yml
 
 services:
 
