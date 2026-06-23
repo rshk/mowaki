@@ -54,12 +54,14 @@ def create_async_engine(url: str | URL, **kwargs):
             repr(make_url(db_url)),
         )
 
-    # READ COMMITTED is the default isolation level, but we want to
-    # state it explicitly here.
+    # Explicitly set default isolation level
     kwargs.setdefault("isolation_level", "READ COMMITTED")
 
-    # TODO: make this a configuration option
-    kwargs.setdefault("pool_size", 50)
+    if kwargs.get("poolclass") is not NullPool:
+        # TODO: this is a bit hacky; any better way to set this
+        #       default through sqllachemy, only if the pool supports it?
+        # TODO: make this a configuration option
+        kwargs.setdefault("pool_size", 50)
 
     return _create_async_engine(db_url, **kwargs)
 

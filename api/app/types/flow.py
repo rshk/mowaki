@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 from pydantic import BaseModel
 from typing import Any, NewType
@@ -16,6 +17,8 @@ class Flow(BaseModel):
     goal: Any  # List of grants to be added? But this might be dynamic!
     status: Any  # PENDING | GRANTED | DENIED
 
-    # session_id: SessionID
-    # scopes: list[Any]
-    # challenges: list[Any]
+    created_at: datetime
+    expires_at: datetime | None
+
+    # Challenges to be solved for this flow
+    challenges: list[Any]

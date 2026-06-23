@@ -66,7 +66,11 @@ async def database_schema(database, resources):
     """
 
     database_url = database
-    engine = create_async_engine(database_url, isolation_level="AUTOCOMMIT", poolclass=NullPool)
+    engine = create_async_engine(
+        database_url,
+        isolation_level="AUTOCOMMIT",
+        poolclass=NullPool,
+    )
 
     async with engine.begin() as conn:
         await conn.run_sync(metadata.create_all)
