@@ -5,6 +5,7 @@ from typing import Any, Callable, Type, TypeVar
 import sqlalchemy
 from pydantic import BaseModel
 
+from app.lib.type_registry import TypeCallbackRegistry
 from app.types.session import AuthSession
 
 type LoaderFn = Callable[[Type, sqlalchemy.Row], Any]
@@ -21,53 +22,31 @@ class ModelSerializationRegistry:
       dictionary.
     """
 
-    _loaders: dict[Type, LoaderFn]
-    _dumpers: dict[Type, DumperFn]
+    _loaders: TypeCallbackRegistry[LoaderFn]
+    _dumpers: TypeCallbackRegistry[DumperFn]
 
     def __init__(self):
-        self._loaders = {}
-        self._dumpers = {}
+        self._loaders = TypeCallbackRegistry()
+        self._dumpers = TypeCallbackRegistry()
 
     def set_loader(self, type_: Type, fn: LoaderFn):
-        self._loaders[type_] = fn
+        self._loaders.set(type_, fn)
 
     def set_dumper(self, type_: Type, fn: DumperFn):
-        self._dumpers[type_] = fn
+        self._dumpers.set(type_, fn)
 
     def loader(self, type_: Type) -> Callable[[LoaderFn], None]:
-        def decorator(fn: LoaderFn):
-            self.set_loader(type_, fn)
-
-        return decorator
+        return self._loaders.declare(type_)
 
     def dumper(self, type_: Type) -> Callable[[DumperFn], None]:
-        def decorator(fn: DumperFn):
-            self.set_dumper(type_, fn)
-
-        return decorator
-
-    def _find_loader(self, type_: Type) -> LoaderFn:
-        for subtype in type_.mro():
-            try:
-                return self._loaders[subtype]
-            except KeyError:
-                pass
-        raise KeyError(f"No loader found for {type_}")
-
-    def _find_dumper(self, type_: Type) -> DumperFn:
-        for subtype in type_.mro():
-            try:
-                return self._dumpers[subtype]
-            except KeyError:
-                pass
-        raise KeyError(f"No dumper found for {type_}")
+        return self._dumpers.declare(type_)
 
     def load(self, model: Type, obj: sqlalchemy.Row) -> Any:
-        loader = self._find_loader(model)
+        loader = self._loaders.get(model)
         return loader(model, obj)
 
     def dump(self, obj: Any) -> dict[str, Any]:
-        dumper = self._find_dumper(type(obj))
+        dumper = self._dumpers.get(type(obj))
         return dumper(type(obj), obj)
 
 
@@ -76,25 +55,19 @@ registry = ModelSerializationRegistry()
 
 type ToDictFn = Callable[[Any], dict[str, Any]]
 
-# class DictSerializerRegistry:
-#     _registry: dict[Type, ToDictFn]
+to_dict_registry = TypeCallbackRegistry[ToDictFn]()
 
-#     def __init__(self):
-#         self._registry = {}
 
-#     def set_serializer(self, type_: Type, fn: ToDictFn):
-#         self._registry[type_] = fn
-
-#     def get_serializer(self, type_: Type) -> ToDictFn:
-#         for subtype in type_.mro():
-#             try:
-#                 return self._registry()
+@to_dict_registry.declare(sqlalchemy.Row)
+def sqlalchemy_row_to_dict(row: sqlalchemy.Row):
+    return row._asdict()
 
 
 # Public interface ---------------------------------------------------
 
 
-def load_model(model: type, obj: sqlalchemy.Row) -> Any:
+def load_model(model: type, obj: Any) -> Any:
+    data = to_dict_registry.get(type(obj))(obj)
     return registry.load(model, obj)
 
 

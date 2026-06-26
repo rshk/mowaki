@@ -4,7 +4,7 @@ Registry to hold values associated to a type.
 Values will be resolved according to the type MRO.
 """
 
-from typing import Callable, Type
+from typing import Any, Callable, Type
 
 
 class TypeRegistry[T]:
@@ -25,7 +25,7 @@ class TypeRegistry[T]:
         raise KeyError(f"No entry found for {type_}")
 
 
-class TypeCallbackRegistry[T: Callable](TypeRegistry[T]):
+class TypeCallbackRegistry[T](TypeRegistry[Callable[..., T]]):
     """
     Specialized registry to hold callables.
 
@@ -33,8 +33,12 @@ class TypeCallbackRegistry[T: Callable](TypeRegistry[T]):
     like Rust traits.
     """
 
-    def declare(self, type_: Type) -> Callable[[T], None]:
-        def decorator(fn: T):
+    def declare(self, type_: Type) -> Callable[[Callable[..., T]], None]:
+        def decorator(fn: Callable[..., T]):
             self.set(type_, fn)
 
         return decorator
+
+    def call_method(self, obj: Any, *args, **kwargs) -> T:
+        fn = self.get(type(obj))
+        return fn(obj, *args, **kwargs)

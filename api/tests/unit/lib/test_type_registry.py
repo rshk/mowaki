@@ -1,6 +1,6 @@
 from pytest import Subtests
 import pytest
-from app.lib.type_registry import TypeRegistry
+from app.lib.type_registry import TypeCallbackRegistry, TypeRegistry
 
 
 def test_type_registry(subtests: Subtests):
@@ -33,3 +33,34 @@ def test_type_registry(subtests: Subtests):
     with subtests.test("Get for missing  type"):
         with pytest.raises(KeyError):
             registry.get(Quux)
+
+
+def test_method_registry(subtests):
+
+    class Foo:
+        name = "foo"
+
+    class Bar(Foo):
+        name = "bar"
+
+    class Baz(Bar):
+        name = "baz"
+
+    registry = TypeCallbackRegistry[str]()
+
+    @registry.declare(Foo)
+    def some_method_for_foo(foo: Foo) -> str:
+        return foo.name
+
+    @registry.declare(Baz)
+    def some_method_for_baz(baz: Baz) -> str:
+        return "BAZZZ!"
+
+    with subtests.test("Call method for exact type"):
+        assert registry.call_method(Foo()) == "foo"
+
+    with subtests.test("Call method for sub-type"):
+        assert registry.call_method(Bar()) == "bar"
+
+    with subtests.test("Call method for sub-sub-type with override"):
+        assert registry.call_method(Baz()) == "BAZZZ!"
