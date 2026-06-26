@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Annotated, Literal, NewType, Self
 
 from pydantic import BaseModel, Field
 
-from .challenges import AuthChallengeState
+from app.types.authentication import Assertion
+
 from .user import UserID
 
 if TYPE_CHECKING:
@@ -21,10 +22,13 @@ SessionToken = NewType("SessionToken", str)
 class AuthSession(BaseModel):
     """Authentication session"""
 
-    # Used to identify the session in the database
+    # Session identifier
     session_id: SessionID
 
-    # Used to prevent session fixation attacks, eg. when adding grants.
+    # Session "secret". Stored in the database as SHA256 hash, so
+    # session tokens cannot be guessed from read-only access to the
+    # database. Can be rotated to prevent session fixation attacks
+    # (eg. when a new assertion is added to a session).
     session_secret: HashedSessionSecret
 
     # Date this session was created. Immutable.
@@ -33,17 +37,23 @@ class AuthSession(BaseModel):
     # Date this session was last used.
     last_used_date: datetime | None = None
 
-    # Expiration dates can be calculated on the fly
+    # Expiration dates can be calculated on the fly, based on
+    # creation_date and last_used_date.
+    # We could add another (shorter-lived) expiration date to the
+    # session, if the need arises to have sessions with even shorter
+    # validity.
 
-    # Metadata about the user / device / location where the session
-    # was created. Mostly informative, can be used for advanced
-    # security checks.
+    # Session metadata.
+    # Contains information about the device that initiated the session
+    # (IP address, user agent, etc.).
+    # Mostly for informative and auditing purposes.
     metadata: AuthSessionMetadata = Field(
         default_factory=lambda: AuthSessionMetadata.empty()
     )
 
-    # Auth data associated with the session.
-    # Using a sub-field makes storage in the database easier.
+    # Authentication data associated to the session.
+    # Stored in a separate object so it's easier to pass around on its
+    # own.
     data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
 
     @classmethod
@@ -70,8 +80,13 @@ class AuthSessionData(BaseModel):
     # case of an admin impersonating a different user.
     current_user_id: UserID | None = None
 
-    # Authorization grants associated with this session.
-    grants: list[AuthGrant] = Field(default_factory=list)
+    # Authorization assertions
+    assertions: list[Assertion] = Field(default_factory=list)
+
+    # # Authorization grants associated with this session.
+    # grants: list[AuthGrant] = Field(default_factory=list)
+
+    # challenges: ...
 
     @classmethod
     def empty(cls) -> AuthSessionData:

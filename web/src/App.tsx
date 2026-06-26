@@ -1,4 +1,3 @@
-import * as React from "react";
 import { BrowserRouter, Routes, Route, Outlet, useParams } from "react-router";
 import ResponsiveAppBar from "./demo/_components/app-bar";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
@@ -9,12 +8,10 @@ import {
     useQuery,
     useMutation,
     useQueryClient,
-    QueryClient,
     QueryClientProvider,
 } from "@tanstack/react-query";
 import { AuthorizationError } from "./lib/api-client/rest-client";
-
-const queryClient = new QueryClient();
+import queryClient from "./lib/query-client";
 
 const theme = createTheme({
     colorSchemes: {

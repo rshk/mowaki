@@ -1,11 +1,50 @@
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from typing import Annotated, Literal, NewType
+
+from pydantic import BaseModel, Discriminator, Field
+
+from app.types.user import UserID
+
+
 class AuthnLevel:
     pass
 
 
 # Assertions ---------------------------------------------------------
 
-class AuthnAssertion:
-    """
-    Base for authentication assertions
-    """
-    pass
+
+class Assertion(BaseModel):
+    """Authentication assertion"""
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    expires_at: datetime | None = None
+    params: AssertionParams = Field()
+
+
+class EmailVerified(BaseModel):
+    kind: Literal["email-verified"]
+    email_address: str
+
+
+class PasskeyVerification(BaseModel):
+    kind: Literal["passkey"]
+    passkey_id: PasskeyID
+    user_id: UserID
+
+
+AssertionParams = Annotated[EmailVerified | PasskeyVerification, Discriminator("kind")]
+
+
+# Passkey data -------------------------------------------------------
+
+PasskeyID = NewType("PasskeyID", str)
+
+
+class PasskeyData(BaseModel):
+    credential_id: PasskeyID
+    public_key: str
+    sign_count: int
