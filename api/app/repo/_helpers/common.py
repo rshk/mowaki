@@ -1,35 +1,21 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import (
-    Any,
-    AsyncContextManager,
-    AsyncIterator,
-    Callable,
-    Coroutine,
-    Generic,
-    Self,
-    Type,
-    TypeVar,
-    reveal_type,
-)
+from typing import Any, AsyncIterator, Callable, Coroutine, Self, Type
 
 import sqlalchemy as sa
-from pydantic import BaseModel
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncTransaction
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from app.exceptions import ObjectNotFound
 from app.io.resources import get_database
-from app.types._protocols import FromRow
-
-T = TypeVar("T", bound=FromRow)
+from app.types._protocols import FromDict
 
 # Callable to update an object
 UpdaterFn = Callable[..., Coroutine[Any, Any, sa.CursorResult[Any]]]
 
 
-class TableCrud(Generic[T]):
+class TableCrud[T: FromDict]:
     """Helper class for performing basic CRUD operations on a table."""
 
     __slots__ = ["_table", "_model", "_engine", "_connection"]
@@ -168,13 +154,13 @@ class TableCrud(Generic[T]):
             await conn.execute(query)
 
 
-class WrappedResult(Generic[T]):
+class WrappedResult[T: FromDict]:
     def __init__(self, model: Type[T], result: sa.CursorResult) -> None:
         self._model = model
         self._result = result
 
     def all(self) -> list[T]:
-        return [self._model.from_row(row) for row in self._result.all()]
+        return [self._model.from_dict(row._asdict()) for row in self._result.all()]
 
     def fetchall(self) -> list[T]:
         return self.all()
@@ -183,25 +169,25 @@ class WrappedResult(Generic[T]):
         row = self._result.fetchone()
         if row is None:
             return None
-        return self._model.from_row(row)
+        return self._model.from_dict(row._asdict())
 
     def first(self) -> T | None:
         row = self._result.first()
         if row is None:
             return None
-        return self._model.from_row(row)
+        return self._model.from_dict(row._asdict())
 
     def one(self) -> T:
         # Raises NoResultFound, MultipleResultsFound
         row = self._result.one()
-        return self._model.from_row(row)
+        return self._model.from_dict(row._asdict())
 
     def one_or_none(self) -> T | None:
         # Raises MultipleResultsFound
         row = self._result.one_or_none()
         if row is None:
             return None
-        return self._model.from_row(row)
+        return self._model.from_dict(row._asdict())
 
     @property
     def inserted_primary_key(self) -> Any | None:

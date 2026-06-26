@@ -3,9 +3,23 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Annotated, Literal, NewType
 
-from pydantic import BaseModel, Discriminator
+from pydantic import BaseModel, Discriminator, TypeAdapter
 
 ChallengeID = NewType("ChallengeID", str)
+
+
+class ChallengeState(BaseModel):
+    challenge_id: ChallengeID
+    created_at: datetime
+    expires_at: datetime
+    params: BaseChallengeState
+    response: BaseChallengeResponse | None = None
+
+
+ListOfChallengeState = TypeAdapter(list[ChallengeState])
+
+
+# FlowList = TypeAdapter(list[Flow])
 
 
 # *Challenge -> sent to the user

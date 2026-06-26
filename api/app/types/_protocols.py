@@ -1,22 +1,15 @@
 from abc import abstractmethod
 from typing import Any, Protocol, Self
 
-import sqlalchemy
 
-
-class FromRow(Protocol):
+class FromDict(Protocol):
     @classmethod
     @abstractmethod
-    def from_row(cls, row: sqlalchemy.Row) -> Self:
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         pass
 
 
-class JsonSerializable(Protocol):
-    @classmethod
+class ToDict(Protocol):
     @abstractmethod
-    def from_json(cls, data: dict[str, Any]) -> Self:
-        pass
-
-    @abstractmethod
-    def to_json(self) -> dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         pass

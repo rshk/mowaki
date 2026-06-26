@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, NewType, Self, TYPE_CHECKING
+from typing import Any, NewType, Self
 from uuid import UUID
 
 from pydantic import BaseModel
-
-if TYPE_CHECKING:
-    import sqlalchemy
 
 UserID = NewType("UserID", UUID)
 
@@ -18,8 +15,8 @@ class User(BaseModel):
     is_active: bool
 
     @classmethod
-    def from_row(cls, row: sqlalchemy.Row) -> Self:
-        return cls.model_validate(row._asdict())
+    def from_dict(cls, row: dict[str, Any]) -> Self:
+        return cls.model_validate(row)
 
     @classmethod
     def from_json(cls, data: dict[str, Any]):

@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 
 from app.lib.database.json_with_schema import JsonWithSchema
-from app.types.session import AuthGrant, AuthSessionData, AuthSessionMetadata
+from app.types.session import AuthSessionData, AuthSessionMetadata
 
 from .metadata import metadata
 

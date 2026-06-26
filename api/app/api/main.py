@@ -55,6 +55,8 @@ async def setup_request_context_middleware(request: Request, call_next):
     token = get_request_session_token(request)
     session, new_token = await get_or_create_session_from_token(token)
 
+    # TODO: update session with metadata from the request, if new
+
     ctx = RequestContext(auth_session=session, new_session_token=new_token)
     with scoped_context(request_context, ctx):
         response: Response = await call_next(request)
@@ -75,6 +77,22 @@ def get_request_session_token(request: Request) -> SessionToken | None:
     if scheme.lower() != "bearer":
         return None
     return SessionToken(credentials)
+
+
+def get_client_ip_address(request: Request) -> str | None:
+    # ****************************************************************
+    # FIXME: get this from a header instead! But we want some
+    # configuration around that, not just magically try to autoguess
+    # which header contains the address, or we'd be vulnerable to
+    # spoofing!
+    # ****************************************************************
+    if request.client is None:
+        return None
+    return request.client.host
+
+
+def get_user_agent(request: Request) -> str | None:
+    return request.headers.get("User-Agent")
 
 
 # Exception handling -------------------------------------------------

@@ -2,16 +2,13 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Annotated, Literal, NewType, Self
+from typing import Annotated, Any, Literal, NewType, Self
 
 from pydantic import BaseModel, Field
 
 from app.types.authentication import Assertion
 
 from .user import UserID
-
-if TYPE_CHECKING:
-    import sqlalchemy
 
 SessionID = NewType("SessionID", str)
 SessionSecret = NewType("SessionSecret", str)
@@ -57,8 +54,8 @@ class AuthSession(BaseModel):
     data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
 
     @classmethod
-    def from_row(cls, row: sqlalchemy.Row) -> Self:
-        return cls.model_validate(row._asdict())
+    def from_dict(cls, row: dict[str, Any]) -> Self:
+        return cls.model_validate(row)
 
 
 class AuthSessionMetadata(BaseModel):

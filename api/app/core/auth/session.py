@@ -56,7 +56,9 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
     return session
 
 
-async def get_or_create_session_from_token(token: SessionToken | None) -> tuple[AuthSession, SessionToken | None]:
+async def get_or_create_session_from_token(
+    token: SessionToken | None,
+) -> tuple[AuthSession, SessionToken | None]:
     if token is not None:
         try:
             session = await get_session_from_token(token)
