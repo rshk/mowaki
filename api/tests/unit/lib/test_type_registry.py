@@ -1,6 +1,8 @@
+from abc import abstractmethod
+from typing import Protocol, reveal_type
 from pytest import Subtests
 import pytest
-from app.lib.type_registry import TypeCallbackRegistry, TypeRegistry
+from app.lib.type_registry import TraitRegistry, TypeCallbackRegistry, TypeRegistry
 
 
 def test_type_registry(subtests: Subtests):
@@ -64,3 +66,47 @@ def test_method_registry(subtests):
 
     with subtests.test("Call method for sub-sub-type with override"):
         assert registry.call_method(Baz()) == "BAZZZ!"
+
+
+def test_trait_registry(subtests):
+
+    class Foo:
+        name = "foo"
+
+    class Bar(Foo):
+        name = "bar"
+
+    class Baz(Bar):
+        name = "baz"
+
+    class GetName(Protocol):
+        @abstractmethod
+        def get_name(self) -> str:
+            raise NotImplementedError
+
+    GetNameTrait = TraitRegistry[GetName]()
+
+    @GetNameTrait.impl(Foo)
+    class GetNameForFoo(GetName):
+        def __init__(self, foo: Foo):
+            self._foo = foo
+
+        def get_name(self):
+            return self._foo.name
+
+    @GetNameTrait.impl(Baz)
+    class GetNameForBaz(GetName):
+        def __init__(self, baz: Baz):
+            self._baz = baz
+
+        def get_name(self):
+            return "BAZZZ!"
+
+    with subtests.test("Use trait for exact type"):
+        assert GetNameTrait(Foo()).get_name() == "foo"
+
+    with subtests.test("Use trait for sub-type"):
+        assert GetNameTrait(Bar()).get_name() == "bar"
+
+    with subtests.test("Use trait for sub-sub-type with override"):
+        assert GetNameTrait(Baz()).get_name() == "BAZZZ!"

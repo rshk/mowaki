@@ -4,7 +4,7 @@ Registry to hold values associated to a type.
 Values will be resolved according to the type MRO.
 """
 
-from typing import Any, Callable, Type
+from typing import Any, Callable, Protocol, Type
 
 
 class TypeRegistry[T]:
@@ -42,3 +42,21 @@ class TypeCallbackRegistry[T](TypeRegistry[Callable[..., T]]):
     def call_method(self, obj: Any, *args, **kwargs) -> T:
         fn = self.get(type(obj))
         return fn(obj, *args, **kwargs)
+
+
+type TraitConstructor[T] = Callable[[Any], T]
+
+class TraitRegistry[Proto]:
+    _registry: TypeRegistry[TraitConstructor[Proto]]
+
+    def __init__(self):
+        self._registry = TypeRegistry()
+
+    def impl(self, type_: Type) -> Callable[[TraitConstructor[Proto]], None]:
+        def decorator(ti: TraitConstructor[Proto]):
+            self._registry.set(type_, ti)
+
+        return decorator
+
+    def __call__(self, obj: Any) -> Proto:
+        return self._registry.get(type(obj))(obj)
