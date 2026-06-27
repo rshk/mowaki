@@ -1,6 +1,6 @@
 import { API_URL } from "../config";
-import { RestClient } from "./rest-client";
 import * as tokenStorage from "../token-storage";
+import { RestClient } from "./rest-client";
 
 export class ApiClient {
     _client: RestClient;

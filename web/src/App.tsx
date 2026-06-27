@@ -1,21 +1,21 @@
-import * as React from "react";
-import { BrowserRouter, Routes, Route, Outlet, useParams } from "react-router";
-import ResponsiveAppBar from "./demo/_components/app-bar";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Container from "@mui/material/Container";
-import apiClient from "/src/lib/api-client";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
+import TextField from "@mui/material/TextField";
 import {
-    useQuery,
-    useMutation,
-    useQueryClient,
     QueryClientProvider,
+    useMutation,
+    useQuery,
+    useQueryClient,
 } from "@tanstack/react-query";
+import * as React from "react";
+import { BrowserRouter, Outlet, Route, Routes, useParams } from "react-router";
+import ResponsiveAppBar from "./demo/_components/app-bar";
 import { AuthorizationError } from "./lib/api-client/rest-client";
 import queryClient from "./lib/query-client";
+import apiClient from "/src/lib/api-client";
 
 const theme = createTheme({
     colorSchemes: {
