@@ -4,7 +4,7 @@ import sqlalchemy as sa
 
 from app.lib.database.json_with_schema import JsonWithSchema
 from app.repo._schema.utils import primary_key_column
-from app.types.auth.challenges import ListOfChallengeState
+from app.types.auth.challenges import ListOfChallenges
 
 from .metadata import metadata
 
@@ -24,7 +24,7 @@ AuthFlowTable = sa.Table(
     sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
     sa.Column(
         "challenges",
-        JsonWithSchema(ListOfChallengeState),
+        JsonWithSchema(ListOfChallenges),
         default=list,
         nullable=False,
     ),

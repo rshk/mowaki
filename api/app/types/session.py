@@ -6,7 +6,7 @@ from typing import Annotated, Any, Literal, NewType, Self
 
 from pydantic import BaseModel, Field
 
-from app.types.authentication import Assertion
+from app.types.auth.authentication import Assertion
 
 from .user import UserID
 
@@ -54,8 +54,8 @@ class AuthSession(BaseModel):
     data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
 
     @classmethod
-    def from_dict(cls, row: dict[str, Any]) -> Self:
-        return cls.model_validate(row)
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls.model_validate(data)
 
 
 class AuthSessionMetadata(BaseModel):

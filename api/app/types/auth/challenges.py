@@ -1,88 +1,146 @@
 from __future__ import annotations
 
+import abc
 from datetime import datetime
-from typing import Annotated, Literal, NewType
+from typing import Annotated, Literal, NewType, Self
+import uuid
 
 from pydantic import BaseModel, Discriminator, TypeAdapter
 
-ChallengeID = NewType("ChallengeID", str)
+ChallengeID = NewType("ChallengeID", uuid.UUID)
 
 
-class ChallengeState(BaseModel):
+class Challenge[KIND](BaseModel):
+    """Challenge state, stored in a flow"""
+
     challenge_id: ChallengeID
+
+    # Discriminator
+    kind: KIND
+
     created_at: datetime
-    expires_at: datetime
-    params: BaseChallengeState
-    response: BaseChallengeResponse | None = None
+    expires_at: datetime | None = None
+
+    # Internal state of the challenge
+    state: BaseChallengeState[KIND]
+
+    # Response submitted by the user, if any
+    result: BaseChallengeResult[KIND] | None = None
 
 
-ListOfChallengeState = TypeAdapter(list[ChallengeState])
+ListOfChallenges = TypeAdapter(list[Challenge])
 
 
-# FlowList = TypeAdapter(list[Flow])
+# Base classes -------------------------------------------------------
 
 
-# *Challenge -> sent to the user
-# *State -> stored in the session
-# *Response -> sent by the client
+class BaseChallengeState[KIND](BaseModel):
+    """Internal state for the challenge, eg. OTP code to be verified"""
+
+    kind: KIND
 
 
-class BaseChallengeState(BaseModel):
+class BaseChallengeResult[KIND](BaseModel):
+    """Outcome of verifying the user response"""
+
+    kind: KIND
+    is_success: bool
+    # ... subclasses may add extra fields
+
+
+class BaseChallengeRequest[KIND](BaseModel):
+    """User-facing request"""
+
     challenge_id: ChallengeID
-    created_at: datetime
-    expires_at: datetime
-    response: BaseChallengeResponse | None = None
+    kind: KIND
 
-
-class BaseChallengeRequest(BaseModel):
-    challenge_id: ChallengeID
+    @classmethod
+    def from_challenge(cls, challenge: Challenge[KIND]) -> Self:
+        return cls(challenge_id=challenge.challenge_id, kind=cls.kind)
 
 
 class BaseChallengeResponse(BaseModel):
+    """Response to the challenge submitted by the user"""
+
     challenge_id: ChallengeID
+    # ... subclasses need to add extra fields
 
 
-# Email OTP challenge ------------------------------------------------
+# Request email address ----------------------------------------------
+
+# Ask for an email address, to be used for creating more challenges
+
+class EmailAddrChallenge(Challenge):
+    kind: Literal["email-addr"] = "email-addr"
 
 
-class EmailOtpChallenge(BaseChallengeRequest):
-    challenge_id: ChallengeID
-    kind: Literal["email"]
+class EmailAddrState(BaseChallengeState):
+    kind: Literal["email-addr"] = "email-addr"
+
+
+class EmailAddrResult(BaseChallengeResult):
+    kind: Literal["email-addr"] = "email-addr"
+    email: str
+
+
+class EmailAddrRequest(BaseChallengeRequest):
+    kind: Literal["email-addr"] = "email-addr"
+
+
+class EmailAddrResponse(BaseChallengeResponse):
+    kind: Literal["email-addr"] = "email-addr"
+    email: str
+
+
+# OTB-based email verification ---------------------------------------
+
+
+class EmailOtpChallenge(Challenge):
+    kind: Literal["email-otp"] = "email-otp"
 
 
 class EmailOtpState(BaseChallengeState):
-    challenge_id: ChallengeID
-    kind: Literal["email"]
+    kind: Literal["email-otp"] = "email-otp"
     email: str
     otp: str
 
 
+class EmailOtpResult(BaseChallengeResult):
+    kind: Literal["email-otp"] = "email-otp"
+
+
+class EmailOtpRequest(BaseChallengeRequest):
+    kind: Literal["email-otp"] = "email-otp"
+
+
 class EmailOtpResponse(BaseChallengeResponse):
-    challenge_id: ChallengeID
-    kind: Literal["email"]
+    kind: Literal["email-otp"] = "email-otp"
     otp: str
 
 
 # WebAuthn -----------------------------------------------------------
 
 
-class WebAuthnChallenge(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["webauthn"]
+class PasskeyChallenge(Challenge):
+    kind: Literal["passkey"] = "passkey"
+
+
+class PasskeyState(BaseChallengeState):
+    kind: Literal["passkey"] = "passkey"
     # TODO: add webauthn parameters
 
 
-class WebAuthnState(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["webauthn"]
-    expires_at: datetime
+class PasskeyResult(BaseChallengeResult):
+    kind: Literal["passkey"] = "passkey"
+
+
+class PasskeyRequest(BaseChallengeRequest):
+    kind: Literal["passkey"] = "passkey"
     # TODO: add webauthn parameters
 
 
-class WebAuthnChallengeResponse(BaseModel):
-    challenge_id: ChallengeID
-    kind: Literal["webauthn"]
-    # TODO: add webauthn fields
+class PasskeyResponse(BaseChallengeResponse):
+    kind: Literal["passkey"] = "passkey"
 
 
 # Time-based OTP -----------------------------------------------------
@@ -110,15 +168,15 @@ class TotpChallengeResponse(BaseModel):
 # --------------------------------------------------------------------
 
 
-AuthChallenge = Annotated[
-    EmailOtpChallenge | WebAuthnChallenge | TotpChallenge,
-    Discriminator("kind"),
-]
-AuthChallengeState = Annotated[
-    EmailOtpState | WebAuthnState | TotpChallengeState,
-    Discriminator("kind"),
-]
-AuthChallengeResponse = Annotated[
-    EmailOtpResponse | WebAuthnChallengeResponse | TotpChallengeResponse,
-    Discriminator("kind"),
-]
+# AuthChallenge = Annotated[
+#     EmailOtpChallenge | WebAuthnChallenge | TotpChallenge,
+#     Discriminator("kind"),
+# ]
+# AuthChallengeState = Annotated[
+#     EmailOtpState | WebAuthnState | TotpChallengeState,
+#     Discriminator("kind"),
+# ]
+# AuthChallengeResponse = Annotated[
+#     EmailOtpResponse | WebAuthnChallengeResponse | TotpChallengeResponse,
+#     Discriminator("kind"),
+# ]

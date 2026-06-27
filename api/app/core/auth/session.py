@@ -1,5 +1,4 @@
 from contextlib import asynccontextmanager
-from datetime import timedelta
 from typing import AsyncIterator
 
 from app import repo
@@ -14,11 +13,6 @@ from app.types.session import (
     SessionToken,
     SessionTokenData,
 )
-
-DUMMY_SESSION_DB: dict[SessionID, AuthSession] = {}
-
-SOFT_SESSION_VALIDITY = timedelta(days=7)
-HARD_SESSION_VALIDITY = timedelta(days=90)
 
 
 async def create_session() -> tuple[AuthSession, SessionToken]:

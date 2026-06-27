@@ -5,11 +5,7 @@ import secrets
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
 
-from app.exceptions import ObjectNotFound
-from app.types.challenges import AuthChallengeState, ChallengeID
 from app.types.session import (
-    AuthGrant,
-    AuthGrantId,
     AuthSession,
     AuthSessionData,
     AuthSessionMetadata,
@@ -168,16 +164,16 @@ class SessionUpdater:
             self._updates["data"] = AuthSessionData.empty()
         return self._updates["data"]
 
-    def cleanup(self):
-        """Remove expired grants and challenges from the session data"""
-        data = self._new_data
-        now = datetime.now(timezone.utc)
-        data.grants = [
-            x for x in data.grants if x.expires_at is None or x.expires_at > now
-        ]
-        data.challenges = [
-            x for x in data.challenges if x.expires_at is None or x.expires_at > now
-        ]
+    # def cleanup(self):
+    #     """Remove expired grants and challenges from the session data"""
+    #     data = self._new_data
+    #     now = datetime.now(timezone.utc)
+    #     # data.grants = [
+    #     #     x for x in data.grants if x.expires_at is None or x.expires_at > now
+    #     # ]
+    #     # data.challenges = [
+    #     #     x for x in data.challenges if x.expires_at is None or x.expires_at > now
+    #     # ]
 
     def set_authenticated_user_id(self, user_id: UserID | None = None):
         self.rotate_secret()
@@ -191,30 +187,30 @@ class SessionUpdater:
         self._new_data.current_user_id = user_id
         self._updates["current_user_id"] = user_id
 
-    def add_grant(self, grant: AuthGrant):
-        self.rotate_secret()
-        self._new_data.grants.append(grant)
+    # def add_grant(self, grant: AuthGrant):
+    #     self.rotate_secret()
+    #     self._new_data.grants.append(grant)
 
-    def remove_grant(self, grant_id: AuthGrantId):
-        self.rotate_secret()
-        self._new_data.grants = [
-            x for x in self._new_data.grants if x.id != grant_id
-        ]
+    # def remove_grant(self, grant_id: AuthGrantId):
+    #     self.rotate_secret()
+    #     self._new_data.grants = [
+    #         x for x in self._new_data.grants if x.id != grant_id
+    #     ]
 
-    def get_editable_challange(self, challenge_id: ChallengeID) -> AuthChallengeState:
-        """Get an authentication challenge so it can be updated"""
-        for challenge in self._new_data.challenges:
-            if challenge.challenge_id == challenge_id:
-                return challenge
-        raise ObjectNotFound(f"Challenge {challenge_id} on session {self.session.session_id}")
+    # def get_editable_challange(self, challenge_id: ChallengeID) -> AuthChallengeState:
+    #     """Get an authentication challenge so it can be updated"""
+    #     for challenge in self._new_data.challenges:
+    #         if challenge.challenge_id == challenge_id:
+    #             return challenge
+    #     raise ObjectNotFound(f"Challenge {challenge_id} on session {self.session.session_id}")
 
-    def add_challenge(self, challenge: AuthChallengeState):
-        self._new_data.challenges.append(challenge)
+    # def add_challenge(self, challenge: AuthChallengeState):
+    #     self._new_data.challenges.append(challenge)
 
-    def remove_challenge(self, challenge_id: ChallengeID):
-        self._new_data.challenges = [
-            x for x in self._new_data.challenges if x.challenge_id != challenge_id
-        ]
+    # def remove_challenge(self, challenge_id: ChallengeID):
+    #     self._new_data.challenges = [
+    #         x for x in self._new_data.challenges if x.challenge_id != challenge_id
+    #     ]
 
 
 @asynccontextmanager

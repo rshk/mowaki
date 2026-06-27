@@ -1,24 +1,20 @@
 import uuid
 from datetime import datetime, timezone
-from typing import NewType
+from typing import Annotated, Any, Literal, NewType, Self
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Discriminator, Field
 
-from app.types.auth.challenges import ChallengeState
+from app.types.auth.challenges import Challenge
 from app.types.session import SessionID
 
 AuthFlowID = NewType("AuthFlowID", uuid.UUID)
-AuthFlowKind = NewType("AuthFlowKind", str)
 
 
-class AuthFlow(BaseModel):
+class AuthFlow[KIND](BaseModel):
     flow_id: AuthFlowID
 
-    # A flow can be tied to a session
-    session_id: SessionID | None = None
-
-    # Used to dispatch flow handling logic
-    kind: AuthFlowKind  # Eg. "login"
+    # Discriminator, used to dispatch flow handling logic
+    kind: KIND
 
     # Completed flows can actually be cleaned up
     is_completed: bool = False
@@ -30,4 +26,22 @@ class AuthFlow(BaseModel):
     expires_at: datetime | None = None
 
     # Challenges to be solved for this flow
-    challenges: list[ChallengeState] = Field(default_factory=list)
+    challenges: list[Challenge] = Field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> Self:
+        return cls.model_validate(data)
+
+
+class LoginFlow(AuthFlow):
+    kind: Literal["login"]
+
+
+class UpgradeFlow(AuthFlow):
+    kind: Literal["upgrade"]
+
+    # Session being upgraded
+    session_id: SessionID
+
+
+type AuthFlowType = Annotated[LoginFlow | UpgradeFlow, Discriminator("kind")]
