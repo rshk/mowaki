@@ -231,8 +231,7 @@ function ColorModeToggler() {
     const switchMode = (event: React.MouseEvent) => {
         if (event.altKey || event.ctrlKey || event.metaKey) {
             setMode("system");
-        }
-        else {
+        } else {
             setMode(nextMode);
         }
     };

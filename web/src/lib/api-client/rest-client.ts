@@ -73,7 +73,7 @@ export class RestClient {
             return response.json();
         }
 
-        let responseData = await (response.json().catch(() => null));
+        let responseData = await response.json().catch(() => null);
 
         const exceptionArgs = {
             data: responseData,

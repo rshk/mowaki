@@ -8,14 +8,14 @@ export class ApiClient {
     constructor(baseUrl: string) {
         this._client = new RestClient(baseUrl);
 
-        this._client.addRequestMiddleware(request => {
+        this._client.addRequestMiddleware((request) => {
             const token = tokenStorage.getToken();
             if (token) {
                 request.headers.set("Authorization", `Bearer ${token}`);
             }
         });
 
-        this._client.addResponseHandler(response => {
+        this._client.addResponseHandler((response) => {
             const newSessionId = response.headers.get("x-set-session-token");
             if (newSessionId) {
                 tokenStorage.setSessionToken(newSessionId);
@@ -72,8 +72,7 @@ type LoginFlowInfo = {
 };
 
 type LoginFlowChallenge =
-    | { type: "email"; email: string }
-    | { type: "password"; password: string };
+    { type: "email"; email: string } | { type: "password"; password: string };
 
 type Item = {
     id: string;

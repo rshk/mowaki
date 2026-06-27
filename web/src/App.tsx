@@ -1,9 +1,13 @@
+import * as React from "react";
 import { BrowserRouter, Routes, Route, Outlet, useParams } from "react-router";
 import ResponsiveAppBar from "./demo/_components/app-bar";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Container from "@mui/material/Container";
 import apiClient from "/src/lib/api-client";
-import { Button } from "@mui/material";
+import Button from "@mui/material/Button";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
+import CssBaseline from "@mui/material/CssBaseline";
 import {
     useQuery,
     useMutation,
@@ -23,6 +27,7 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <ThemeProvider theme={theme}>
+                <CssBaseline />
                 <BrowserRouter>
                     <AppRoutes />
                 </BrowserRouter>
@@ -109,6 +114,8 @@ function Homepage() {
         <div>
             <h1>Dashboard</h1>
             <DemoRequests />
+            <h1>Login with webauthn</h1>
+            <WebauthnLoginForm />
         </div>
     );
 }
@@ -236,6 +243,28 @@ function DemoRequests() {
                     403 with upgrade
                 </Button>
             </div>
+        </div>
+    );
+}
+
+function WebauthnLoginForm() {
+    const [formState, setFormState] = React.useState({});
+    const onSubmit = () => {};
+
+    return (
+        <div>
+            <form onSubmit={onSubmit}>
+                <Box>
+                    <TextField
+                        id="email-addr"
+                        label="Email address"
+                        variant="outlined"
+                        fullWidth
+                        autoComplete="username webauthn"
+                        type="email"
+                    />
+                </Box>
+            </form>
         </div>
     );
 }
