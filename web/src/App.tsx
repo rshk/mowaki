@@ -4,6 +4,7 @@ import Container from "@mui/material/Container";
 import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
+import { startAuthentication } from "@simplewebauthn/browser";
 import {
     QueryClientProvider,
     useMutation,
@@ -158,7 +159,7 @@ function DemoRequests() {
 
     const query = useQuery({
         queryKey: ["_dev"],
-        queryFn: () => apiClient._client.get("/_dev"),
+        queryFn: () => apiClient._client.get<object>("/_dev"),
     });
 
     const logoutMutation = useMutation({
@@ -247,12 +248,56 @@ function DemoRequests() {
     );
 }
 
+type LoginFormState = {
+    email: string;
+};
+
 function WebauthnLoginForm() {
-    const [formState, setFormState] = React.useState({});
-    const onSubmit = () => {};
+    const [formState, setFormState] = React.useState<LoginFormState>({
+        email: "",
+    });
+
+    const authOptionsQuery = useQuery({
+        queryKey: ["auth/login/options"],
+        queryFn: () => apiClient.getAuthLoginOptions(),
+    });
+
+    React.useEffect(() => {
+        if (!authOptionsQuery.data) {
+            return;
+        }
+        const optionsJSON = authOptionsQuery.data;
+        console.log("Auth options:", optionsJSON);
+
+        startAuthentication({ optionsJSON, useBrowserAutofill: true })
+            .then((authResp) => {
+                console.log("Auth response:", authResp);
+            })
+            .catch((err) => console.warn("Start authentication error:", err));
+
+    }, [authOptionsQuery.data]);
+
+    const onSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        console.log("SUBMIT", formState.email);
+    };
+
+    const onEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setFormState((state) => ({ ...state, email: event.target.value }));
+    };
+
+    /* fetch('/generate-authentication-options')
+     *   .then(resp => resp.json())
+     *   .then((optionsJSON) => {
+     *     // Note the `useBrowserAutofill: true` argument here
+     *     startAuthentication({ optionsJSON, useBrowserAutofill: true })
+     *       .then(authResp => sendToServerForVerificationAndLogin)
+     *       .catch(err => handleError);
+     *   });
+     */
 
     return (
-        <div>
+        <Box sx={{ m: "auto", maxWidth: 600 }}>
             <form onSubmit={onSubmit}>
                 <Box>
                     <TextField
@@ -262,9 +307,22 @@ function WebauthnLoginForm() {
                         fullWidth
                         autoComplete="username webauthn"
                         type="email"
+                        onChange={onEmailChange}
+                        value={formState.email}
                     />
                 </Box>
+                <Box sx={{ my: 1, textAlign: "end" }}>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        color="primary"
+                        size="large"
+                        fullWidth
+                    >
+                        Log in with email
+                    </Button>
+                </Box>
             </form>
-        </div>
+        </Box>
     );
 }

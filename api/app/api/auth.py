@@ -12,10 +12,11 @@ from pydantic import BaseModel, EmailStr
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
+    options_to_json,
     verify_authentication_response,
     verify_registration_response,
 )
-from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url, options_to_json_dict
 from webauthn.helpers.structs import (
     AttestationConveyancePreference,
     AuthenticatorAttachment,
@@ -91,7 +92,7 @@ def start_registration(payload: EmailSchema):
     return {"message": "Verification code sent to your email."}
 
 
-@router.post("/auth/register/verify-email")
+@router.post("/register/verify-email")
 def verify_email(payload: VerifyOtpSchema, response: Response):
     """Step 2: Verify OTP and drop a secure session cookie."""
     email = payload.email
@@ -206,23 +207,20 @@ def verify_passkey_registration(
 # -------------------------------------------------------------------------
 
 
-@router.post("/login/options")
-def get_login_options(payload: EmailSchema):
-    """Step 1 of Login: Generate options for browser navigator.credentials.get()"""
-    user = db_users.get(payload.email)
-    if not user or not user["passkeys"]:
-        raise HTTPException(
-            status_code=400, detail="No passkeys registered for this account"
-        )
+@router.get("/login/options")
+def get_login_options():
+    """Get login options, for conditional UI"""
 
     config = get_config()
-
     options = generate_authentication_options(
-        rp_id=config.auth_relying_party_id, user_verification=UserVerificationRequirement.REQUIRED,
+        rp_id=config.auth_relying_party_id,
+        user_verification=UserVerificationRequirement.REQUIRED,
     )
 
-    db_challenges[user["id"]] = bytes_to_base64url(options.challenge)
-    return dataclasses.asdict(options)
+    # TODO: this should be stored in the session instead!
+    # db_challenges[user["id"]] = bytes_to_base64url(options.challenge)
+
+    return options_to_json_dict(options)
 
 
 @router.post("/login/verify")

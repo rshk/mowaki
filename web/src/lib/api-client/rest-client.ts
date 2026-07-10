@@ -40,11 +40,11 @@ export class RestClient {
         this.responseHandlers.push(fn);
     }
 
-    async _fetchJson(
+    async _fetchJson<T>(
         path: string,
         method: string,
         data?: object,
-    ): Promise<object> {
+    ): Promise<T> {
         let url = this._url(path);
         let options: RequestInit = {
             method,
@@ -70,7 +70,7 @@ export class RestClient {
 
         if (response.ok) {
             this.responseHandlers.forEach((handler) => handler(response));
-            return response.json();
+            return await response.json();
         }
 
         let responseData = await response.json().catch(() => null);
@@ -87,23 +87,23 @@ export class RestClient {
         throw new HttpError(exceptionArgs);
     }
 
-    async get(path: string): Promise<object> {
-        return this._fetchJson(path, "GET");
+    async get<T = void>(path: string): Promise<T> {
+        return await this._fetchJson<T>(path, "GET");
     }
 
-    async post(path: string, data: object): Promise<object> {
+    async post<T = void>(path: string, data: object): Promise<T> {
         return this._fetchJson(path, "POST", data);
     }
 
-    async put(path: string, data: object): Promise<object> {
+    async put<T = void>(path: string, data: object): Promise<T> {
         return this._fetchJson(path, "PUT", data);
     }
 
-    async patch(path: string, data: object): Promise<object> {
+    async patch<T = void>(path: string, data: object): Promise<T> {
         return this._fetchJson(path, "PATCH", data);
     }
 
-    async delete_(path: string): Promise<object> {
+    async delete_<T = void>(path: string): Promise<T> {
         return this._fetchJson(path, "DELETE");
     }
 }

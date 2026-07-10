@@ -1,3 +1,4 @@
+import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/browser";
 import { API_URL } from "../config";
 import * as tokenStorage from "../token-storage";
 import { RestClient } from "./rest-client";
@@ -27,18 +28,22 @@ export class ApiClient {
     // User authentication
     // ---------------------------------------------------------------
 
-    async getLoginFlowInfo(token?: string): Promise<null> {}
+    async getAuthLoginOptions(): Promise<PublicKeyCredentialRequestOptionsJSON> {
+        return await this._client.get("/auth/login/options");
+    }
 
-    async startLoginFlow(email: string): Promise<null> {}
+    /* async getLoginFlowInfo(token?: string): Promise<null> {}
 
-    async submitLoginFlowChallengeResponse(
-        token: string,
-        response: object,
-    ): Promise<null> {}
+* async startLoginFlow(email: string): Promise<null> {}
 
-    async getSessionInfo(token: string) {}
+* async submitLoginFlowChallengeResponse(
+*     token: string,
+*     response: object,
+* ): Promise<null> {}
 
-    async deleteSession(token: string) {}
+* async getSessionInfo(token: string) {}
+
+* async deleteSession(token: string) {} */
 
     // ---------------------------------------------------------------
     // Item management
