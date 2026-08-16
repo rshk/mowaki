@@ -1,0 +1,4 @@
+---
+include:
+  - path: ./.compose/main.yml
+    project_directory: .

@@ -1,0 +1,27 @@
+---
+services:
+
+  # ------------------------------------------------------------------
+  #     PostgreSQL database
+  # ------------------------------------------------------------------
+
+  db:
+    image: postgres:18-trixie
+    # restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql
+    environment:
+      POSTGRES_DB: "default"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "not-a-secret"
+    expose:
+      - 5432
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
