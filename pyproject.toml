@@ -8,7 +8,16 @@ authors = [
     { name = "Samuele Santi", email = "samuele@samuelesanti.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "asyncpg>=0.31.0",
+    "click>=8.4.2",
+    "email-validator>=2.3.0",
+    "fastapi[standard]>=0.141.1",
+    "publicsuffixlist>=1.0.2.20260815",
+    "pydantic-settings>=2.15.0",
+    "sqlalchemy[asyncio]>=2.0.52",
+    "webauthn>=3.0.0",
+]
 classifiers = [
     "Private :: Do Not Upload"
 ]
@@ -19,3 +28,13 @@ app-cli = "app.svc.cli:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "ipython>=9.16.1",
+    "pdbpp>=0.12.1",
+    "pyright>=1.1.411",
+    "pytest>=9.1.1",
+    "pytest-annotated>=0.1.1",
+    "pytest-asyncio>=1.4.0",
+]
