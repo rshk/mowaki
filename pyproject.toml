@@ -1,0 +1,21 @@
+[project]
+name = "app"
+version = "0.1.0"
+description = "Add your description here"
+license = "BSD-3-Clause"
+readme = "README.md"
+authors = [
+    { name = "Samuele Santi", email = "samuele@samuelesanti.com" }
+]
+requires-python = ">=3.14"
+dependencies = []
+classifiers = [
+    "Private :: Do Not Upload"
+]
+
+[project.scripts]
+app-cli = "app.svc.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
