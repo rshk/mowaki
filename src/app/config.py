@@ -40,7 +40,7 @@ class Config(BaseSettings):
     cors_origins: Annotated[
         list[str],
         NoDecode,
-        BeforeValidator(lambda x: (x.split() if isinstance(x, str) else x)),
+        BeforeValidator(lambda x: x.split() if isinstance(x, str) else x),
         PlainSerializer(lambda x: " ".join(x), return_type=str),
     ] = Field(default_factory=lambda data: [str(data["frontend_url"])])
 

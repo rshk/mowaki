@@ -7,11 +7,8 @@ from .metadata import metadata
 
 SessionTable = sa.Table(
     "auth_session",
-
-
-
     metadata,
-                     sa.Column("session_id", sa.Text, primary_key=True),
+    sa.Column("session_id", sa.Text, primary_key=True),
     # Hashed secret
     sa.Column("session_secret", sa.Text, nullable=False),
     # Dates are exposed in the main table for filtering
