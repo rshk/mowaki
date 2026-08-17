@@ -6,9 +6,8 @@ from typing import Annotated, Any, Literal, NewType, Self
 
 from pydantic import BaseModel, Field
 
-from app.types.auth.authentication import Assertion
-
-from .user import UserID
+from ..user import UserID
+from .authentication import Assertion
 
 SessionID = NewType("SessionID", str)
 SessionSecret = NewType("SessionSecret", str)
@@ -80,11 +79,6 @@ class AuthSessionData(BaseModel):
     # Authorization assertions
     assertions: list[Assertion] = Field(default_factory=list)
 
-    # # Authorization grants associated with this session.
-    # grants: list[AuthGrant] = Field(default_factory=list)
-
-    # challenges: ...
-
     @classmethod
     def empty(cls) -> AuthSessionData:
         return AuthSessionData()
@@ -95,27 +89,3 @@ class SessionTokenData(BaseModel):
 
     session_id: SessionID
     session_secret: SessionSecret
-
-
-AuthGrantId = NewType("AuthGrantId", uuid.UUID)
-
-
-class BaseAuthGrant(BaseModel):
-    """Base for auth grants"""
-
-    id: AuthGrantId
-    expires_at: datetime | None
-
-
-class UserLoginGrant(BaseAuthGrant):
-    kind: Literal["login"]
-    user_id: UserID
-
-
-class UserSudoModeGrant(BaseAuthGrant):
-    kind: Literal["sudo"]
-    user_id: UserID
-
-
-# These can be added as needed by the application
-AuthGrant = Annotated[UserLoginGrant | UserSudoModeGrant, Field(discriminator="kind")]

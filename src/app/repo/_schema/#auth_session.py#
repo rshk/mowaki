@@ -22,5 +22,5 @@ SessionTable = sa.Table(
     # Authentication data
     sa.Column("data", JsonWithSchema(AuthSessionData)),
     # Indices on the JSON data
-    sa.Index("")
+    sa.Index("ix_auth_session_data_")
 )
