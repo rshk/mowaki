@@ -10,3 +10,4 @@ MoWAKi documentation
    :maxdepth: 2
 
    dev/index
+   prod/index

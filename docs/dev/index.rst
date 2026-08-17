@@ -6,4 +6,5 @@ Development guide
    :caption: Contents:
 
    running
+   testing
    build-docs
