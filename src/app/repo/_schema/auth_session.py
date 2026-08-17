@@ -1,14 +1,17 @@
 import sqlalchemy as sa
 
-from app.lib.database.json_with_schema import JsonWithSchema
-from app.types.session import AuthSessionData, AuthSessionMetadata
+from app.lib.sql.json_with_schema import JsonWithSchema
+from app.types.auth.session import AuthSessionData, AuthSessionMetadata
 
 from .metadata import metadata
 
 SessionTable = sa.Table(
     "auth_session",
+
+
+
     metadata,
-    sa.Column("session_id", sa.Text, primary_key=True),
+                     sa.Column("session_id", sa.Text, primary_key=True),
     # Hashed secret
     sa.Column("session_secret", sa.Text, nullable=False),
     # Dates are exposed in the main table for filtering

@@ -1,4 +1,4 @@
 from . import session, user
 from .metadata import metadata
 
-__all__ = ["metadata", "user", "session"]
+__all__ = ["metadata", "session", "user"]

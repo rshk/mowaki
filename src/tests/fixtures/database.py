@@ -2,11 +2,11 @@ import asyncio
 
 import pytest
 import pytest_asyncio
-from app.repo._schema import metadata
 from sqlalchemy import NullPool, make_url
 
 from app.config import Config
 from app.lib.sql.utils import DbOps, create_async_engine
+from app.repo._schema import metadata
 
 from .config import TestingConfig
 

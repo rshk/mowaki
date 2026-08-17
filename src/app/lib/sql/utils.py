@@ -45,22 +45,32 @@ def create_async_engine(url: str | URL, **kwargs):
     driver is used for the dialect.
     """
 
+    url = make_url(url)
     db_url = get_async_database_url(url)
 
-    if str(db_url) != str(db_url):
+    old_driver = url.get_dialect().driver
+    new_driver = db_url.get_dialect().driver
+    dialect_name = db_url.get_dialect().name
+
+    if new_driver != old_driver:
+        # Log a warning if we needed to modify the URL
         logger.warning(
-            "Database URL %s does not support asyncio, changing it to %s",
-            repr(make_url(url)),
-            repr(make_url(db_url)),
+            "The %s driver for %s doesn't support asyncio, switching to %s instead",
+            old_driver,
+            dialect_name,
+            new_driver,
         )
 
     # Explicitly set default isolation level
     kwargs.setdefault("isolation_level", "READ COMMITTED")
 
     if kwargs.get("poolclass") is not NullPool:
-        # TODO: this is a bit hacky; any better way to set this
-        #       default through sqllachemy, only if the pool supports it?
-        # TODO: make this a configuration option
+        # Set default pool size, unless connection pooling is disabled
+        # (eg for testing).
+
+        # TODO: should we get this from a URL query argument?
+        #       Or use a separate configuration variable?
+
         kwargs.setdefault("pool_size", 50)
 
     return _create_async_engine(db_url, **kwargs)

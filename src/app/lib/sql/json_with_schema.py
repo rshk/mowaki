@@ -6,11 +6,10 @@ from __future__ import annotations
 
 import json
 from abc import ABCMeta, abstractmethod
-from typing import Any, Type
+from typing import Any
 
-import sqlalchemy.types as types
 from pydantic import BaseModel, TypeAdapter
-from sqlalchemy import JSON, Dialect
+from sqlalchemy import JSON, Dialect, types
 from sqlalchemy.dialects.postgresql import JSONB
 
 
@@ -19,7 +18,7 @@ class JsonWithSchema(types.TypeDecorator):
     cache_ok = False  # TODO: verify if we can / should cache
     _serializer: ModelSerializer
 
-    def __init__(self, model_class: Type[BaseModel] | TypeAdapter):
+    def __init__(self, model_class: type[BaseModel] | TypeAdapter):
         super().__init__()
         self._model_class = model_class
         self._serializer = get_model_serializer(model_class)
@@ -61,7 +60,7 @@ class ModelSerializer(metaclass=ABCMeta):
 
 
 class PydanticModelSerializer(ModelSerializer):
-    def __init__(self, model: Type[BaseModel]):
+    def __init__(self, model: type[BaseModel]):
         self._model = model
 
     def load(self, value: Any) -> Any:

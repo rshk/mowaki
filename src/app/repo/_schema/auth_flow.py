@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import sqlalchemy as sa
 
@@ -18,7 +18,7 @@ AuthFlowTable = sa.Table(
     sa.Column(
         "created_at",
         sa.DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
         nullable=False,
     ),
     sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),

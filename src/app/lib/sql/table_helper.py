@@ -7,7 +7,8 @@ model and a table.
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Type
+from collections.abc import Callable
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
@@ -19,13 +20,13 @@ type GetEngineFn = Callable[[], AsyncEngine]
 
 
 class TableHelper[T: FromDict]:
-    __slots__ = ["_table", "_model", "_get_engine"]
+    __slots__ = ["_get_engine", "_model", "_table"]
 
     _table: sa.Table
-    _model: Type[T]
+    _model: type[T]
     _get_engine: GetEngineFn
 
-    def __init__(self, table: sa.Table, model: Type[T], get_engine: GetEngineFn):
+    def __init__(self, table: sa.Table, model: type[T], get_engine: GetEngineFn):
         self._table = table
         self._model = model
         self._get_engine = get_engine
@@ -44,7 +45,7 @@ class TableHelper[T: FromDict]:
         statement: sa.Executable,
         parameters: Any | None = None,
         *,
-        execution_options: Optional[CoreExecuteOptionsParameter] = None,
+        execution_options: CoreExecuteOptionsParameter | None = None,
     ) -> WrappedResult[T]:
         async with self._connect() as conn:
             result = await conn.execute(
@@ -65,7 +66,7 @@ class WrappedResult[T: FromDict]:
     model to return the resulting data.
     """
 
-    def __init__(self, model: Type[T], result: sa.CursorResult) -> None:
+    def __init__(self, model: type[T], result: sa.CursorResult) -> None:
         self._model = model
         self._result = result
 
