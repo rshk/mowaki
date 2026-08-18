@@ -11,6 +11,10 @@ case "$COMMAND" in
         exec docker compose down
         ;;
 
+    build)
+        exec docker compose build
+        ;;
+
     test)
         exec docker compose run --rm api uv run pytest -vvv ./src/tests
         ;;
@@ -41,6 +45,18 @@ case "$COMMAND" in
 
     alembic)
         exec docker compose exec api uv run "$COMMAND" "$@"
+        ;;
+
+    install)
+        exec uv sync --group dev
+        ;;
+
+    docs)
+        exec uv run make -C docs help
+        ;;
+
+    docs-watch)
+        exec uv run sphinx-autobuild docs docs/_build/html -b html
         ;;
 
     _wrapper.sh)

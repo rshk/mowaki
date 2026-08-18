@@ -81,8 +81,6 @@ async def create(
         session_secret=secret_hash,
         created_at=datetime.now(UTC),
         last_used_at=None,
-        authenticated_user_id=data.authenticated_user_id,
-        current_user_id=data.current_user_id,
         metadata=metadata,
         data=data,
     )

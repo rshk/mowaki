@@ -8,14 +8,26 @@ Build docker images:
 
 .. code:: shell
 
-    docker compose build
+    ./bin/dev/build
 
 Start the services:
 
 .. code:: shell
 
-    docker compose up --watch
+    ./bin/dev/start
 
-This should automatically restart the service upon changes, and
-rebuild the images upon changes to `uv.lock`. Manual restarting might
-still be required in some cases.
+.. note::
+
+    The ``docker compose`` configuration contains directives to
+    automatically update changed code inside the container, and to
+    completely rebuild the container in case dependencies in
+    ``uv.lock`` are changed.
+
+    In some cases, manually building and restarting might still be
+    required.
+
+Create database schema (only needed once):
+
+.. code:: shell
+
+    ./bin/dev/cli db create-schema

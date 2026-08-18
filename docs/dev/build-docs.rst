@@ -11,10 +11,10 @@ To build locally:
 
 .. code:: shell
 
-    uv run make -C docs help
+    ./bin/dev/docs
 
 To rebuild automatically upon changes:
 
 .. code:: shell
 
-    uv run sphinx-autobuild docs docs/_build/html -b html
+    ./bin/dev/docs-watch

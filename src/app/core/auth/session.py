@@ -45,8 +45,8 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
 
     try:
         session = await repo.auth.session.get_for_token(session_token)
-    except ObjectNotFound:
-        raise SessionNotFound("Session not found for token")
+    except ObjectNotFound as exc:
+        raise SessionNotFound("Session not found for token") from exc
 
     return session
 

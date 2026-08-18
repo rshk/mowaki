@@ -8,7 +8,7 @@ model and a table.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Coroutine
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from typing import Any
 
@@ -43,10 +43,11 @@ class TableHelper[T: FromDict]:
         engine = self._get_engine()
         return engine.connect()
 
-    async def _begin(self) -> AsyncTransaction:
+    @asynccontextmanager
+    async def _begin(self) -> AsyncGenerator[AsyncConnection]:
         engine = self._get_engine()
-        async with engine.connect() as conn:
-            return conn.begin_nested()
+        async with engine.connect() as conn, conn.begin():
+            yield conn
 
     async def _execute(
         self,
@@ -55,7 +56,8 @@ class TableHelper[T: FromDict]:
         *,
         execution_options: CoreExecuteOptionsParameter | None = None,
     ) -> WrappedResult[T]:
-        async with self._connect() as conn:
+
+        async with self._begin() as conn:
             result = await conn.execute(
                 statement, parameters, execution_options=execution_options
             )
