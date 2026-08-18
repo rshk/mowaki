@@ -28,17 +28,25 @@ class Assertion(BaseModel):
 
 
 class EmailVerified(BaseModel):
-    kind: Literal["email-verified"]
+    kind: Literal["email"]
     email_address: str
 
+    # If this email address was attached to a user, list it here
+    user_id: UserID | None = None
 
-class PasskeyVerification(BaseModel):
+
+class PasskeyVerified(BaseModel):
     kind: Literal["passkey"]
     passkey_id: PasskeyID
     user_id: UserID
 
 
-AssertionParams = Annotated[EmailVerified | PasskeyVerification, Discriminator("kind")]
+class IsUser(BaseModel):
+    kind: Literal["user"]
+    user_id: UserID
+
+
+AssertionParams = Annotated[EmailVerified | PasskeyVerified, Discriminator("kind")]
 
 
 # Passkey data -------------------------------------------------------
