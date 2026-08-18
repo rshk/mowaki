@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated, Literal, NewType
 
 from pydantic import BaseModel, Discriminator, Field
 
 from app.types.user import UserID
+
+AssertionID = NewType("AssertionID", uuid.UUID)
 
 
 class AuthnLevel:
@@ -19,8 +21,8 @@ class AuthnLevel:
 class Assertion(BaseModel):
     """Authentication assertion"""
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    id: AssertionID = Field(default_factory=lambda: AssertionID(uuid.uuid4()))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     params: AssertionParams = Field()
 

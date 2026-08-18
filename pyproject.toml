@@ -16,6 +16,7 @@ dependencies = [
     "publicsuffixlist>=1.0.2.20260815",
     "pydantic-settings>=2.15.0",
     "sqlalchemy[asyncio]>=2.0.52",
+    "ua-parser[regex]>=1.0.2",
     "webauthn>=3.0.0",
 ]
 classifiers = [

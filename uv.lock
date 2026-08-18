@@ -53,6 +53,7 @@ dependencies = [
     { name = "publicsuffixlist" },
     { name = "pydantic-settings" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "ua-parser", extra = ["regex"] },
     { name = "webauthn" },
 ]
 
@@ -76,6 +77,7 @@ requires-dist = [
     { name = "publicsuffixlist", specifier = ">=1.0.2.20260815" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.0.52" },
+    { name = "ua-parser", extras = ["regex"], specifier = ">=1.0.2" },
     { name = "webauthn", specifier = ">=3.0.0" },
 ]
 
@@ -1503,6 +1505,55 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a3/26/b09b8010994eccc3c09092e6b34058f36a460eea2d4c3e8b910c695975a0/typing_inspection-0.4.4.tar.gz", hash = "sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47", size = 76928 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl", hash = "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147", size = 14750 },
+]
+
+[[package]]
+name = "ua-parser"
+version = "1.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ua-parser-builtins" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/90/98/5e4b52d772a048af122a6fc5ce365c311efb9f5e79c55fd4fdd7c9f59e83/ua_parser-1.0.2.tar.gz", hash = "sha256:bab404ad42fb37f943107da2f6003ffc79724d11cc95076a7a539513371779da", size = 33239 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/7c/6367995ff57aaa2d9e1055adbaec2519cf5a979780a83a93fdf8c6ec37be/ua_parser-1.0.2-py3-none-any.whl", hash = "sha256:0f8e6d0484af2a9ff804bba5a4fe696e87c028eaba98ad9a7dfae873fef7788a", size = 31219 },
+]
+
+[package.optional-dependencies]
+regex = [
+    { name = "ua-parser-rs" },
+]
+
+[[package]]
+name = "ua-parser-builtins"
+version = "202606"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/a3/f26edd95a2ce2ffbf559da432e5ff544e8dcda3673d1c775f71afffb18b7/ua_parser_builtins-202606-py3-none-any.whl", hash = "sha256:13b483eb12a5419c1094ce02b7df705fefc6b5d869764b3ffbf6c940c6d014cb", size = 90676 },
+]
+
+[[package]]
+name = "ua-parser-rs"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/06/cc368e91b99b57cecc9eaf99160b3c876d086656365b315edbee38e45c9e/ua_parser_rs-0.1.5.tar.gz", hash = "sha256:f45aa9a2beba4cfc0a7b312a79a0b57e6823a32c965badfbc2d4307ea387d31f", size = 9378 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/41/81588680b77685942296bdcb2edaf0bfc6407ee59645cad120074044b39f/ua_parser_rs-0.1.5-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:2b79515a8b60963644ff6c57ff68529dca80d7c9886637ccbef9fd9b67c1a4c6", size = 978286 },
+    { url = "https://files.pythonhosted.org/packages/fc/f3/0e8ffc163b5e024fec89024223324beef7a024a66394d65dd7e9ad5e3d94/ua_parser_rs-0.1.5-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:15746ca51ebf9b7350ad1c12f7383a2cf7f4a6253bc4f157d67802c2d4e7b941", size = 926604 },
+    { url = "https://files.pythonhosted.org/packages/e8/fb/4c987fc37339ae8d13b0a78812e028099f0a406301829e541a6c6b1606e3/ua_parser_rs-0.1.5-cp310-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c6243d19eccb659a24b226558129154de55135a4c19acdab1040441bc3802f22", size = 878215 },
+    { url = "https://files.pythonhosted.org/packages/85/ab/c8a87465e212b1fe5029151931f214fae9def91469d5d8d0c152e0285b92/ua_parser_rs-0.1.5-cp310-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c2d15993b0501572a20dce50903f445d0ae213abcf10a473f7dec6c01c9abb43", size = 955525 },
+    { url = "https://files.pythonhosted.org/packages/d4/b6/c5b1a8db87068db3e02dd52d5d526b7c50b334113a33efeee8cc633b23c7/ua_parser_rs-0.1.5-cp310-abi3-manylinux_2_34_aarch64.whl", hash = "sha256:94720791eac816a0339df3b97ddc983c330e7a6554fbe0f80c27cae93aa9e92a", size = 1051421 },
+    { url = "https://files.pythonhosted.org/packages/01/8c/fe8fe8fdfe30c56b79993b87126bf18a16f4e97821e256f96920a7a42fb2/ua_parser_rs-0.1.5-cp310-abi3-manylinux_2_34_x86_64.whl", hash = "sha256:91d43f224c9236da923fd080b71f635b57bd7857679162cb114f99f20870183a", size = 1081880 },
+    { url = "https://files.pythonhosted.org/packages/0a/b1/d2fe088590d73474d93c94eed429578b75048758e08da9d84ece8636e6d1/ua_parser_rs-0.1.5-cp310-abi3-win_amd64.whl", hash = "sha256:b6bd2cd437973ee12fb87507ac71f784d4d3d23af8a844388119e7e0861b1662", size = 822388 },
+    { url = "https://files.pythonhosted.org/packages/7a/82/789b206a96e96d7877eb4c1a7893e09acad357c4fb72db2b476dbf679dcc/ua_parser_rs-0.1.5-cp310-abi3-win_arm64.whl", hash = "sha256:4afe22e98b6301dfd3ab59d3b8c4aa2045b1c3b6a94a3743515bd449cbb2f4bf", size = 757685 },
+    { url = "https://files.pythonhosted.org/packages/b5/46/eb1efe732df6ec2c3560268a1b3c1cb7aa384ae9576ff760378afb0f4096/ua_parser_rs-0.1.5-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:7a74ca9800b917ef1055b70492dd828dde3968d1a071748f4fd4f3269aadedf1", size = 971426 },
+    { url = "https://files.pythonhosted.org/packages/98/60/89d4bb06339e3c5ff1d4ef044c60d75fd27f36ea84c31d7ac7ee30af78b7/ua_parser_rs-0.1.5-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:fe1b8d5c43a75fa89dea8c22b6297e1bae06752f5b8454065d80041923f7a8b4", size = 920311 },
+    { url = "https://files.pythonhosted.org/packages/eb/41/16ff3864303cabc1d14505aaca36542918bc8fe007a6a75fb86b3cd29fbf/ua_parser_rs-0.1.5-cp314-cp314t-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:c030c8d52c5c5a038313296e557faadfa19583fdaf78984fdf325b9b10e241c1", size = 873321 },
+    { url = "https://files.pythonhosted.org/packages/58/51/ad404e131bc516192a5806ed01179df11cb9fd52e777659f3b42c4bc388a/ua_parser_rs-0.1.5-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:5d23f9ad4653a45e58d84faed38ec3ffbf81d191701f8a66bc9715c588f90dee", size = 949816 },
+    { url = "https://files.pythonhosted.org/packages/52/0b/f7db4676c5303b6c096dc18c5a5ac310018334747ef2dff17b659e12fcf4/ua_parser_rs-0.1.5-cp314-cp314t-manylinux_2_34_aarch64.whl", hash = "sha256:4f510bf641bcfdc246bd44d7bf11a1a02dd2aa9e080b7e553de413c62c1c74d3", size = 1044852 },
+    { url = "https://files.pythonhosted.org/packages/af/a4/b9e51af5690abae41df87a154c62e3b90306d17fbc015fd346db95f26718/ua_parser_rs-0.1.5-cp314-cp314t-manylinux_2_34_x86_64.whl", hash = "sha256:71056a6d1f535e50e57d479df28c46cd55c8db7d884f8b007ebc32188c89e4c0", size = 1074278 },
+    { url = "https://files.pythonhosted.org/packages/2e/84/754d7193c4e301d2b864e6c4a2d4445f0e5706176ab98731308987733c64/ua_parser_rs-0.1.5-cp314-cp314t-win_amd64.whl", hash = "sha256:3359273acfad013acdff3c3646e19227fc23dad694b1853222bd760e6e9768d9", size = 816775 },
+    { url = "https://files.pythonhosted.org/packages/3b/a3/e3028ada8775e865179a61708f19a9d8974e8bd84964c5ecdd170d49c50a/ua_parser_rs-0.1.5-cp314-cp314t-win_arm64.whl", hash = "sha256:4d760bcdaa2148c2953b92d63b7fb6e5189496ceb9832bdd5a52d76badaa3d4f", size = 752882 },
 ]
 
 [[package]]

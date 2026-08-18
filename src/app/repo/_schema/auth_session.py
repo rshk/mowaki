@@ -21,6 +21,10 @@ SessionTable = sa.Table(
     sa.Column("metadata", JsonWithSchema(AuthSessionMetadata)),
     # Authentication data
     sa.Column("data", JsonWithSchema(AuthSessionData)),
-    # Indices on the JSON data
-    sa.Index("")
+)
+
+# Index on auth_session.data->authenticated_user_id
+sa.Index(
+    "ix_auth_session_data_authenticated_user_id",
+    SessionTable.c.data["authenticated_user_id"],
 )

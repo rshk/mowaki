@@ -38,6 +38,6 @@ services:
       - "8027:8027"  # smtp
     volumes:
       - type: bind
-        source: ./etc/mailslurper.json
+        source: ./.compose/etc/mailslurper.json
         target: >-
           /go/src/github.com/mailslurper/mailslurper/cmd/mailslurper/config.json

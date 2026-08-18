@@ -66,6 +66,9 @@ async def database_schema(database, resources):
     before/after each test execution.
     """
 
+    if resources:
+        pass  # Make linter happy; only need resources as a dependency
+
     database_url = database
     engine = create_async_engine(
         database_url,

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
-from typing import Annotated, Any, Literal, NewType, Self
+from typing import Any, NewType, Self
 
 from pydantic import BaseModel, Field
 
@@ -28,10 +27,10 @@ class AuthSession(BaseModel):
     session_secret: HashedSessionSecret
 
     # Date this session was created. Immutable.
-    creation_date: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Date this session was last used.
-    last_used_date: datetime | None = None
+    last_used_at: datetime | None = None
 
     # Expiration dates can be calculated on the fly, based on
     # creation_date and last_used_date.

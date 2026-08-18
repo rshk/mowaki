@@ -1,4 +1,4 @@
-from . import session, user
+from . import auth_session, user
 from .metadata import metadata
 
-__all__ = ["metadata", "session", "user"]
+__all__ = ["auth_session", "metadata", "user"]

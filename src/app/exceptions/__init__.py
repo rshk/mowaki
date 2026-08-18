@@ -1,10 +1,14 @@
-class BaseAppException(Exception):
+class AppException(Exception):
     pass
 
 
-class UninitializedResourceError(BaseAppException):
+class UninitializedResourceError(AppException):
     pass
 
 
-class ObjectNotFound(BaseAppException):
+class ObjectNotFound(AppException):
     pass
+
+
+class DevFeatureDisabled(AppException):
+    """A development feature is currently disabled"""

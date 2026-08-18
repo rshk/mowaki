@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from app.exceptions import UninitializedResourceError
-from app.lib.database.utils import create_async_engine
 from app.lib.mailer import get_mailer_from_url
+from app.lib.sql.utils import create_async_engine
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncEngine
