@@ -51,7 +51,9 @@ async def get_for_token(token: SessionTokenData) -> AuthSession:
     user is using the session for this request.
     """
     hashed_secret = hash_session_secret(token.session_secret)
-    session = await _crud.get_by(session_id=token.session_id, session_secret=hashed_secret)
+    session = await _crud.get_by(
+        session_id=token.session_id, session_secret=hashed_secret
+    )
     await update_last_used_date(session.session_id)
     return session
 

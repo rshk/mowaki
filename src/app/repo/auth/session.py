@@ -1,9 +1,9 @@
 import base64
 import hashlib
 import secrets
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import AsyncGenerator
 
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.repo._schema.auth_session import SessionTable
@@ -109,7 +109,7 @@ class SessionUpdater:
                 pass
     """
 
-    __slots__ = ["_update_helper", "session", "new_secret"]
+    __slots__ = ["_update_helper", "new_secret", "session"]
 
     _update_helper: UpdateHelper[AuthSession]
     session: AuthSession

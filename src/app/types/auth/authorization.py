@@ -76,7 +76,6 @@ class CorrectiveActionBase:
     """
 
 
-
 class AuthzScope:
     """Base object for authorization scopes.
 

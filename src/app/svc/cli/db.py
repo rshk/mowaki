@@ -63,6 +63,7 @@ async def cmd_db_show_schema():
 
     # Create an engine with the mock executor
     from sqlalchemy import create_engine
+
     engine = create_engine("postgresql://", strategy="mock", executor=dump)
 
     # This will print the entire schema creation script without touching a real database
