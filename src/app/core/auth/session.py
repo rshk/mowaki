@@ -26,7 +26,7 @@ async def create_session() -> tuple[AuthSession, SessionToken]:
     """
 
     session_id, session_secret = await repo.auth.session.create()
-    token = create_session_token(session_id, session_secret)
+    token = format_session_token(session_id, session_secret)
     session = await repo.auth.session.get(session_id)
     return session, token
 
@@ -69,7 +69,7 @@ async def get_session(session_id: SessionID) -> AuthSession:
     return await repo.auth.session.get(session_id)
 
 
-def create_session_token(
+def format_session_token(
     session_id: SessionID, session_secret: SessionSecret
 ) -> SessionToken:
     """Format a session token for returning to the client"""
@@ -87,7 +87,7 @@ def parse_session_token(token: SessionToken) -> SessionTokenData:
 
 async def invalidate_session(session_id: SessionID):
     """Delete this session from database"""
-    await repo.auth.session.invalidate(session_id)
+    await repo.auth.session.delete(session_id)
 
 
 # Current session ----------------------------------------------------
@@ -98,7 +98,15 @@ def get_current_session() -> AuthSession:
 
 
 @asynccontextmanager
-async def current_session_updater() -> AsyncGenerator[SessionUpdater]:
+async def edit_current_session() -> AsyncGenerator[SessionUpdater]:
+    """
+    Edit the current session.
+
+    Editing a generic session (by id) is currently not supported, as
+    we have no way to pass the newly-rotated token to the owner,
+    basically rendering it useless.
+    """
+
     ctx = get_request_context()
     session = ctx.auth_session
     async with repo.auth.session.for_update(session.session_id) as upd:
@@ -107,13 +115,19 @@ async def current_session_updater() -> AsyncGenerator[SessionUpdater]:
 
         finally:
             if upd.new_secret is not None:
-                token = create_session_token(session.session_id, upd.new_secret)
+                token = format_session_token(session.session_id, upd.new_secret)
                 ctx.new_session_token = token
 
 
-async def invalidate_current_session():
+async def invalidate_current_session() -> AuthSession:
+    """
+    Delete the current session and create a new one.
+
+    Returns the newly created session.
+    """
     ctx = get_request_context()
     await invalidate_session(ctx.auth_session.session_id)
     new_session, new_token = await create_session()
     ctx.auth_session = new_session
     ctx.new_session_token = new_token
+    return new_session

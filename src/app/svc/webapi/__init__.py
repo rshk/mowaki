@@ -10,13 +10,14 @@ from app.config import load_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.auth.exceptions import AuthorizationError
 from app.core.auth.session import (
-    current_session_updater,
+    edit_current_session,
     get_or_create_session_from_token,
     invalidate_current_session,
 )
 from app.core.context import RequestContext, get_current_session, request_context
 from app.lib.context import scoped_context
 from app.resources import initialize_resources
+from app.types.auth.authorization import AuthSubject
 from app.types.auth.session import SessionToken
 
 # from . import auth
@@ -57,7 +58,11 @@ async def setup_request_context_middleware(request: Request, call_next):
 
     # TODO: update session with metadata from the request, if new
 
-    ctx = RequestContext(auth_session=session, new_session_token=new_token)
+    ctx = RequestContext(
+        auth_session=session,
+        new_session_token=new_token,
+        auth_subject=AuthSubject(),
+    )
     with scoped_context(request_context, ctx):
         response: Response = await call_next(request)
 
@@ -147,8 +152,8 @@ async def post_dev_logout():
 
 @app.post("/_dev/rotate")
 async def post_dev_rotate_secret():
-    async with current_session_updater() as upd:
-        upd.rotate_secret()
+    async with edit_current_session() as upd:
+        await upd.rotate_secret()
 
     session = get_current_session()
     return {"session_id": session.session_id}

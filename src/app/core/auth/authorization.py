@@ -1,7 +1,7 @@
-from app.types.authorization import AuthzAction, AuthzResult, AuthzSubject
+from app.types.auth.authorization import AuthSubject, AuthzAction, AuthzResult
 
 
-def check_authorization(subject: AuthzSubject, action: AuthzAction) -> AuthzResult:
+def check_authorization(subject: AuthSubject, action: AuthzAction) -> AuthzResult:
     """
     Check if a subject is authorized to perform an action.
 

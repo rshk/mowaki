@@ -94,19 +94,9 @@ class SessionUpdater:
     """
     High-level methods for updating a session.
 
-    Typically not instantiated directly, but obtained through::
-
-        async with repo.session.for_update(session_id) as updater:
-
-            # Call various updater methods here...
-
-            # Run the update query. The session stored in
-            # updater.session is updated automatically.
-            updater.run()
-
-            if updater.new_secret is not None:
-                # We need to provide a new token to the user
-                pass
+    Ensures that secrets are rotated as required.
+    If the secret was rotated, the new plain-text value will be stored
+    in the ``new_secret`` attribute.
     """
 
     __slots__ = ["_update_helper", "new_secret", "session"]
@@ -142,34 +132,34 @@ class SessionUpdater:
         return new_secret
 
     @asynccontextmanager
-    async def update_metadata(self) -> AsyncGenerator[AuthSessionMetadata]:
+    async def edit_metadata(self) -> AsyncGenerator[AuthSessionMetadata]:
         new_metadata = self.session.metadata.model_copy()
         yield new_metadata
         await self._update(metadata=new_metadata)
 
     @asynccontextmanager
-    async def update_data(self) -> AsyncGenerator[AuthSessionData]:
+    async def edit_data(self) -> AsyncGenerator[AuthSessionData]:
         new_data = self.session.data.model_copy()
         yield new_data
         await self._update(data=new_data)
 
     async def set_authenticated_user_id(self, user_id: UserID | None = None):
         await self.rotate_secret()
-        async with self.update_data() as data:
+        async with self.edit_data() as data:
             data.authenticated_user_id = user_id
             data.current_user_id = user_id
 
     async def set_current_user_id(self, user_id: UserID | None = None):
         await self.rotate_secret()
-        async with self.update_data() as data:
+        async with self.edit_data() as data:
             data.current_user_id = user_id
 
     async def add_assertion(self, assertion: Assertion):
-        async with self.update_data() as data:
+        async with self.edit_data() as data:
             data.assertions.append(assertion)
 
     async def remove_assertion(self, assertion_id: AssertionID):
-        async with self.update_data() as data:
+        async with self.edit_data() as data:
             data.assertions = [x for x in data.assertions if x.id != assertion_id]
 
 
