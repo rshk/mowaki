@@ -40,16 +40,16 @@ services:
       watch:
         # Sync the working directory with the `/app` directory in the container
         - action: sync
-          path: .
+          path: ..
           target: /app
           # Exclude the project virtual environment - it could be for
           # a different platform in the container
           ignore:
-            - .venv/
+            - ../.venv/
 
         # Rebuild the image if dependencies change by checking uv.lock
         - action: rebuild
-          path: ./uv.lock
+          path: ../uv.lock
 
     depends_on:
       db:

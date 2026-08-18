@@ -20,7 +20,6 @@ from app.resources import initialize_resources
 from app.types.auth.authorization import AuthSubject
 from app.types.auth.session import SessionToken
 
-# from . import auth
 
 # Initialize configuration and resources -----------------------------
 
@@ -127,43 +126,3 @@ responses = {
 }
 
 app.router.responses[403] = {"model": AuthorizationErrorResponse}
-
-
-# Include routers ----------------------------------------------------
-
-# app.include_router(auth.router, prefix="/auth")
-
-
-# Dev stuff ----------------------------------------------------------
-
-
-@app.get("/_dev")
-def get_dev():
-    session = get_current_session()
-    return {"session_id": session.session_id}
-
-
-@app.post("/_dev/logout")
-async def post_dev_logout():
-    await invalidate_current_session()
-    session = get_current_session()
-    return {"session_id": session.session_id}
-
-
-@app.post("/_dev/rotate")
-async def post_dev_rotate_secret():
-    async with edit_current_session() as upd:
-        await upd.rotate_secret()
-
-    session = get_current_session()
-    return {"session_id": session.session_id}
-
-
-@app.post("/_dev/403")
-def post_dev_403():
-    raise AuthorizationError.definitive()
-
-
-@app.post("/_dev/403-upgrade")
-def post_dev_403_upgrade():
-    raise AuthorizationError.require_upgrade(["scope1", ["scope2", "foobar"]])

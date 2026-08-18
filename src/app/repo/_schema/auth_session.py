@@ -14,17 +14,17 @@ SessionTable = sa.Table(
     # Dates are exposed in the main table for filtering
     sa.Column("created_at", sa.DateTime(timezone=True), nullable=True, index=True),
     sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True, index=True),
-    # User IDs are exposed in the main table to make querying easier
-    sa.Column("authenticated_user_id", sa.Uuid, nullable=True, index=True),
-    sa.Column("current_user_id", sa.Uuid, nullable=True, index=True),
     # Session metadata
     sa.Column("metadata", JsonWithSchema(AuthSessionMetadata)),
     # Authentication data
     sa.Column("data", JsonWithSchema(AuthSessionData)),
 )
 
-# Index on auth_session.data->authenticated_user_id
 sa.Index(
-    "ix_auth_session_data_authenticated_user_id",
+    "ix_auth_session_data__authenticated_user_id",
     SessionTable.c.data["authenticated_user_id"],
+)
+sa.Index(
+    "ix_auth_session_data__current_user_id",
+    SessionTable.c.data["current_user_id"],
 )
