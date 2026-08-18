@@ -33,9 +33,9 @@ services:
   mailslurper:
     image: oryd/mailslurper:smtps-latest
     ports:
-      - "8025:8025"  # www
-      - "8026:8026"  # service
-      - "8027:8027"  # smtp
+      - "8025:8025"  # smtp
+      - "8026:8026"  # www
+      - "8027:8027"  # service
     volumes:
       - type: bind
         source: ./.compose/etc/mailslurper.json

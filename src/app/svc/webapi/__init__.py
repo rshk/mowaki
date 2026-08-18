@@ -9,17 +9,14 @@ from pydantic.main import BaseModel
 from app.config import load_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.auth.exceptions import AuthorizationError
-from app.core.auth.session import (
-    edit_current_session,
-    get_or_create_session_from_token,
-    invalidate_current_session,
-)
-from app.core.context import RequestContext, get_current_session, request_context
+from app.core.auth.session import get_or_create_session_from_token
+from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
 from app.resources import initialize_resources
 from app.types.auth.authorization import AuthSubject
 from app.types.auth.session import SessionToken
 
+from .routes import router
 
 # Initialize configuration and resources -----------------------------
 
@@ -119,10 +116,8 @@ async def handle_authorization_error(request: Request, exc: AuthorizationError):
     )
 
 
-responses = {
-    403: {
-        "model": AuthorizationErrorResponse,
-    }
-}
-
 app.router.responses[403] = {"model": AuthorizationErrorResponse}
+
+# Routes -------------------------------------------------------------
+
+app.include_router(router)

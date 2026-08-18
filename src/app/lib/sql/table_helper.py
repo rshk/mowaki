@@ -8,14 +8,14 @@ model and a table.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Coroutine
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncTransaction
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
 from app.exceptions import ObjectNotFound
 from app.lib.protocols import FromDict
