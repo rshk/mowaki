@@ -36,10 +36,10 @@ Create database schema (only needed once):
 Accessing the application
 -------------------------
 
-- The main application can be accessed at http://localhost:8000/
-- The web API is exposed at http://localhost:8001/ (`docs <http://localhost:8001/docs>`_)
-- To connect to the database, use ``./bin/dev/psql`` (or ``docker compose exec db psql``).
-- Emails sent by the app will be visible at http://localhost:8026/
+- Web app runs at `localhost:8000 <http://localhost:8000/>`_
+- RESTful API runs at `localhost:8001 <http://localhost:8001/>`_ (`docs <http://localhost:8001/docs>`_)
+- Sent emails can be seen at `localhost:8026 <http://localhost:8026/>`_
+- Connect to postgres using ``./bin/dev/psql``
 
 
 Linting & formatting
