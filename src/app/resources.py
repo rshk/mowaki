@@ -27,6 +27,19 @@ resources_context = ContextVar[Resources]("resources_context")
 
 
 def initialize_resources(config: Config, set_context=False) -> Resources:
+    """
+    Initialize resources from configuration.
+
+    Args:
+
+        config:
+            Config object
+
+        set_context:
+            If set to True, expose resources in the global
+            context as well.
+    """
+
     resources = Resources()
 
     if config.database_url is not None:

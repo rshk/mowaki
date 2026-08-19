@@ -27,26 +27,25 @@ class Assertion(BaseModel):
     params: AssertionParams = Field()
 
 
-class EmailVerified(BaseModel):
-    kind: Literal["email"]
+class EmailOTP(BaseModel):
+    """Solved an email-based OTP challenge"""
+
+    kind: Literal["email-otp"]
     email_address: str
 
     # If this email address was attached to a user, list it here
     user_id: UserID | None = None
 
 
-class PasskeyVerified(BaseModel):
+class PasskeyAuth(BaseModel):
+    """Authenticated using a passkey"""
+
     kind: Literal["passkey"]
     passkey_id: PasskeyID
     user_id: UserID
 
 
-class IsUser(BaseModel):
-    kind: Literal["user"]
-    user_id: UserID
-
-
-AssertionParams = Annotated[EmailVerified | PasskeyVerified, Discriminator("kind")]
+AssertionParams = Annotated[EmailOTP | PasskeyAuth, Discriminator("kind")]
 
 
 # Passkey data -------------------------------------------------------

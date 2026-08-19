@@ -14,7 +14,7 @@ from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
 from app.resources import initialize_resources
 from app.types.auth.authorization import AuthSubject
-from app.types.auth.session import SessionToken
+from app.types.auth.session import AuthSession, SessionToken
 
 from .routes import router
 
@@ -45,21 +45,36 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def setup_request_context_middleware(request: Request, call_next):
+async def request_context_middleware(request: Request, call_next):
+    """
+    Middlware function to add RequestContext during processing.
+
+    - Parse session token from the request (Authorization: Bearer) and
+      retrieve the associated session
+    - If no valid session token was provided, create a new session
+    - Create AuthSubject from assertions contained in the session
+    - If a new session was created at any point, set a
+      X-Set-Session-Token header on the response
+    """
+
     if request.method == "OPTIONS":
         return await call_next(request)
 
-    token = get_request_session_token(request)
+    token = get_session_token_from_request(request)
     session, new_token = await get_or_create_session_from_token(token)
 
     # TODO: update session with metadata from the request, if new
 
+    auth_subject = await get_auth_subject_from_session(session)
+
     ctx = RequestContext(
         auth_session=session,
         new_session_token=new_token,
-        auth_subject=AuthSubject(),
+        auth_subject=auth_subject,
     )
+
     with scoped_context(request_context, ctx):
+        # Wrap the rest of the request processing
         response: Response = await call_next(request)
 
     # If a new session was created at any point during request
@@ -70,7 +85,7 @@ async def setup_request_context_middleware(request: Request, call_next):
     return response
 
 
-def get_request_session_token(request: Request) -> SessionToken | None:
+def get_session_token_from_request(request: Request) -> SessionToken | None:
     authorization = request.headers.get("Authorization")
     scheme, credentials = get_authorization_scheme_param(authorization)
     if not (authorization and scheme and credentials):
@@ -94,6 +109,13 @@ def get_client_ip_address(request: Request) -> str | None:
 
 def get_user_agent(request: Request) -> str | None:
     return request.headers.get("User-Agent")
+
+
+async def get_auth_subject_from_session(session: AuthSession) -> AuthSubject:
+    """
+    Create an AuthSubject() instance from a Session.
+    """
+    return AuthSubject()  # TODO: implement this
 
 
 # Exception handling -------------------------------------------------

@@ -11,14 +11,12 @@ from app.resources import get_database
 from app.types.auth.authentication import Assertion, AssertionID
 from app.types.auth.session import (
     AuthSession,
-    AuthSessionData,
     AuthSessionMetadata,
     HashedSessionSecret,
     SessionID,
     SessionSecret,
     SessionTokenData,
 )
-from app.types.user import UserID
 
 _crud = TableHelper[AuthSession](
     SessionTable,
@@ -64,7 +62,7 @@ async def get_for_token(token: SessionTokenData) -> AuthSession:
 
 async def create(
     metadata: AuthSessionMetadata | None = None,
-    data: AuthSessionData | None = None,
+    assertions: list[Assertion] | None = None,
 ) -> tuple[SessionID, SessionSecret]:
     session_id = generate_session_id()
     session_secret = generate_session_secret()
@@ -73,16 +71,13 @@ async def create(
     if metadata is None:
         metadata = AuthSessionMetadata.empty()
 
-    if data is None:
-        data = AuthSessionData.empty()
-
     await _crud.insert(
         session_id=session_id,
         session_secret=secret_hash,
         created_at=datetime.now(UTC),
         last_used_at=None,
         metadata=metadata,
-        data=data,
+        assertions=assertions or [],
     )
 
     return session_id, session_secret
@@ -135,30 +130,12 @@ class SessionUpdater:
         yield new_metadata
         await self._update(metadata=new_metadata)
 
-    @asynccontextmanager
-    async def edit_data(self) -> AsyncGenerator[AuthSessionData]:
-        new_data = self.session.data.model_copy()
-        yield new_data
-        await self._update(data=new_data)
-
-    async def set_authenticated_user_id(self, user_id: UserID | None = None):
-        await self.rotate_secret()
-        async with self.edit_data() as data:
-            data.authenticated_user_id = user_id
-            data.current_user_id = user_id
-
-    async def set_current_user_id(self, user_id: UserID | None = None):
-        await self.rotate_secret()
-        async with self.edit_data() as data:
-            data.current_user_id = user_id
-
     async def add_assertion(self, assertion: Assertion):
-        async with self.edit_data() as data:
-            data.assertions.append(assertion)
+        await self._update(assertions=[*self.session.assertions, assertion])
 
     async def remove_assertion(self, assertion_id: AssertionID):
-        async with self.edit_data() as data:
-            data.assertions = [x for x in data.assertions if x.id != assertion_id]
+        assertions = [x for x in self.session.assertions if x.id != assertion_id]
+        await self._update(assertions=assertions)
 
 
 @asynccontextmanager

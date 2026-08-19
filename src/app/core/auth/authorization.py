@@ -1,7 +1,143 @@
-from app.types.auth.authorization import AuthSubject, AuthzAction, AuthzResult
+from datetime import UTC, datetime
+
+from app.exceptions import AppException
+from app.types.auth.authentication import (
+    Assertion,
+    AssertionParams,
+    EmailOTP,
+    PasskeyAuth,
+)
+from app.types.auth.authorization import (
+    RECENT_ASSERTION_MAX_AGE,
+    TRUST_LEVEL_HIGH,
+    TRUST_LEVEL_LOW,
+    TRUST_LEVEL_MID,
+    TRUST_LEVEL_NONE,
+    AuthSubject,
+    AuthzAction,
+    AuthzResult,
+    TrustLevel,
+)
+from app.types.auth.session import AuthSession
+from app.types.user import UserID
+
+# What trust level is granted for each assertion type
+GRANTED_TRUST_LEVELS = {
+    EmailOTP: TRUST_LEVEL_MID,
+    PasskeyAuth: TRUST_LEVEL_HIGH,
+}
 
 
-def check_authorization(subject: AuthSubject, action: AuthzAction) -> AuthzResult:
+async def get_auth_subject_from_session(session: AuthSession) -> AuthSubject:
+    """
+    Create an AuthSubject() instance from a Session.
+    """
+
+    now = datetime.now(UTC)
+    bld = _AuthSubjectBuilder()
+
+    # TODO: set max_trust_level as appropriate, checking the
+    # configured authentication methods for this user.
+
+    # Note: we might want to tweak the logic here a bit once we add
+    # more assertion types, so that levels can be granted based on
+    # *combinations* of assertions (eg. multiple factors -> higher
+    # *trust level).
+
+    for assertion in session.assertions:
+        assertion_age = assertion.created_at - now
+        is_recent = assertion_age <= RECENT_ASSERTION_MAX_AGE
+
+        if (result := _get_user_id_and_level(assertion)) is not None:
+            user_id, trust = result
+
+            bld.set_user_id(user_id)
+            bld.set_current_trust_level(trust)
+            if is_recent:
+                bld.set_recent_trust_level(trust)
+
+    return bld.build()
+
+
+class _AuthSubjectBuilder:
+    user_id: UserID | None = None
+    current_trust_level: TrustLevel = TRUST_LEVEL_NONE
+    recent_trust_level: TrustLevel = TRUST_LEVEL_NONE
+    max_trust_level: TrustLevel = TRUST_LEVEL_NONE
+
+    def set_user_id(self, user_id: UserID):
+        if self.user_id is None:
+            self.user_id = user_id
+        elif self.user_id != user_id:
+            raise AppException(
+                "Mismatching user IDs found in assertions:"
+                f" {self.user_id} ≠ {user_id}"
+                " (THIS SHOULD NEVER HAPPEN)"
+            )
+
+    def set_current_trust_level(self, level: TrustLevel):
+        if level > self.current_trust_level:  # noqa: PLR1730 (more readable this way)
+            self.current_trust_level = level
+
+    def set_recent_trust_level(self, level: TrustLevel):
+        if level > self.recent_trust_level:  # noqa: PLR1730 (more readable this way)
+            self.recent_trust_level = level
+
+    def set_max_trust_level(self, level: TrustLevel):
+        self.max_trust_level = level
+
+    def build(self) -> AuthSubject:
+        return AuthSubject(
+            user_id=self.user_id,
+            current_trust_level=self.current_trust_level,
+            recent_trust_level=self.recent_trust_level,
+            max_trust_level=self.max_trust_level,
+        )
+
+
+def _get_user_id_and_level(assertion: Assertion) -> tuple[UserID, TrustLevel] | None:
+    """
+    Get user_id and trust level from an assertion.
+
+    If the assertion contains indication of a user_id/trust_level,
+    return it as a tuple. Return None otherwise.
+    """
+
+    def _get_level(type_: type[AssertionParams]) -> TrustLevel:
+        for t in type_.mro():
+            try:
+                return GRANTED_TRUST_LEVELS[t]
+            except KeyError:
+                pass
+        return TRUST_LEVEL_LOW
+
+    level = _get_level(type(assertion.params))
+
+    match assertion.params:
+        case EmailOTP(user_id=user_id) if user_id is not None:
+            return (user_id, level)
+        case PasskeyAuth(user_id=user_id):
+            return (user_id, level)
+
+    return None  # no match
+
+
+async def check_trust_level(
+    subject: AuthSubject, level: TrustLevel, recent: bool = False
+):
+
+    user_level = subject.recent_trust_level if recent else subject.current_trust_level
+
+    if level < TRUST_LEVEL_LOW:
+        return user_level >= level
+
+    if level > subject.max_trust_level:
+        return True
+
+    return user_level >= level
+
+
+async def check_authorization(subject: AuthSubject, action: AuthzAction) -> AuthzResult:
     """
     Check if a subject is authorized to perform an action.
 

@@ -5,13 +5,32 @@ Authorization-related types
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import timedelta
+from typing import Any, NewType
 
-# from pydantic import BaseModel
-# from app.types.session import AuthGrant
 from app.types.user import UserID
 
+TrustLevel = NewType("TrustLevel", int)
 
+TRUST_LEVEL_NONE = TrustLevel(0)
+TRUST_LEVEL_WEAK = TrustLevel(5)
+
+# Minimum level at which a user is considered "authenticated".
+# This is usually granted for phone OTP or password-only authentication.
+TRUST_LEVEL_LOW = TrustLevel(10)
+
+# Medium trust level, usually granted for solving an email OTP challenge.
+TRUST_LEVEL_MID = TrustLevel(20)
+
+# Highest trust level, granted when multi-factor authentication was
+# used, or the user logged in using a passkey.
+TRUST_LEVEL_HIGH = TrustLevel(50)  # MFA / passkey login
+
+# How old an assertion can be to be considered "recent"
+RECENT_ASSERTION_MAX_AGE = timedelta(minutes=5)
+
+
+@dataclass(slots=True)
 class AuthSubject:
     """
     Authorization Subject
@@ -24,13 +43,26 @@ class AuthSubject:
 
     # If this subject is tied to an application user, this field will
     # contain its user ID
-    user_id: UserID | None
+    user_id: UserID | None = None
 
-    # Allow access to some restricted actions.
-    # This usually requires stronger / more recent authentication.
-    # Example actions requiring this: account management, payment,
-    # other high-risk actions.
-    allow_protected_actions: bool = False
+    # Trust level ----------------------------------------------------
+
+    # Trust level is defined as "how much we trust this session to
+    # belong to the specified user"
+
+    # Trust level based on current assertions.
+    current_trust_level: TrustLevel = TRUST_LEVEL_NONE
+
+    # Trust level based on recent assertions.
+    # An assertion is considered "recent" if not older than
+    # RECENT_ASSERTION_MAX_AGE.
+    recent_trust_level: TrustLevel = TRUST_LEVEL_NONE
+
+    # Maximum trust level configured for this user.
+    # Ideally this should always be TRUST_LEVEL_HIGH, but might be
+    # lower if the user hasn't added any MFA / passkeys to their
+    # account, for example.
+    max_trust_level: TrustLevel = TRUST_LEVEL_NONE
 
 
 # Authorization actions ----------------------------------------------
@@ -50,39 +82,27 @@ class AuthzAction:
 # Authorization result -----------------------------------------------
 
 
-@dataclass
+@dataclass(slots=True)
 class AuthzResult:
     """Result of an authorization check"""
 
     allowed: bool
-    upgrade_paths: list[Any] = field(default_factory=list)
+    corrective_actions: list[BaseCorrectiveAction] = field(default_factory=list)
 
     @classmethod
     def allow(cls):
         return cls(allowed=True)
 
     @classmethod
-    def deny(cls, upgrade_paths: list[Any] | None = None):
-        if upgrade_paths is None:
-            upgrade_paths = []
-        return cls(allowed=False, upgrade_paths=upgrade_paths)
+    def deny(cls, corrective_actions: list[Any] | None = None):
+        if corrective_actions is None:
+            corrective_actions = []
+        return cls(allowed=False, corrective_actions=corrective_actions)
 
 
-class CorrectiveActionBase:
+class BaseCorrectiveAction:
     """Base object for "corrective actions".
 
     Corrective actions represent actions that can be taken to remedy a
     failed authorization attempt.
     """
-
-
-class AuthzScope:
-    """Base object for authorization scopes.
-
-    A scope represent a set of grants the authorization subject wants
-    to obtain in order to perform an action.
-
-    They can be associated to a flow
-    """
-
-    # Leave it to the app to implement scopes.

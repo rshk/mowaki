@@ -10,6 +10,9 @@ async def post_auth_initiate_email_top(address: str):
     """Initiate authentication using email OTP"""
 
 
+# /upgrade/... methods to add / refresh assertions
+
+
 @router.get("/session")
 async def get_session_info():
     """Get information about the current session"""

@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, NewType, Self
+from typing import NewType
 
-from pydantic import BaseModel, Field
+from pydantic import Field, TypeAdapter
 
-from ..user import UserID
+from app.lib.models import BaseModel
+
 from .authentication import Assertion
 
 SessionID = NewType("SessionID", str)
 SessionSecret = NewType("SessionSecret", str)
 HashedSessionSecret = NewType("HashedSessionSecret", str)
 SessionToken = NewType("SessionToken", str)
+
+AssertionsList = TypeAdapter(list[Assertion])
 
 
 class AuthSession(BaseModel):
@@ -46,14 +49,8 @@ class AuthSession(BaseModel):
         default_factory=lambda: AuthSessionMetadata.empty()
     )
 
-    # Authentication data associated to the session.
-    # Stored in a separate object so it's easier to pass around on its
-    # own.
-    data: AuthSessionData = Field(default_factory=lambda: AuthSessionData.empty())
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> Self:
-        return cls.model_validate(data)
+    # Assertions associated with this session
+    assertions: list[Assertion] = Field(default_factory=list)
 
 
 class AuthSessionMetadata(BaseModel):
@@ -65,22 +62,6 @@ class AuthSessionMetadata(BaseModel):
     @classmethod
     def empty(cls) -> AuthSessionMetadata:
         return AuthSessionMetadata()
-
-
-class AuthSessionData(BaseModel):
-    # User who performed the authentication for this session. Immutable.
-    authenticated_user_id: UserID | None = None
-
-    # Current user ID. Might differ from authenticated_user_id, eg. in
-    # case of an admin impersonating a different user.
-    current_user_id: UserID | None = None
-
-    # Authorization assertions
-    assertions: list[Assertion] = Field(default_factory=list)
-
-    @classmethod
-    def empty(cls) -> AuthSessionData:
-        return AuthSessionData()
 
 
 class SessionTokenData(BaseModel):
