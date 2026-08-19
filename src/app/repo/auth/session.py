@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.repo._schema.auth_session import SessionTable
 from app.resources import get_database
-from app.types.auth.authentication import Assertion, AssertionID
+from app.types.auth.assertions import Assertion, AssertionID
 from app.types.auth.session import (
     AuthSession,
     AuthSessionMetadata,

@@ -1,7 +1,7 @@
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 
-from app.types.auth.authorization import AuthSubject
+from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.session import AuthSession, SessionToken
 
 

@@ -1,30 +1,26 @@
 from datetime import UTC, datetime
 
+from app.const import RECENT_ASSERTION_MAX_AGE
 from app.exceptions import AppException
-from app.types.auth.authentication import (
-    Assertion,
-    AssertionParams,
-    EmailOTP,
-    PasskeyAuth,
-)
-from app.types.auth.authorization import (
-    RECENT_ASSERTION_MAX_AGE,
+from app.types.auth import assertions
+from app.types.auth.assertions import Assertion, AssertionParams
+from app.types.auth.auth_subject import AuthSubject
+from app.types.auth.authz_actions import AuthzAction
+from app.types.auth.authz_result import AuthzResult
+from app.types.auth.session import AuthSession
+from app.types.auth.trust_level import (
     TRUST_LEVEL_HIGH,
     TRUST_LEVEL_LOW,
     TRUST_LEVEL_MID,
     TRUST_LEVEL_NONE,
-    AuthSubject,
-    AuthzAction,
-    AuthzResult,
     TrustLevel,
 )
-from app.types.auth.session import AuthSession
 from app.types.user import UserID
 
 # What trust level is granted for each assertion type
 GRANTED_TRUST_LEVELS = {
-    EmailOTP: TRUST_LEVEL_MID,
-    PasskeyAuth: TRUST_LEVEL_HIGH,
+    assertions.EmailOTP: TRUST_LEVEL_MID,
+    assertions.PasskeyAuth: TRUST_LEVEL_HIGH,
 }
 
 
@@ -114,9 +110,9 @@ def _get_user_id_and_level(assertion: Assertion) -> tuple[UserID, TrustLevel] | 
     level = _get_level(type(assertion.params))
 
     match assertion.params:
-        case EmailOTP(user_id=user_id) if user_id is not None:
+        case assertions.EmailOTP(user_id=user_id) if user_id is not None:
             return (user_id, level)
-        case PasskeyAuth(user_id=user_id):
+        case assertions.PasskeyAuth(user_id=user_id):
             return (user_id, level)
 
     return None  # no match

@@ -7,7 +7,7 @@ from pydantic import Field, TypeAdapter
 
 from app.lib.models import BaseModel
 
-from .authentication import Assertion
+from .assertions import Assertion
 
 SessionID = NewType("SessionID", str)
 SessionSecret = NewType("SessionSecret", str)

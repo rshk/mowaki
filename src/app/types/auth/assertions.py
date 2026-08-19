@@ -8,14 +8,11 @@ from pydantic import BaseModel, Discriminator, Field
 
 from app.types.user import UserID
 
-AssertionID = NewType("AssertionID", uuid.UUID)
-
-
-class AuthnLevel:
-    pass
-
+from .passkey_data import PasskeyID
 
 # Assertions ---------------------------------------------------------
+
+AssertionID = NewType("AssertionID", uuid.UUID)
 
 
 class Assertion(BaseModel):
@@ -46,14 +43,3 @@ class PasskeyAuth(BaseModel):
 
 
 AssertionParams = Annotated[EmailOTP | PasskeyAuth, Discriminator("kind")]
-
-
-# Passkey data -------------------------------------------------------
-
-PasskeyID = NewType("PasskeyID", str)
-
-
-class PasskeyData(BaseModel):
-    credential_id: PasskeyID
-    public_key: str
-    sign_count: int

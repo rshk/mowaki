@@ -13,7 +13,7 @@ from app.core.auth.session import get_or_create_session_from_token
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
 from app.resources import initialize_resources
-from app.types.auth.authorization import AuthSubject
+from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.session import AuthSession, SessionToken
 
 from .routes import router
