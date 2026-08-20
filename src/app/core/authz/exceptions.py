@@ -1,23 +1,9 @@
 from typing import Any
 
-
-class SessionError(Exception):
-    pass
+from app.exceptions import AppException
 
 
-class SessionExpired(SessionError):
-    """Session was found, but it expired"""
-
-
-class SessionNotFound(SessionError):
-    """Session was not found"""
-
-
-class SessionInvalid(SessionError):
-    """Session was found but it's invalid for some reason"""
-
-
-class AuthorizationError(Exception):
+class AuthorizationError(AppException):
     """Used to indicate a user is not authorized to perform an action"""
 
     # User may upgrade the session to include extra scopes in order to

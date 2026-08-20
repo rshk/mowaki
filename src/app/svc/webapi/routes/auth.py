@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from app.core.auth.session import invalidate_current_session
+from app.core.authn.session import invalidate_current_session
 
 router = APIRouter(tags=["authentication"])
 

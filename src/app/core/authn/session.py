@@ -2,11 +2,12 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from app import repo
-from app.core.auth.exceptions import SessionNotFound
+from app.core.authn.exceptions import SessionNotFound
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
 from app.repo.auth.session import SessionUpdater
+from app.types.auth.assertions import Assertion
 from app.types.auth.session import (
     AuthSession,
     SessionID,
@@ -131,3 +132,8 @@ async def invalidate_current_session() -> AuthSession:
     ctx.auth_session = new_session
     ctx.new_session_token = new_token
     return new_session
+
+
+async def add_session_assertion(assertion: Assertion):
+    async with edit_current_session() as upd:
+        await upd.add_assertion(assertion)

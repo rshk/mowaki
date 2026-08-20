@@ -17,3 +17,6 @@ TRUST_LEVEL_MID = TrustLevel(20)
 # Highest trust level, granted when multi-factor authentication was
 # used, or the user logged in using a passkey.
 TRUST_LEVEL_HIGH = TrustLevel(50)  # MFA / passkey login
+
+# Minimum trust level to consider a user authenticated
+MIN_AUTHENTICATED_TRUST_LEVEL = TRUST_LEVEL_LOW

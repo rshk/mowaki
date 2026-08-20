@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 
-from app.core.auth.exceptions import AuthorizationError
-from app.core.auth.session import (
+from app.core.authn.session import (
     edit_current_session,
     get_current_session,
     invalidate_current_session,
 )
+from app.core.authz.exceptions import AuthorizationError
 
 router = APIRouter(tags=["development"])
 

@@ -1,3 +1,3 @@
-from . import session
+from . import challenge, session
 
-__all__ = ["session"]
+__all__ = ["challenge", "session"]
