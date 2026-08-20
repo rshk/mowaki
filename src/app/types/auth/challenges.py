@@ -17,6 +17,8 @@ ChallengeID = NewType("ChallengeID", uuid.UUID)
 
 
 class ChallengeState(BaseModel):
+    """Database object to store challenges"""
+
     challenge_id: ChallengeID = Field(default_factory=lambda: ChallengeID(uuid.uuid4()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = Field(default=None)

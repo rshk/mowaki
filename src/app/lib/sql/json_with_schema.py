@@ -80,7 +80,7 @@ class PydanticTypeAdapterSerializer(ModelSerializer):
         return self._model.validate_python(value)
 
     def dump(self, value) -> Any:
-        return self._model.dump_python(value)
+        return self._model.dump_python(value, mode="json")
 
 
 def get_model_serializer(model: Any) -> ModelSerializer:

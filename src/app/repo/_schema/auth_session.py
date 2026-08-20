@@ -16,11 +16,11 @@ SessionTable = sa.Table(
     sa.Column("assertions", JsonWithSchema(AssertionsList)),
 )
 
-sa.Index(
-    "ix_auth_session_data__authenticated_user_id",
-    SessionTable.c.data["authenticated_user_id"],
-)
-sa.Index(
-    "ix_auth_session_data__current_user_id",
-    SessionTable.c.data["current_user_id"],
-)
+# sa.Index(
+#     "ix_auth_session_data__authenticated_user_id",
+#     SessionTable.c.data["authenticated_user_id"],
+# )
+# sa.Index(
+#     "ix_auth_session_data__current_user_id",
+#     SessionTable.c.data["current_user_id"],
+# )

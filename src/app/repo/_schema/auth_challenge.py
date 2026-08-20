@@ -12,4 +12,5 @@ ChallengeTable = sa.Table(
     sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, index=True),
     sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True, index=True),
     sa.Column("params", JsonWithSchema(ChallengeStateParamsTA)),
+    sa.Column("processed", sa.Boolean, default=False),  # logical deletion
 )

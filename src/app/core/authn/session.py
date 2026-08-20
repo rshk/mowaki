@@ -136,4 +136,9 @@ async def invalidate_current_session() -> AuthSession:
 
 async def add_session_assertion(assertion: Assertion):
     async with edit_current_session() as upd:
+        session = upd.session
+
+        # TODO: ensure assertion is compatible before adding it!
+        # Eg. conflicting email / user_id assertions are not allowed.
+
         await upd.add_assertion(assertion)

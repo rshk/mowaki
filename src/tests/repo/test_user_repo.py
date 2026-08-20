@@ -1,10 +1,10 @@
 import uuid
 
 import pytest
-from app.types.user import UserID, UserMetadata
 
 from app import repo
 from app.exceptions import ObjectNotFound
+from app.types.user import UserID, UserMetadata
 
 pytestmark = [
     pytest.mark.usefixtures("database_schema"),

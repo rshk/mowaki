@@ -40,6 +40,7 @@ class TableHelper[T: FromDict]:
         self._get_engine = get_engine
 
     def _connect(self) -> AsyncConnection:
+        # WARNING! If only using engine.connect(), remember to commit manually.
         engine = self._get_engine()
         return engine.connect()
 
@@ -101,7 +102,7 @@ class TableHelper[T: FromDict]:
     async def update(self, *key, **updates):
         where_clause = self._get_pk_filter(*key)
         query = self._table.update().where(where_clause).values(**updates)
-        async with self._connect() as conn:
+        async with self._begin() as conn:
             await conn.execute(query)
 
     @asynccontextmanager
@@ -111,7 +112,7 @@ class TableHelper[T: FromDict]:
         where_clause = self._get_pk_filter(*key)
         query = self._table.select().where(where_clause).with_for_update()
 
-        async with self._connect() as conn:
+        async with self._begin() as conn:
             result = await conn.execute(query)
 
             async def update_object(**updates):
@@ -127,7 +128,7 @@ class TableHelper[T: FromDict]:
     async def delete(self, *key):
         where_clause = self._get_pk_filter(*key)
         query = self._table.delete().where(where_clause)
-        async with self._connect() as conn:
+        async with self._begin() as conn:
             await conn.execute(query)
 
 

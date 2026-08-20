@@ -2,6 +2,7 @@
 Email OTP based authentication
 """
 
+import logging
 import secrets
 
 from app.core.authn.challenge import create_challenge
@@ -18,6 +19,8 @@ from app.types.auth.challenges import (
     EmailOTPChallengeStateParams,
 )
 
+logger = logging.getLogger(__name__)
+
 
 async def initiate_with_email_otp(address: str) -> EmailOTPChallengeRequest:
     """
@@ -28,10 +31,13 @@ async def initiate_with_email_otp(address: str) -> EmailOTPChallengeRequest:
     return await upgrade_with_email_otp(address)
 
 
-async def upgrade_with_email_otp(address: str) -> EmailOTPChallengeRequest:
+async def upgrade_with_email_otp(address) -> EmailOTPChallengeRequest:
     """
     Upgrade session with a new email OTP
     """
+
+    # TODO: create an upgrade version that figures out the address automatically.
+    # Break common code to a separate function
 
     otp_code = generate_otp_code()
     params = EmailOTPChallengeStateParams(email_address=address, otp_code=otp_code)
@@ -67,6 +73,8 @@ def generate_otp_code(length: int = 6) -> str:
 async def compose_and_send_otp_challenge_email(address: str, otp_code: str):
     # TODO: get language from session for translations
     # TODO: we should probably have a non-blocking SMTP client instead!
+
+    logger.info("Sending OTP challenge to %s with code %s", address, otp_code)
 
     bld = EmailBuilder()
     bld.set_subject("Verify your email address")

@@ -33,9 +33,27 @@ async def lock_challenge_for_processing(
 ) -> AsyncGenerator[ChallengeState]:
     """Lock a challenge for processing, delete it at the end"""
 
-    async with _crud.for_update(challenge_id) as updh:
-        challenge = updh.result.one()
-        yield challenge
+    db = get_database()
 
+    query = (
+        ChallengeTable.select()
+        .filter_by(challenge_id=challenge_id, processed=False)
+        .with_for_update()
+    )
+
+    async with db.connect() as conn, conn.begin():
+        result = await conn.execute(query)
+        row = result.one()._asdict()
+        challenge = ChallengeState.from_dict(row)
+
+        await conn.execute(
+            ChallengeTable.update()
+            .filter_by(challenge_id=challenge_id)
+            .values(processed=True)
+        )
+
+    try:
+        yield challenge
+    finally:
         # Challenges are one-time only!
         await _crud.delete(challenge_id)
