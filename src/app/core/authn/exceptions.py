@@ -15,3 +15,15 @@ class SessionNotFound(SessionError):
 
 class SessionInvalid(SessionError):
     """Session was found but it's invalid for some reason"""
+
+
+class ChallengeExpired(AppException):
+    """Challenge is past expiration date"""
+
+
+class ChallengeResponseInvalid(AppException):
+    """Invalid response to a challenge"""
+
+
+class ChallengeResponseMismatched(ChallengeResponseInvalid):
+    """Challenge response doesn't match the challenge type"""

@@ -12,3 +12,7 @@ class ObjectNotFound(AppException):
 
 class DevFeatureDisabled(AppException):
     """A development feature is currently disabled"""
+
+
+class ItsABug(AppException):
+    """Application reached an invalid state"""

@@ -7,6 +7,29 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from urllib.parse import ParseResult, parse_qs, urlparse
 
+# ********************************************************************
+#                        TODO: async support
+# ********************************************************************
+# Add async support via aiosmtplib:
+# - https://pypi.org/project/aiosmtplib/
+# - https://aiosmtplib.readthedocs.io/en/stable/client.html
+#
+# This involves converting the base mailer class to async, but
+# shouldn't be a big task.
+# Also, make it the new default for smtp(s)://, move the old one to
+# something like smtp+legacy:// ?
+# Make sure to use start_tls (default) and NOT use_tls btw, or it will
+# fail. Also test it with a few real world services.
+# ********************************************************************
+
+# ----------------------- SMTP only support? -------------------------
+# We could simplify this whole code to only support SMTP, since we use
+# the slurpmail for development, but the low-overhead "dummy" mailer
+# is still useful for testing, without having to constantly resort to
+# mailslurper.
+# Also, people might want to use a 3rd party service via API instead.
+# --------------------------------------------------------------------
+
 
 def get_mailer_from_url(url: str) -> BaseMailer:
     """Create an appropriate Mailer instance from a URL
