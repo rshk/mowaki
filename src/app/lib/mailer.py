@@ -69,7 +69,7 @@ class BaseMailer(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def send_message(self, msg: Message):
+    async def send_message(self, msg: Message):
         pass
 
 
@@ -111,7 +111,7 @@ class SMTPMailer(BaseMailer):
             starttls=starttls,
         )
 
-    def send_message(self, msg):
+    async def send_message(self, msg):
         with smtplib.SMTP(self._host, port=self._port) as smtp:
             if self._starttls:
                 smtp.starttls()
@@ -138,7 +138,7 @@ class DummyMailer(BaseMailer):
     def from_url(cls, url: ParseResult):
         return DummyMailer()
 
-    def send_message(self, msg):
+    async def send_message(self, msg):
         try:
             outbox = _outbox.get()
         except LookupError:

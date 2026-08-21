@@ -1,7 +1,14 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Body
 from pydantic import BaseModel
 
-from app.core.authn.flows.actions import create_flow
+from app.config import get_config
+from app.core.authn.flows.actions import create_flow, process_flow_action
+from app.core.authn.flows.base import FlowStatus
+from app.core.authn.flows.email_otp_auth import FLD_EMAIL
+from app.core.context import get_current_session
+from app.types.auth.auth_flow import FlowAction, FlowID
 
 router = APIRouter(tags=["authentication"])
 
@@ -12,7 +19,34 @@ class InitEmailOtpInput(BaseModel):
 
 @router.post("/init/email-otp")
 async def post_auth_init_email_otp(body: InitEmailOtpInput):
+    # Create a flow and set an email address to it.
+    # This will trigger the notification email containing the OTP code
     flow_id = await create_flow(kind="email-otp-auth")
+    await process_flow_action(flow_id, FlowAction({FLD_EMAIL: body.address}))
+    return {  # TODO: return some kind of standardized response
+        "flow_id": flow_id,
+        "msg": "Check your email",
+    }
+
+
+@router.post("/flow/{flow_id}")
+async def post_flow_action(
+    flow_id: FlowID,
+    action: Annotated[FlowAction, Body(default_factory=dict)],
+):
+    result = await process_flow_action(flow_id, action)
+
+    status = {
+        FlowStatus.IN_PROGRESS: "in-progress",
+        FlowStatus.SUCCESS: "success",
+        FlowStatus.FAILED: "failed",
+    }[result]
+
+    return {
+        "flow_id": flow_id,
+        "action": action,
+        "status": status,
+    }
 
 
 # @router.post("/initiate/email-otp")
@@ -54,24 +88,24 @@ async def post_auth_init_email_otp(body: InitEmailOtpInput):
 # # /upgrade/... methods to add / refresh assertions
 
 
-# @router.get("/session")
-# async def get_session_info():
-#     """Get information about the current session"""
+@router.get("/session")
+async def get_session_info():
+    """Get information about the current session"""
 
-#     session = get_current_session()
+    session = get_current_session()
 
-#     config = get_config()
-#     if not config.development_mode:
-#         return {"session_id": session.session_id}
+    config = get_config()
+    if not config.development_mode:
+        return {"session_id": session.session_id}
 
-#     # Allow inspecting session details, but only for development!
-#     return {
-#         "session_id": session.session_id,
-#         "created_at": session.created_at,
-#         "last_used_at": session.last_used_at,
-#         "metadata": session.metadata,
-#         "assertions": session.assertions,
-#     }
+    # Allow inspecting session details, but only for development!
+    return {
+        "session_id": session.session_id,
+        "created_at": session.created_at,
+        "last_used_at": session.last_used_at,
+        "metadata": session.metadata,
+        "assertions": session.assertions,
+    }
 
 
 # @router.post("/session/invalidate", status_code=status.HTTP_204_NO_CONTENT)

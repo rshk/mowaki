@@ -41,7 +41,7 @@ async def create(
 
 
 @asynccontextmanager
-async def for_update(flow_id: FlowID) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
+async def for_update(flow_id: FlowID, session_id: SessionID | None = None) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
     # ----------------------------------------------------------------
     # Use ``is_completed`` as logic deletion, since we cannot
     # immediately delete an object that's currently locked with
@@ -54,8 +54,11 @@ async def for_update(flow_id: FlowID) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
         .with_for_update()
     )
 
+    if session_id is not None:
+        query = query.filter_by(session_id=session_id)
+
     db = get_database()
-    async with db.connect() as conn, db.begin():
+    async with db.connect() as conn, conn.begin():
         result = await conn.execute(query)
 
         async def update_object(**updates):
@@ -75,5 +78,5 @@ async def delete_completed():
     """Delete completed flows"""
     db = get_database()
     query = FlowTable.delete().filter_by(is_completed=True)
-    async with db.connect() as conn, db.begin():
+    async with db.connect() as conn, conn.begin():
         await conn.execute(query)

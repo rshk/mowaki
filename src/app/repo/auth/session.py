@@ -102,7 +102,7 @@ class SessionUpdater:
 
     def __init__(self, update_helper: UpdateHelper[AuthSession]):
         self._update_helper = update_helper
-        self.session = update_helper.result.one()
+        self.session = update_helper.obj
         self.new_secret = None
 
     async def _refresh(self):

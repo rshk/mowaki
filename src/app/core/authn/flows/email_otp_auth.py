@@ -2,7 +2,9 @@ import logging
 import secrets
 from typing import Self
 
+from app.config import get_config
 from app.core.authn.session import add_session_assertion
+from app.exceptions import ItsABug
 from app.lib.email_builder import EmailBuilder
 from app.resources import get_mailer
 from app.types.auth import assertions
@@ -48,34 +50,38 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
         return FlowState({})
 
     async def process(self, action: FlowAction) -> FlowStatus:
-        if (email_addr := action.get(FLD_EMAIL)) is not None:
-            if self.email_address is None:
-                # User just provided an email address to send code to
+        # STEP 1: get email address -> generate and send OTP code
+
+        if self.email_address is None:
+            if (email_addr := action.get(FLD_EMAIL)) is not None:
                 self.email_address = email_addr
                 self.otp_code = generate_otp_code()
                 await compose_and_send_otp_challenge_email(
                     self.email_address, self.otp_code
                 )
+            return FlowStatus.IN_PROGRESS
 
-            elif email_addr != self.email_address:
-                raise ValueError("Mismatching email address specified")
+        # If an email address was provided (not required), it must
+        # match the one we already have
+        if (email_addr := action.get(FLD_EMAIL)) is not None:  # noqa: SIM102
+            if email_addr != self.email_address:
+                raise ValueError("Specified email address does not match state")
+
+        # STEP 2: verify OTP code
+
+        if self.otp_code is None:
+            raise ItsABug("Missing OTP code")
 
         if (otp_code := action.get(FLD_OTP_CODE)) is not None:
             # User provided an OTP code for verification
-            if self.email_address is None:
-                raise ValueError(
-                    "Cannot provide an OTP code without an email address first"
-                )
-
             if self.otp_code == otp_code:
-                # SUCCESS -> valid otp
+                # SUCCESS -> valid OTP code
                 # Grant new assertion to the session
                 await add_session_assertion(
                     assertions.Assertion.from_params(
                         assertions.EmailOTP(email_address=self.email_address)
                     )
                 )
-
                 return FlowStatus.SUCCESS
 
             else:
@@ -86,10 +92,13 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
 
 
 async def compose_and_send_otp_challenge_email(address: str, otp_code: str):
-    # TODO: get language from session for translations
-    # TODO: we should probably have a non-blocking SMTP client instead!
+    # TODO: get language from session for translations.
+    #       Email composing logic needs some refactoring overall.
 
-    logger.info("Sending OTP challenge to %s with code %s", address, otp_code)
+    cfg = get_config()
+    if cfg.development_mode:
+        # For convenience, write the code to the logs
+        logger.info("Sending OTP to %s: %s", address, otp_code)
 
     bld = EmailBuilder()
     bld.set_subject("Verify your email address")
@@ -98,7 +107,7 @@ async def compose_and_send_otp_challenge_email(address: str, otp_code: str):
     msg = bld.build()
 
     mailer = get_mailer()
-    mailer.send_message(msg)
+    await mailer.send_message(msg)
 
 
 def generate_otp_code(length: int = 6) -> str:
