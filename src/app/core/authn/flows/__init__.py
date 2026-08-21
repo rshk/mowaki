@@ -1,19 +1,15 @@
-from app.core.context import get_current_session
-from app.types.auth.auth_flow import EmailOTPAuthFlowState, FlowID, FlowState
+from .actions import (
+    cleanup_completed_flows,
+    create_flow,
+    delete_flow,
+    process_flow_action,
+)
+from .registry import get_flow_processor_class
 
-
-async def create_flow(state: FlowState) -> FlowID:
-    # TODO: use repo to store flow to database
-    pass
-
-
-async def process_flow():
-    pass
-
-
-async def delete_flow():
-    pass
-
-
-async def cleanup_completed_flows():
-    pass
+__all__ = [
+    "cleanup_completed_flows",
+    "create_flow",
+    "delete_flow",
+    "get_flow_processor_class",
+    "process_flow_action",
+]

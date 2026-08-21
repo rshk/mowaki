@@ -133,6 +133,9 @@ class SessionUpdater:
     async def add_assertion(self, assertion: Assertion):
         await self._update(assertions=[*self.session.assertions, assertion])
 
+    async def update_assertions(self, assertions: list[Assertion]):
+        await self._update(assertions=assertions)
+
     async def remove_assertion(self, assertion_id: AssertionID):
         assertions = [x for x in self.session.assertions if x.id != assertion_id]
         await self._update(assertions=assertions)

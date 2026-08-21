@@ -24,7 +24,7 @@ from app.lib.protocols import FromDict
 type GetEngineFn = Callable[[], AsyncEngine]
 
 # Callable to update an object
-type UpdaterFn = Callable[..., Coroutine[Any, Any, sa.CursorResult[Any]]]
+type UpdaterFn = Callable[..., Coroutine[Any, Any, None]]
 
 
 class TableHelper[T: FromDict]:
@@ -38,11 +38,6 @@ class TableHelper[T: FromDict]:
         self._table = table
         self._model = model
         self._get_engine = get_engine
-
-    def _connect(self) -> AsyncConnection:
-        # WARNING! If only using engine.connect(), remember to commit manually.
-        engine = self._get_engine()
-        return engine.connect()
 
     @asynccontextmanager
     async def _begin(self) -> AsyncGenerator[AsyncConnection]:
@@ -107,7 +102,16 @@ class TableHelper[T: FromDict]:
 
     @asynccontextmanager
     async def for_update(self, *key) -> AsyncGenerator[UpdateHelper[T]]:
-        """Select a object for atomic update"""
+        """
+        Select a object for atomic update.
+
+        Returns an UpdateHelper instance with the following attributes:
+
+        - obj: the selected object, as model instance
+        - update: async function accepting object properties as
+          keyword arguments, performing an update on the selected
+          object
+        """
 
         where_clause = self._get_pk_filter(*key)
         query = self._table.select().where(where_clause).with_for_update()
@@ -117,13 +121,11 @@ class TableHelper[T: FromDict]:
 
             async def update_object(**updates):
                 query = self._table.update().where(where_clause).values(**updates)
-                result = await conn.execute(query)
-                return result
+                await conn.execute(query)
 
-            yield UpdateHelper(
-                result=WrappedResult[T](self._model, result),
-                update=update_object,
-            )
+            row = result.one()
+            obj = self._model.from_dict(row._asdict())
+            yield UpdateHelper(obj=obj, update=update_object)
 
     async def delete(self, *key):
         where_clause = self._get_pk_filter(*key)
@@ -181,5 +183,5 @@ class WrappedResult[T: FromDict]:
 
 @dataclass(slots=True)
 class UpdateHelper[T: FromDict]:
-    result: WrappedResult[T]
+    obj: T
     update: UpdaterFn
