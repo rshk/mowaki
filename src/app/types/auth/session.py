@@ -6,6 +6,7 @@ from typing import NewType
 from pydantic import Field, TypeAdapter
 
 from app.lib.models import BaseModel
+from app.types.user import UserID
 
 from .assertions import Assertion
 
@@ -51,6 +52,9 @@ class AuthSession(BaseModel):
 
     # Assertions associated with this session
     assertions: list[Assertion] = Field(default_factory=list)
+
+    # Current user ID
+    current_user_id: UserID | None = None
 
 
 class AuthSessionMetadata(BaseModel):

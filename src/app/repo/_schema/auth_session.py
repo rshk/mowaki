@@ -14,6 +14,7 @@ SessionTable = sa.Table(
     sa.Column("last_used_at", sa.DateTime(timezone=True), nullable=True, index=True),
     sa.Column("metadata", JsonWithSchema(AuthSessionMetadata)),
     sa.Column("assertions", JsonWithSchema(AssertionsList)),
+    sa.Column("current_user_id", sa.Uuid, nullable=True, index=True),
 )
 
 # sa.Index(

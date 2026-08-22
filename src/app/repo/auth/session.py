@@ -17,6 +17,7 @@ from app.types.auth.session import (
     SessionSecret,
     SessionTokenData,
 )
+from app.types.user import UserID
 
 _crud = TableHelper[AuthSession](
     SessionTable,
@@ -133,12 +134,18 @@ class SessionUpdater:
     async def add_assertion(self, assertion: Assertion):
         await self._update(assertions=[*self.session.assertions, assertion])
 
-    async def update_assertions(self, assertions: list[Assertion]):
+    async def set_assertions(self, assertions: list[Assertion]):
         await self._update(assertions=assertions)
 
     async def remove_assertion(self, assertion_id: AssertionID):
         assertions = [x for x in self.session.assertions if x.id != assertion_id]
         await self._update(assertions=assertions)
+
+    async def set_current_user_id(self, user_id: UserID):
+        await self._update(current_user_ud=user_id)
+
+    async def unset_current_user_id(self, user_id: UserID):
+        await self._update(current_user_ud=None)
 
 
 @asynccontextmanager
@@ -150,8 +157,13 @@ async def for_update(session_id: SessionID) -> AsyncGenerator[SessionUpdater]:
 
 
 async def set_last_used_at(session_id: SessionID, new_date: datetime | None = None):
-    async with for_update(session_id) as updater:
-        await updater.set_last_used_at(new_date)
+    if new_date is None:
+        new_date = datetime.now(UTC)
+    await _crud.update(session_id, last_used_at=new_date)
+
+
+async def set_current_user_id(session_id: SessionID, user_id: UserID | None):
+    await _crud.update(session_id, user_id=user_id)
 
 
 async def delete(session_id: SessionID):
