@@ -41,7 +41,9 @@ async def create(
 
 
 @asynccontextmanager
-async def for_update(flow_id: FlowID, session_id: SessionID | None = None) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
+async def for_update(
+    flow_id: FlowID, session_id: SessionID | None = None
+) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
     # ----------------------------------------------------------------
     # Use ``is_completed`` as logic deletion, since we cannot
     # immediately delete an object that's currently locked with

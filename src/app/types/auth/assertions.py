@@ -25,8 +25,16 @@ class Assertion(BaseModel):
     def from_params(cls, params: AssertionParams) -> Assertion:
         return Assertion(params=params)
 
+    def conflicts(self, other: Assertion) -> bool:
+        return self.params.conflicts(other.params)
 
-class EmailOTP(BaseModel):
+
+class BaseAssertionParams(BaseModel):
+    def conflicts(self, other: BaseAssertionParams) -> bool:
+        return False
+
+
+class EmailOTP(BaseAssertionParams):
     """Solved an email-based OTP challenge"""
 
     kind: Literal["email-otp"] = Field(default="email-otp")
@@ -36,7 +44,7 @@ class EmailOTP(BaseModel):
     user_id: UserID | None = None
 
 
-class PasskeyAuth(BaseModel):
+class PasskeyAuth(BaseAssertionParams):
     """Authenticated using a passkey"""
 
     kind: Literal["passkey"] = Field(default="passkey")
