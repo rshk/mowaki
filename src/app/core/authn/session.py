@@ -153,7 +153,9 @@ async def add_session_assertion(new_assertion: Assertion):
             for new_assertion in new_assertions:
                 if isinstance(new_assertion, assertions.EmailOTP):
                     if new_assertion.email_address != new_assertion.email_address:
-                        raise ConflictingAssertion("Conflicting EmailOTP assertions found in session")
+                        raise ConflictingAssertion(
+                            "Conflicting EmailOTP assertions found in session"
+                        )
 
             new_assertions = [
                 x for x in new_assertions if not isinstance(x, assertions.EmailOTP)

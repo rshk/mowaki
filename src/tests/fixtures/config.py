@@ -10,6 +10,10 @@ from app.lib.context import scoped_context
 
 
 class TestingConfig(BaseSettings):
+    """
+    Configuration for the testing machinery.
+    """
+
     model_config = SettingsConfigDict(env_prefix="TESTING_")
 
     # ----------------------------------------------------------------

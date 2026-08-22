@@ -16,7 +16,12 @@ case "$COMMAND" in
         ;;
 
     test)
-        exec docker compose run --rm api uv run pytest -vvv ./src/tests
+        exec docker compose exec api uv run pytest -vvv ./src/tests
+        ;;
+
+    test-cov)
+        exec docker compose exec api uv run pytest -vvv ./src/tests \
+             --cov=app --cov-report=term-missing
         ;;
 
     style-fix)

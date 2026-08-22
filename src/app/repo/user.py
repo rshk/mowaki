@@ -2,9 +2,8 @@ import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from email_validator import validate_email
-
-from app.lib.sql.table_helper import TableHelper, UpdateHelper
+from app.lib.sql.table_helper import TableHelper
+from app.lib.validation import normalize_email
 from app.resources import get_database
 from app.types.user import User, UserID, UserMetadata
 
@@ -22,24 +21,24 @@ async def get_by_id(user_id: UserID) -> User:
 
 
 async def get_by_email(email: str) -> User:
-    email = validate_email(email, check_deliverability=False).normalized
+    email = normalize_email(email)
     return await _crud.get_by(email=email)
 
 
 async def create(email: str) -> UserID:
     user_id = UserID(uuid.uuid4())
-    email = validate_email(email).normalized
+    email = normalize_email(email)
 
     await _crud.insert(id=user_id, email=email)
     return user_id
 
 
-@asynccontextmanager
-async def for_update(user_id: UserID) -> AsyncGenerator[UpdateHelper[User]]:
-    # DANGER: this potentially allows updating *any* object
-    # attributes, which might be undesirable. Use carefully.
-    async with _crud.for_update(user_id) as upd:
-        yield upd
+# @asynccontextmanager
+# async def for_update(user_id: UserID) -> AsyncGenerator[UpdateHelper[User]]:
+#     # DANGER: this potentially allows updating *any* object
+#     # attributes, which might be undesirable. Use carefully.
+#     async with _crud.for_update(user_id) as upd:
+#         yield upd
 
 
 @asynccontextmanager
@@ -48,7 +47,7 @@ async def edit_metadata(user_id: UserID) -> AsyncGenerator[UserMetadata]:
     Context manager to allow updating a user's metadata.
     """
     async with _crud.for_update(user_id) as upd:
-        user = upd.result.one()
+        user = upd.obj
         new_metadata = user.metadata.model_copy()
         yield new_metadata
         await upd.update(metadata=new_metadata)

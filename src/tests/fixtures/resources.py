@@ -1,10 +1,10 @@
 import pytest
-from app.io.resources import (
+
+from app.lib.context import scoped_context
+from app.resources import (
     initialize_resources,
     resources_context,
 )
-
-from app.lib.context import scoped_context
 
 
 @pytest.fixture(scope="function")
