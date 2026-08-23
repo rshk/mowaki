@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 from typing import Any
 
 import sqlalchemy as sa
@@ -22,6 +21,9 @@ from app.lib.protocols import FromDict
 
 # Fuctio returig a SQLAlchemy engine
 type GetEngineFn = Callable[[], AsyncEngine]
+
+# Callable to get (an updated version of) an object
+type GetterFn[T] = Callable[[], Coroutine[Any, Any, T]]
 
 # Callable to update an object
 type UpdaterFn = Callable[..., Coroutine[Any, Any, None]]
@@ -118,14 +120,18 @@ class TableHelper[T: FromDict]:
 
         async with self._begin() as conn:
             result = await conn.execute(query)
+            obj = WrappedResult(self._model, result).one()
+
+            async def get_object():
+                query = self._table.select().where(where_clause).with_for_update()
+                result = await conn.execute(query)
+                return WrappedResult(self._model, result).one()
 
             async def update_object(**updates):
                 query = self._table.update().where(where_clause).values(**updates)
                 await conn.execute(query)
 
-            row = result.one()
-            obj = self._model.from_dict(row._asdict())
-            yield UpdateHelper(obj=obj, update=update_object)
+            yield UpdateHelper(obj=obj, get=get_object, update=update_object)
 
     async def delete(self, *key):
         where_clause = self._get_pk_filter(*key)
@@ -181,7 +187,24 @@ class WrappedResult[T: FromDict]:
         return self._result.inserted_primary_key
 
 
-@dataclass(slots=True)
 class UpdateHelper[T: FromDict]:
-    obj: T
-    update: UpdaterFn
+    __slots__ = ["_obj", "_get", "_update"]
+
+    _obj: T | None
+    _get: GetterFn[T]
+    _update: UpdaterFn
+
+    def __init__(self, obj: T, get: GetterFn[T], update: UpdaterFn):
+        self._obj = obj
+        self._get = get
+        self._update = update
+
+    async def get(self, cache=True):
+        if cache and self._obj is not None:
+            return self._obj
+        self._obj = await self._get()
+        return self._obj
+
+    async def update(self, **kwargs):
+        await self._update(**kwargs)
+        self._obj = None  # Invalidate

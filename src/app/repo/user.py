@@ -47,7 +47,7 @@ async def edit_metadata(user_id: UserID) -> AsyncGenerator[UserMetadata]:
     Context manager to allow updating a user's metadata.
     """
     async with _crud.for_update(user_id) as upd:
-        user = upd.obj
+        user = await upd.get()
         new_metadata = user.metadata.model_copy()
         yield new_metadata
         await upd.update(metadata=new_metadata)

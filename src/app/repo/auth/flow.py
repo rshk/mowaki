@@ -62,14 +62,18 @@ async def for_update(
     db = get_database()
     async with db.connect() as conn, conn.begin():
         result = await conn.execute(query)
+        obj = AuthFlow.from_dict(result.one()._asdict())
+
+        async def get_object():
+            query = FlowTable.select().filter_by(flow_id=flow_id, is_completed=False).with_for_update()
+            result = await conn.execute(query)
+            return AuthFlow.from_dict(result.one()._asdict())
 
         async def update_object(**updates):
             query = FlowTable.update().filter_by(flow_id=flow_id).values(**updates)
             await conn.execute(query)
 
-        row = result.one()
-        obj = AuthFlow.from_dict(row._asdict())
-        yield UpdateHelper(obj=obj, update=update_object)
+        yield UpdateHelper(obj=obj, get=get_object, update=update_object)
 
 
 async def delete(flow_id: FlowID):

@@ -146,19 +146,21 @@ async def add_session_assertion(new_assertion: Assertion):
     """
 
     async with edit_current_session() as upd:
-        session = upd.session
+        session = await upd.get()
         new_assertions = [*session.assertions]
 
-        if isinstance(new_assertion, assertions.EmailOTP):
+        # FIXME FIXME FIXME FIX THIS STUFF HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+        if isinstance(new_assertion, assertions.EmailAuth):
             for new_assertion in new_assertions:
-                if isinstance(new_assertion, assertions.EmailOTP):
+                if isinstance(new_assertion, assertions.EmailAuth):
                     if new_assertion.email_address != new_assertion.email_address:
                         raise ConflictingAssertion(
                             "Conflicting EmailOTP assertions found in session"
                         )
 
             new_assertions = [
-                x for x in new_assertions if not isinstance(x, assertions.EmailOTP)
+                x for x in new_assertions if not isinstance(x, assertions.EmailAuth)
             ]
 
         elif isinstance(new_assertion, assertions.PasskeyAuth):

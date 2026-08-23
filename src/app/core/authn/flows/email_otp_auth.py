@@ -79,7 +79,7 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
                 # Grant new assertion to the session
                 await add_session_assertion(
                     assertions.Assertion.from_params(
-                        assertions.EmailOTP(email_address=self.email_address)
+                        assertions.EmailAuth(email_address=self.email_address)
                     )
                 )
                 return FlowStatus.SUCCESS

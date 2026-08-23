@@ -12,7 +12,7 @@ from app.types.user import UserID
 
 # What trust level is granted for each assertion type
 GRANTED_TRUST_LEVELS_BY_ASSERTION = {
-    assertions.EmailOTP: TRUST_LEVEL_MID,
+    assertions.EmailAuth: TRUST_LEVEL_MID,
     assertions.PasskeyAuth: TRUST_LEVEL_HIGH,
 }
 
@@ -41,7 +41,7 @@ def get_user_id_and_level_from_assertion(
     level = get_trust_level_granted_by_assertion(type(assertion.params))
 
     match assertion.params:
-        case assertions.EmailOTP(user_id=user_id) if user_id is not None:
+        case assertions.EmailAuth(user_id=user_id) if user_id is not None:
             return (user_id, level)
         case assertions.PasskeyAuth(user_id=user_id):
             return (user_id, level)

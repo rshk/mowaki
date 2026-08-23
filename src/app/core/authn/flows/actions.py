@@ -28,7 +28,7 @@ async def create_flow(kind: str, expires_in: timedelta | None = None) -> FlowID:
 async def process_flow_action(flow_id: FlowID, action: FlowAction) -> FlowStatus:
     session = get_current_session()
     async with repo.auth.flow.for_update(flow_id, session_id=session.session_id) as upd:
-        flow = upd.obj
+        flow = await upd.get()
         flow_class = get_flow_processor_class(flow.kind)
         flow = flow_class.from_state(flow.state)
 

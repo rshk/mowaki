@@ -34,14 +34,11 @@ class BaseAssertionParams(BaseModel):
         return False
 
 
-class EmailOTP(BaseAssertionParams):
+class EmailAuth(BaseAssertionParams):
     """Solved an email-based OTP challenge"""
 
     kind: Literal["email-otp"] = Field(default="email-otp")
     email_address: str
-
-    # If this email address was attached to a user, list it here
-    user_id: UserID | None = None
 
 
 class PasskeyAuth(BaseAssertionParams):
@@ -52,4 +49,4 @@ class PasskeyAuth(BaseAssertionParams):
     user_id: UserID
 
 
-AssertionParams = Annotated[EmailOTP | PasskeyAuth, Discriminator("kind")]
+AssertionParams = Annotated[EmailAuth | PasskeyAuth, Discriminator("kind")]
