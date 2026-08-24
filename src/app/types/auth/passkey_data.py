@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import NewType
 import uuid
+from typing import NewType
 
 from pydantic import BaseModel
 

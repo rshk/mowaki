@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+
 from app import repo
 from app.core.authn.session import format_session_token, parse_session_token
 from app.types.auth.assertions import Assertion, EmailAuth, PasskeyAuth
@@ -71,7 +72,6 @@ async def test_add_assertion(freeze_time, subtests):
     assert session.assertions == []
 
     with subtests.test("Add first assertion"):
-
         with freeze_time("2026-08-15"):
             new_assertion = Assertion.from_params(
                 EmailAuth(email_address="user@example.com")
@@ -91,7 +91,6 @@ async def test_add_assertion(freeze_time, subtests):
         assert assertion.params.email_address == "user@example.com"
 
     with subtests.test("Add second assertion"):
-
         # Add another one
         new_assertion = Assertion.from_params(
             PasskeyAuth(
