@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from typing import NewType
+import uuid
 
 from pydantic import BaseModel
 
-PasskeyID = NewType("PasskeyID", str)
+PasskeyID = NewType("PasskeyID", uuid.UUID)
 
 
 class PasskeyData(BaseModel):

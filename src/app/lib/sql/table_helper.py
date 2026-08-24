@@ -123,7 +123,7 @@ class TableHelper[T: FromDict]:
             obj = WrappedResult(self._model, result).one()
 
             async def get_object():
-                query = self._table.select().where(where_clause).with_for_update()
+                query = self._table.select().where(where_clause)
                 result = await conn.execute(query)
                 return WrappedResult(self._model, result).one()
 
@@ -188,7 +188,7 @@ class WrappedResult[T: FromDict]:
 
 
 class UpdateHelper[T: FromDict]:
-    __slots__ = ["_obj", "_get", "_update"]
+    __slots__ = ["_get", "_obj", "_update"]
 
     _obj: T | None
     _get: GetterFn[T]

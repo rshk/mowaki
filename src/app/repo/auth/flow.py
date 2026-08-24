@@ -65,7 +65,11 @@ async def for_update(
         obj = AuthFlow.from_dict(result.one()._asdict())
 
         async def get_object():
-            query = FlowTable.select().filter_by(flow_id=flow_id, is_completed=False).with_for_update()
+            query = (
+                FlowTable.select()
+                .filter_by(flow_id=flow_id, is_completed=False)
+                .with_for_update()
+            )
             result = await conn.execute(query)
             return AuthFlow.from_dict(result.one()._asdict())
 
