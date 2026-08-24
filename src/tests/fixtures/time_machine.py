@@ -12,6 +12,12 @@ def time_machine_fixture():
 @pytest.fixture(name="freeze_time")
 def freeze_time_fixture():
     def freeze_time(arg):
-        return time_machine.travel(arg)
+        return time_machine.travel(arg, tick=False)
+    return freeze_time
 
+
+@pytest.fixture(name="time_travel")
+def time_travel_fixture():
+    def freeze_time(arg):
+        return time_machine.travel(arg, tick=True)
     return freeze_time

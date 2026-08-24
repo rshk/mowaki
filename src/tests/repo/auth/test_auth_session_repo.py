@@ -2,7 +2,6 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
-
 from app import repo
 from app.core.authn.session import format_session_token, parse_session_token
 from app.types.auth.assertions import Assertion, EmailAuth, PasskeyAuth
@@ -65,6 +64,30 @@ async def test_set_last_used_at(subtests, freeze_time):
         assert session.last_used_at == datetime(2026, 8, 7, 0, 0, tzinfo=UTC)
 
 
+async def test_edit_set_last_used_at(subtests, freeze_time):
+    with freeze_time("2026-08-01"):
+        session_id, _ = await repo.auth.session.create()
+
+    session = await repo.auth.session.get(session_id)
+    assert session.last_used_at is None
+
+    with subtests.test("Set to current time (default)"):
+        with freeze_time("2026-08-05"):
+            async with repo.auth.session.for_update(session_id) as upd:
+                await upd.set_last_used_at()
+
+        session = await repo.auth.session.get(session_id)
+        assert session.last_used_at == datetime(2026, 8, 5, 0, 0, tzinfo=UTC)
+
+    with subtests.test("Set to custom time"):
+        with freeze_time("2026-08-08"):
+            async with repo.auth.session.for_update(session_id) as upd:
+                await upd.set_last_used_at(datetime(2026, 8, 7, 0, 0, tzinfo=UTC))
+
+        session = await repo.auth.session.get(session_id)
+        assert session.last_used_at == datetime(2026, 8, 7, 0, 0, tzinfo=UTC)
+
+
 async def test_add_assertion(freeze_time, subtests):
     session_id, _ = await repo.auth.session.create()
 
@@ -108,3 +131,25 @@ async def test_add_assertion(freeze_time, subtests):
 
 async def test_set_assertions():
     session_id, _ = await repo.auth.session.create()
+
+    async with repo.auth.session.for_update(session_id) as upd:
+        await upd.add_assertion(
+            Assertion.from_params(EmailAuth(email_address="foo@example.com"))
+        )
+        await upd.add_assertion(
+            Assertion.from_params(EmailAuth(email_address="bar@example.com"))
+        )
+
+    session = await repo.auth.session.get(session_id)
+    assert len(session.assertions) == 2
+
+    async with repo.auth.session.for_update(session_id) as upd:
+        await upd.set_assertions(
+            [Assertion.from_params(EmailAuth(email_address="bar@example.com"))]
+        )
+
+    session = await repo.auth.session.get(session_id)
+    assert len(session.assertions) == 1
+    [assertion] = session.assertions
+    assert isinstance(assertion.params, EmailAuth)
+    assert assertion.params.email_address == "bar@example.com"
