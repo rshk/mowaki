@@ -13,6 +13,7 @@ def time_machine_fixture():
 def freeze_time_fixture():
     def freeze_time(arg):
         return time_machine.travel(arg, tick=False)
+
     return freeze_time
 
 
@@ -20,4 +21,5 @@ def freeze_time_fixture():
 def time_travel_fixture():
     def freeze_time(arg):
         return time_machine.travel(arg, tick=True)
+
     return freeze_time

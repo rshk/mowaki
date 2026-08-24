@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
+
 from app import repo
 from app.core.authn.session import format_session_token, parse_session_token
 from app.types.auth.assertions import Assertion, EmailAuth, PasskeyAuth

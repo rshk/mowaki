@@ -2,12 +2,11 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from app import repo
-from app.core.authn.exceptions import ConflictingAssertion, SessionNotFound
+from app.core.authn.exceptions import SessionNotFound
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
 from app.repo.auth.session import SessionUpdater
-from app.types.auth import assertions
 from app.types.auth.assertions import Assertion
 from app.types.auth.session import (
     AuthSession,
@@ -135,41 +134,22 @@ async def invalidate_current_session() -> AuthSession:
     return new_session
 
 
-async def add_session_assertion(new_assertion: Assertion):
+async def add_session_assertion(assertion: Assertion):
     """
     Grant a new assertion to the current session.
 
-    Also does some processing:
-
-    - Older identical assertions are removed
-    - If there are incompatible existing assertions, the new one is dropped
+    Pre-existing assertions with the same text will be removed.
     """
 
     async with edit_current_session() as upd:
         session = await upd.get()
-        new_assertions = [*session.assertions]
+        assertions = _add_assertion_to_list(session.assertions, assertion)
+        await upd.set_assertions(assertions)
 
-        # FIXME FIXME FIXME FIX THIS STUFF HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        if isinstance(new_assertion, assertions.EmailAuth):
-            for new_assertion in new_assertions:
-                if isinstance(new_assertion, assertions.EmailAuth):
-                    if new_assertion.email_address != new_assertion.email_address:
-                        raise ConflictingAssertion(
-                            "Conflicting EmailOTP assertions found in session"
-                        )
-
-            new_assertions = [
-                x for x in new_assertions if not isinstance(x, assertions.EmailAuth)
-            ]
-
-        elif isinstance(new_assertion, assertions.PasskeyAuth):
-            pass
-
-        for new_assertion in session.assertions:
-            pass
-
-        # TODO: ensure assertion is compatible before adding it!
-        # Eg. conflicting email / user_id assertions are not allowed.
-
-        await upd.add_assertion(new_assertion)
+def _add_assertion_to_list(assertions: list[Assertion], assertion: Assertion):
+    key = assertion.get_assertion_text()
+    return [
+        *(x for x in assertions if x.get_assertion_text() != key),
+        assertion,
+    ]
