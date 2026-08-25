@@ -59,8 +59,8 @@ async def setup_and_teardown_database(database_url: str, admin_database_url: str
     await dbops.drop_role(dburl.username)
 
 
-@pytest_asyncio.fixture()
-async def database_metadata():
+@pytest.fixture()
+def database_metadata():
     """Fixture returning database schema metadata.
 
     Used to allow overriding metadata for database_schema, eg. in
