@@ -19,6 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 from app.exceptions import ObjectNotFound
 from app.lib.protocols import FromDict
 
+from .wrapped_result import WrappedResult
+
 # Fuctio returig a SQLAlchemy engine
 type GetEngineFn = Callable[[], AsyncEngine]
 
@@ -138,53 +140,6 @@ class TableHelper[T: FromDict]:
         query = self._table.delete().where(where_clause)
         async with self._begin() as conn:
             await conn.execute(query)
-
-
-class WrappedResult[T: FromDict]:
-    """
-    Wrapper for a sqlalchemy.CursorResult
-
-    Exposes many of the standard Result methods, using the specified
-    model to return the resulting data.
-    """
-
-    def __init__(self, model: type[T], result: sa.CursorResult) -> None:
-        self._model = model
-        self._result = result
-
-    def all(self) -> list[T]:
-        return [self._model.from_dict(row._asdict()) for row in self._result.all()]
-
-    def fetchall(self) -> list[T]:
-        return self.all()
-
-    def fetchone(self) -> T | None:
-        row = self._result.fetchone()
-        if row is None:
-            return None
-        return self._model.from_dict(row._asdict())
-
-    def first(self) -> T | None:
-        row = self._result.first()
-        if row is None:
-            return None
-        return self._model.from_dict(row._asdict())
-
-    def one(self) -> T:
-        # Raises NoResultFound, MultipleResultsFound
-        row = self._result.one()
-        return self._model.from_dict(row._asdict())
-
-    def one_or_none(self) -> T | None:
-        # Raises MultipleResultsFound
-        row = self._result.one_or_none()
-        if row is None:
-            return None
-        return self._model.from_dict(row._asdict())
-
-    @property
-    def inserted_primary_key(self) -> Any | None:
-        return self._result.inserted_primary_key
 
 
 class UpdateHelper[T: FromDict]:
