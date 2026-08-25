@@ -63,16 +63,23 @@ class TableHelper[T: FromDict]:
 
     # ----------------------------------------------------------------
 
-    def _get_pk_filter(self, *key):
+    def _get_pk_filter(self, key):
         """Get a SQLAlchemy where clause to filter this table by primary key"""
+
         pk_cols = self._table.primary_key.columns
-        if len(key) != len(pk_cols):
+
+        if len(pk_cols) == 1:
+            key = (key,)
+
+        elif len(key) != len(pk_cols):
             raise ValueError("Mismatched pk length")
+
         where_clause = sa.and_(*(col == val for col, val in zip(pk_cols, key)))
+
         return where_clause
 
-    async def get_by_pk(self, *key):
-        query = self._table.select().where(self._get_pk_filter(*key))
+    async def get_by_pk(self, key):
+        query = self._table.select().where(self._get_pk_filter(key))
         result = await self._execute(query)
         return result.one()
 
@@ -83,10 +90,16 @@ class TableHelper[T: FromDict]:
 
     async def select(self, *where_clause, **filters) -> WrappedResult[T]:
         query = self._table.select()
+
+        if (pk := filters.pop("pk", None)) is not None:
+            query = query.where(self._get_pk_filter(pk))
+
         if where_clause:
             query = query.where(*where_clause)
+
         if filters:
             query = query.filter_by(**filters)
+
         return await self._execute(query)
 
     async def insert(self, **values) -> Any | None:
@@ -94,14 +107,14 @@ class TableHelper[T: FromDict]:
         result = await self._execute(query)
         return result.inserted_primary_key
 
-    async def update(self, *key, **updates):
-        where_clause = self._get_pk_filter(*key)
+    async def update(self, key, **updates):
+        where_clause = self._get_pk_filter(key)
         query = self._table.update().where(where_clause).values(**updates)
         async with self._begin() as conn:
             await conn.execute(query)
 
     @asynccontextmanager
-    async def for_update(self, *key) -> AsyncGenerator[UpdateHelper[T]]:
+    async def for_update(self, key) -> AsyncGenerator[UpdateHelper[T]]:
         """
         Select a object for atomic update.
 
@@ -113,7 +126,7 @@ class TableHelper[T: FromDict]:
           object
         """
 
-        where_clause = self._get_pk_filter(*key)
+        where_clause = self._get_pk_filter(key)
         query = self._table.select().where(where_clause).with_for_update()
 
         async with self._begin() as conn:
@@ -131,8 +144,8 @@ class TableHelper[T: FromDict]:
 
             yield UpdateHelper(obj=obj, get=get_object, update=update_object)
 
-    async def delete(self, *key):
-        where_clause = self._get_pk_filter(*key)
+    async def delete(self, key):
+        where_clause = self._get_pk_filter(key)
         query = self._table.delete().where(where_clause)
         async with self._begin() as conn:
             await conn.execute(query)
