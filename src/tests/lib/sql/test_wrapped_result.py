@@ -43,7 +43,6 @@ def table_helper_fixture(database_metadata):
     )
 
 
-@pytest.mark.usefixtures("database_schema")
 class Test_wrapped_result:
     # result.all() ---------------------------------------------------
 
