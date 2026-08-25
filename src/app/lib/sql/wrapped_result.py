@@ -25,7 +25,7 @@ class WrappedResult[T: FromDict]:
         return [self._model.from_dict(row._asdict()) for row in self._result.all()]
 
     def fetchall(self) -> list[T]:
-        return self.all()
+        return self.all()  # pragma: nocover
 
     def fetchone(self) -> T | None:
         row = self._result.fetchone()

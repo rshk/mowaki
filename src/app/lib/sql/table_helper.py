@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable, Sized
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Iterator
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
@@ -29,18 +29,31 @@ type GetterFn[T] = Callable[[], Coroutine[Any, Any, T]]
 # Callable to update an object
 type UpdaterFn = Callable[..., Coroutine[Any, Any, None]]
 
+# Loose "order by" specification, from user input
+type OrderBySpec = str | list[str] | tuple[str] | None
+
 
 class TableHelper[T: FromDict, K]:
-    __slots__ = ["_get_engine", "_model", "_table"]
+    __slots__ = ["_get_engine", "_model", "_table", "_default_ordering"]
 
     _table: sa.Table
     _model: type[T]
     _get_engine: GetEngineFn
+    _default_ordering: list[Any] | None
 
-    def __init__(self, table: sa.Table, model: type[T], get_engine: GetEngineFn):
+    def __init__(
+        self,
+        table: sa.Table,
+        model: type[T],
+        get_engine: GetEngineFn,
+        default_ordering: OrderBySpec = None,
+    ):
         self._table = table
         self._model = model
         self._get_engine = get_engine
+        self._default_ordering = None
+        if default_ordering is not None:
+            self._default_ordering = list(self._parse_order_by(default_ordering))
 
     @asynccontextmanager
     async def _begin(self) -> AsyncGenerator[AsyncConnection]:
@@ -84,6 +97,23 @@ class TableHelper[T: FromDict, K]:
         where_clause = sa.and_(*(col == val for col, val in zip(pk_cols, key)))
         return where_clause
 
+    def _parse_order_by(self, order_by: str | Iterable[str]) -> Iterator[Any]:
+        if order_by == "PK":
+            # Special case: order by primary key
+            yield from self._table.primary_key.columns
+            return
+
+        if isinstance(order_by, str):
+            _order_by = order_by.split(",")
+        else:
+            _order_by = list(order_by)
+
+        for item in _order_by:
+            if item.startswith("~"):
+                yield self._table.c[item[1:]].desc()
+            else:
+                yield self._table.c[item].asc()
+
     async def get_by_pk(self, key: K) -> T:
         result = await self.select(pk=key)
         return result.one()
@@ -92,11 +122,53 @@ class TableHelper[T: FromDict, K]:
         result = await self.select(**filters)
         return result.one()
 
-    async def select(self, *where_clause, **filters) -> WrappedResult[T]:
+    async def select(
+        self,
+        *where_clause,
+        pk: K | None = None,
+        order_by: str | list[str] | tuple[str] | None = None,
+        **filters,
+    ) -> WrappedResult[T]:
+        """
+        Select multiple objects from a table.
+
+        Args:
+
+            *where_clause:
+
+                Passed to SQLAlchemy Selectable.where().
+
+            pk:
+
+                Valid primary key for this object. Will be converted
+                to the appropriate WHERE clause.
+
+            order_by:
+
+                Adds an ORDER BY clause to the query. If set to None,
+                no ORDER BY will be added to the query. If set to the
+                special value "PK", order by primary
+                column. Otherwise, accepts a string in the form
+                "field1,~field2", where fields prefixed with "~" will
+                be sorted in descending order.
+
+            **filters:
+
+                Other arguments are treated as column names mapping to
+                exact values. Will be passed to
+                Selectable.filter_by().
+        """
+
         query = self._table.select()
 
-        if (pk := filters.pop("pk", None)) is not None:
+        if pk is not None:
             query = query.where(self._get_pk_filter(pk))
+
+        if order_by is None:
+            if self._default_ordering is not None:
+                query = query.order_by(*self._default_ordering)
+        else:
+            query = query.order_by(*self._parse_order_by(order_by))
 
         if where_clause:
             query = query.where(*where_clause)
@@ -113,7 +185,10 @@ class TableHelper[T: FromDict, K]:
         pk = result.inserted_primary_key
 
         if pk is None:
-            raise ItsABug("Unexpected empty primary key returned by INSERT")
+            # This should never happen
+            raise ItsABug(
+                "Unexpected empty primary key returned by INSERT"
+            )  # pragma: nocover
 
         if len(self._table.primary_key.columns) == 1:
             assert len(pk) == 1
