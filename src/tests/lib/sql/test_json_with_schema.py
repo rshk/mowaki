@@ -1,12 +1,9 @@
-from pydantic import TypeAdapter
 import pytest
 import sqlalchemy as sa
-from sqlalchemy.exc import ResourceClosedError
+from pydantic import TypeAdapter
 
-from app.exceptions import MultipleObjectsFound, ObjectNotFound
 from app.lib.models import BaseModel
 from app.lib.sql.json_with_schema import JsonWithSchema
-from app.lib.sql.table_helper import TableHelper
 from app.resources import get_database
 
 pytestmark = [
