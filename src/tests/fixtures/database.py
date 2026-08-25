@@ -60,7 +60,17 @@ async def setup_and_teardown_database(database_url: str, admin_database_url: str
 
 
 @pytest_asyncio.fixture()
-async def database_schema(database, resources):
+async def database_metadata():
+    """Fixture returning database schema metadata.
+
+    Used to allow overriding metadata for database_schema, eg. in
+    tests for app.lib.sql, which require custom, fixed schemas.
+    """
+    return metadata
+
+
+@pytest_asyncio.fixture()
+async def database_schema(database, resources, database_metadata):
     """
     Ficture to actually create and drop the database schema
     before/after each test execution.
@@ -77,9 +87,9 @@ async def database_schema(database, resources):
     )
 
     async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
+        await conn.run_sync(database_metadata.create_all)
 
     yield
 
     async with engine.begin() as conn:
-        await conn.run_sync(metadata.drop_all)
+        await conn.run_sync(database_metadata.drop_all)

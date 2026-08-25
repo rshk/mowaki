@@ -2,13 +2,11 @@ import uuid
 from datetime import UTC, datetime
 
 import pytest
-import pytest_asyncio
 import sqlalchemy as sa
 
 from app.exceptions import ObjectNotFound
 from app.lib.models import BaseModel
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
-from app.lib.sql.utils import create_async_engine
 from app.resources import get_database
 
 pytestmark = [
@@ -57,33 +55,6 @@ def table_helper_fixture(db_tables):
         model=SampleBlogPost,
         get_engine=get_database,
     )
-
-
-@pytest_asyncio.fixture()
-async def database_schema(database, resources, database_metadata):
-    """
-    Create a custom database schema for testing TableHelper machinery
-    """
-
-    metadata = database_metadata
-
-    if resources:
-        pass  # Make linter happy; only need resources as a dependency
-
-    database_url = database
-    engine = create_async_engine(
-        database_url,
-        isolation_level="AUTOCOMMIT",
-        poolclass=sa.NullPool,
-    )
-
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.create_all)
-
-    yield
-
-    async with engine.begin() as conn:
-        await conn.run_sync(metadata.drop_all)
 
 
 @pytest.mark.usefixtures("database_schema")
