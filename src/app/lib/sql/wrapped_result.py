@@ -1,16 +1,11 @@
-"""
-Table helper
-
-Reusable high-level functions to perform CRUD operations between a
-model and a table.
-"""
-
 from __future__ import annotations
 
 from typing import Any
 
 import sqlalchemy as sa
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
+from app.exceptions import MultipleObjectsFound, ObjectNotFound
 from app.lib.protocols import FromDict
 
 
@@ -45,13 +40,24 @@ class WrappedResult[T: FromDict]:
         return self._model.from_dict(row._asdict())
 
     def one(self) -> T:
-        # Raises NoResultFound, MultipleResultsFound
-        row = self._result.one()
+        # Raises ObjectNotfound, MultipleObjectsfound
+        try:
+            row = self._result.one()
+        except NoResultFound as exc:
+            raise ObjectNotFound(self._get_name()) from exc
+        except MultipleResultsFound as exc:
+            raise MultipleObjectsFound(self._get_name()) from exc
+
         return self._model.from_dict(row._asdict())
 
     def one_or_none(self) -> T | None:
-        # Raises MultipleResultsFound
-        row = self._result.one_or_none()
+        # Raises MultipleObjectsFound
+
+        try:
+            row = self._result.one_or_none()
+        except MultipleResultsFound as exc:
+            raise MultipleObjectsFound(self._get_name()) from exc
+
         if row is None:
             return None
         return self._model.from_dict(row._asdict())
@@ -59,3 +65,7 @@ class WrappedResult[T: FromDict]:
     @property
     def inserted_primary_key(self) -> Any | None:
         return self._result.inserted_primary_key
+
+    def _get_name(self):
+        """Get model name. Used for error messages."""
+        return self._model.__name__

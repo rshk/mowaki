@@ -7,7 +7,11 @@ class UninitializedResourceError(AppException):
 
 
 class ObjectNotFound(AppException):
-    pass
+    """Expected 1 result, found 0"""
+
+
+class MultipleObjectsFound(AppException):
+    """Expected <=1 results, found >1"""
 
 
 class DevFeatureDisabled(AppException):

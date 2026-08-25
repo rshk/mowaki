@@ -13,10 +13,8 @@ from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from app.exceptions import ObjectNotFound
 from app.lib.protocols import FromDict
 
 from .wrapped_result import WrappedResult
@@ -63,10 +61,6 @@ class TableHelper[T: FromDict]:
             )
         return WrappedResult[T](self._model, result)
 
-    def _get_name(self):
-        """Get model name. Used for error messages."""
-        return self._model.__name__
-
     # ----------------------------------------------------------------
 
     def _get_pk_filter(self, *key):
@@ -80,18 +74,20 @@ class TableHelper[T: FromDict]:
     async def get_by_pk(self, *key):
         query = self._table.select().where(self._get_pk_filter(*key))
         result = await self._execute(query)
-        try:
-            return result.one()
-        except NoResultFound as exc:
-            raise ObjectNotFound(f"{self._get_name()} pk={key}") from exc
+        return result.one()
 
     async def get_by(self, **filters) -> T:
         query = self._table.select().filter_by(**filters)
         result = await self._execute(query)
-        try:
-            return result.one()
-        except NoResultFound as exc:
-            raise ObjectNotFound(f"{self._get_name()} with {filters}") from exc
+        return result.one()
+
+    async def select(self, *where_clause, **filters) -> WrappedResult[T]:
+        query = self._table.select()
+        if where_clause:
+            query = query.where(*where_clause)
+        if filters:
+            query = query.filter_by(**filters)
+        return await self._execute(query)
 
     async def insert(self, **values) -> Any | None:
         query = self._table.insert().values(**values)
