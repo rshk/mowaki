@@ -52,11 +52,11 @@ class JsonWithSchema(types.TypeDecorator):
 class ModelSerializer(metaclass=ABCMeta):
     @abstractmethod
     def load(self, value) -> Any:
-        pass
+        pass  # pragma: nocover
 
     @abstractmethod
     def dump(self, value) -> Any:
-        pass
+        pass  # pragma: nocover
 
 
 class PydanticModelSerializer(ModelSerializer):
