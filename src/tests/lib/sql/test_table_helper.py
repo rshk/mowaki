@@ -4,14 +4,12 @@ from datetime import UTC, datetime
 import pytest
 import pytest_asyncio
 import sqlalchemy as sa
-from app import repo
+
 from app.exceptions import ObjectNotFound
 from app.lib.models import BaseModel
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.lib.sql.utils import create_async_engine
 from app.resources import get_database
-from app.types.auth.auth_flow import FlowState
-from app.types.auth.session import SessionID
 
 pytestmark = [
     pytest.mark.usefixtures("database"),
