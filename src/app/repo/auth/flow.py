@@ -3,6 +3,9 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.exc import NoResultFound
+
+from app.exceptions import ObjectNotFound
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.repo._schema.auth_flow import FlowTable
 from app.resources import get_database
@@ -38,6 +41,24 @@ async def create(
     )
 
     return flow_id
+
+
+async def get(flow_id: FlowID, session_id: SessionID | None = None) -> AuthFlow:
+    query = FlowTable.select().filter_by(flow_id=flow_id, is_completed=False)
+
+    if session_id is not None:
+        query = query.filter_by(session_id=session_id)
+
+    db = get_database()
+    async with db.connect() as conn, conn.begin():
+        result = await conn.execute(query)
+
+        try:
+            row = result.one()
+        except NoResultFound as exc:
+            raise ObjectNotFound(f"AuthFlow pk={(flow_id,)}") from exc
+
+    return AuthFlow.from_dict(row._asdict())
 
 
 @asynccontextmanager
