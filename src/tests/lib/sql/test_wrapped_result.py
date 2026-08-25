@@ -1,13 +1,10 @@
-import uuid
-from datetime import UTC, datetime
-
 import pytest
-import pytest_asyncio
 import sqlalchemy as sa
 from sqlalchemy.exc import ResourceClosedError
+
 from app.exceptions import MultipleObjectsFound, ObjectNotFound
 from app.lib.models import BaseModel
-from app.lib.sql.table_helper import TableHelper, UpdateHelper
+from app.lib.sql.table_helper import TableHelper
 from app.resources import get_database
 
 pytestmark = [
@@ -54,9 +51,7 @@ class Test_wrapped_result:
         result = await th.select()
         assert result.all() == []
 
-    async def test_all_for_non_empty_result(
-        self, th: TableHelper[SampleObject, int]
-    ):
+    async def test_all_for_non_empty_result(self, th: TableHelper[SampleObject, int]):
         await th.insert(text="foo")
         await th.insert(text="bar")
         result = await th.select()
@@ -99,9 +94,7 @@ class Test_wrapped_result:
         assert isinstance(obj, SampleObject)
         assert obj.text == "foo"
 
-    async def test_fetchone_consumes_rows(
-        self, th: TableHelper[SampleObject, int]
-    ):
+    async def test_fetchone_consumes_rows(self, th: TableHelper[SampleObject, int]):
         await th.insert(text="foo")
         result = await th.select()
 
@@ -145,7 +138,9 @@ class Test_wrapped_result:
         assert isinstance(obj, SampleObject)
         assert obj.text == "foo"
 
-    async def test_one_raises_if_multiple_results(self, th: TableHelper[SampleObject, int]):
+    async def test_one_raises_if_multiple_results(
+        self, th: TableHelper[SampleObject, int]
+    ):
         await th.insert(text="foo")
         await th.insert(text="bar")
         result = await th.select()
@@ -154,18 +149,24 @@ class Test_wrapped_result:
 
     # result.one_or_none() -------------------------------------------
 
-    async def test_one_or_none_returns_none_if_no_result(self, th: TableHelper[SampleObject, int]):
+    async def test_one_or_none_returns_none_if_no_result(
+        self, th: TableHelper[SampleObject, int]
+    ):
         result = await th.select()
         assert result.one_or_none() is None
 
-    async def test_one_or_none_returns_single_object(self, th: TableHelper[SampleObject, int]):
+    async def test_one_or_none_returns_single_object(
+        self, th: TableHelper[SampleObject, int]
+    ):
         await th.insert(text="foo")
         result = await th.select()
         obj = result.one_or_none()
         assert isinstance(obj, SampleObject)
         assert obj.text == "foo"
 
-    async def test_one_or_none_raises_if_multiple_results(self, th: TableHelper[SampleObject, int]):
+    async def test_one_or_none_raises_if_multiple_results(
+        self, th: TableHelper[SampleObject, int]
+    ):
         await th.insert(text="foo")
         await th.insert(text="bar")
         result = await th.select()

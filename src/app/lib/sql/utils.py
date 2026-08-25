@@ -138,7 +138,9 @@ class DbOps:
 
             return
 
-        raise ValueError(f"Dialect {dialect_name} is not supported yet")  # pragma: nocover
+        raise ValueError(
+            f"Dialect {dialect_name} is not supported yet"
+        )  # pragma: nocover
 
     async def drop_database(self, db_name: str):
         dialect_name = self.engine.dialect.name
@@ -153,7 +155,9 @@ class DbOps:
 
             return
 
-        raise ValueError(f"Dialect {dialect_name} is not supported yet")  # pragma: nocover
+        raise ValueError(
+            f"Dialect {dialect_name} is not supported yet"
+        )  # pragma: nocover
 
     async def _terminate_backend(self, conn: AsyncConnection, database_name: str):
         query = text("""
@@ -189,7 +193,9 @@ class DbOps:
 
             return
 
-        raise ValueError(f"Dialect {dialect_name} is not supported yet")  # pragma: nocover
+        raise ValueError(
+            f"Dialect {dialect_name} is not supported yet"
+        )  # pragma: nocover
 
     async def drop_role(self, role_name: str):
         dialect_name = self.engine.dialect.name
@@ -203,4 +209,6 @@ class DbOps:
 
             return
 
-        raise ValueError(f"Dialect {dialect_name} is not supported yet")  # pragma: nocover
+        raise ValueError(
+            f"Dialect {dialect_name} is not supported yet"
+        )  # pragma: nocover

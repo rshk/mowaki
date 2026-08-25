@@ -7,9 +7,16 @@ model and a table.
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable, Sized
+from collections.abc import (
+    AsyncGenerator,
+    Callable,
+    Coroutine,
+    Iterable,
+    Iterator,
+    Sized,
+)
 from contextlib import asynccontextmanager
-from typing import Any, Iterator
+from typing import Any
 
 import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
@@ -34,7 +41,7 @@ type OrderBySpec = str | list[str] | tuple[str] | None
 
 
 class TableHelper[T: FromDict, K]:
-    __slots__ = ["_get_engine", "_model", "_table", "_default_ordering"]
+    __slots__ = ["_default_ordering", "_get_engine", "_model", "_table"]
 
     _table: sa.Table
     _model: type[T]
