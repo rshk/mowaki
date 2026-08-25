@@ -1,5 +1,5 @@
 from app.types.auth import assertions
-from app.types.auth.assertions import Assertion, AssertionParams
+from app.types.auth.assertions import Assertion, BaseAssertionParams
 from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.trust_level import (
     MIN_AUTHENTICATED_TRUST_LEVEL,
@@ -17,7 +17,9 @@ GRANTED_TRUST_LEVELS_BY_ASSERTION = {
 }
 
 
-def get_trust_level_granted_by_assertion(type_: type[AssertionParams]) -> TrustLevel:
+def get_trust_level_granted_by_assertion(
+    type_: type[BaseAssertionParams],
+) -> TrustLevel:
     """Get the trust level granted by a given assertion"""
 
     for t in type_.mro():

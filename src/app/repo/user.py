@@ -9,7 +9,7 @@ from app.types.user import User, UserID, UserMetadata
 
 from ._schema.user import UserTable
 
-_crud = TableHelper[User](UserTable, model=User, get_engine=get_database)
+_crud = TableHelper[User, UserID](UserTable, model=User, get_engine=get_database)
 
 
 async def get(user_id: UserID) -> User:

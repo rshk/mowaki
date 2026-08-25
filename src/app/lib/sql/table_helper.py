@@ -7,7 +7,7 @@ model and a table.
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Callable, Coroutine
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable, Sized
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -15,6 +15,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine.interfaces import CoreExecuteOptionsParameter
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
+from app.exceptions import ItsABug
 from app.lib.protocols import FromDict
 
 from .wrapped_result import WrappedResult
@@ -29,7 +30,7 @@ type GetterFn[T] = Callable[[], Coroutine[Any, Any, T]]
 type UpdaterFn = Callable[..., Coroutine[Any, Any, None]]
 
 
-class TableHelper[T: FromDict]:
+class TableHelper[T: FromDict, K]:
     __slots__ = ["_get_engine", "_model", "_table"]
 
     _table: sa.Table
@@ -63,29 +64,32 @@ class TableHelper[T: FromDict]:
 
     # ----------------------------------------------------------------
 
-    def _get_pk_filter(self, key):
+    def _get_pk_filter(self, key: K):
         """Get a SQLAlchemy where clause to filter this table by primary key"""
 
         pk_cols = self._table.primary_key.columns
 
         if len(pk_cols) == 1:
-            key = (key,)
+            return pk_cols[0] == key
 
-        elif len(key) != len(pk_cols):
-            raise ValueError("Mismatched pk length")
+        if not (isinstance(key, Sized) and isinstance(key, Iterable)):
+            raise TypeError(f"Bad key {key}, expected {K}")
+
+        if len(key) != len(pk_cols):
+            raise ValueError(
+                "Mismatched primary key length "
+                f"(got {len(key)}, expected {len(pk_cols)})"
+            )
 
         where_clause = sa.and_(*(col == val for col, val in zip(pk_cols, key)))
-
         return where_clause
 
-    async def get_by_pk(self, key):
-        query = self._table.select().where(self._get_pk_filter(key))
-        result = await self._execute(query)
+    async def get_by_pk(self, key: K) -> T:
+        result = await self.select(pk=key)
         return result.one()
 
     async def get_by(self, **filters) -> T:
-        query = self._table.select().filter_by(**filters)
-        result = await self._execute(query)
+        result = await self.select(**filters)
         return result.one()
 
     async def select(self, *where_clause, **filters) -> WrappedResult[T]:
@@ -102,19 +106,29 @@ class TableHelper[T: FromDict]:
 
         return await self._execute(query)
 
-    async def insert(self, **values) -> Any | None:
+    async def insert(self, **values) -> K:
         query = self._table.insert().values(**values)
         result = await self._execute(query)
-        return result.inserted_primary_key
 
-    async def update(self, key, **updates):
+        pk = result.inserted_primary_key
+
+        if pk is None:
+            raise ItsABug("Unexpected empty primary key returned by INSERT")
+
+        if len(self._table.primary_key.columns) == 1:
+            assert len(pk) == 1
+            return pk[0]
+
+        return pk
+
+    async def update(self, key: K, **updates):
         where_clause = self._get_pk_filter(key)
         query = self._table.update().where(where_clause).values(**updates)
         async with self._begin() as conn:
             await conn.execute(query)
 
     @asynccontextmanager
-    async def for_update(self, key) -> AsyncGenerator[UpdateHelper[T]]:
+    async def for_update(self, key: K) -> AsyncGenerator[UpdateHelper[T]]:
         """
         Select a object for atomic update.
 
@@ -144,7 +158,7 @@ class TableHelper[T: FromDict]:
 
             yield UpdateHelper(obj=obj, get=get_object, update=update_object)
 
-    async def delete(self, key):
+    async def delete(self, key: K):
         where_clause = self._get_pk_filter(key)
         query = self._table.delete().where(where_clause)
         async with self._begin() as conn:

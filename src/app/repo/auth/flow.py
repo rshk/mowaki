@@ -12,7 +12,7 @@ from app.resources import get_database
 from app.types.auth.auth_flow import AuthFlow, FlowID, FlowState
 from app.types.auth.session import SessionID
 
-_crud = TableHelper[AuthFlow](
+_crud = TableHelper[AuthFlow, FlowID](
     FlowTable,
     model=AuthFlow,
     get_engine=get_database,

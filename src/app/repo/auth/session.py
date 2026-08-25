@@ -19,7 +19,7 @@ from app.types.auth.session import (
 )
 from app.types.user import UserID
 
-_crud = TableHelper[AuthSession](
+_crud = TableHelper[AuthSession, SessionID](
     SessionTable,
     model=AuthSession,
     get_engine=get_database,
