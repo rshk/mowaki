@@ -9,7 +9,8 @@ from pydantic.main import BaseModel
 
 from app.config import load_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
-from app.core.authn.session import get_or_create_session_from_token
+from app.core.authn.exceptions import SessionNotFound
+from app.core.authn.session import create_session, get_or_create_session_from_token, get_session_from_token
 from app.core.authz.exceptions import AuthorizationError
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
@@ -78,9 +79,18 @@ async def request_context_middleware(request: Request, call_next):
         return await call_next(request)
 
     token = get_session_token_from_request(request)
-    session, new_token = await get_or_create_session_from_token(token)
+    session = None
+    new_token = None
 
-    # TODO: update session with metadata from the request, if new
+    if token is not None:
+        try:
+            session = await get_session_from_token(token)
+        except SessionNotFound:
+            pass
+
+    if session is None:
+        # TODO: pass metadata from request into the new session
+        session, new_token = await create_session()
 
     auth_subject = await get_auth_subject_from_session(session)
 

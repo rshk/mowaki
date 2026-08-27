@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
@@ -48,6 +49,11 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
         session = await repo.auth.session.get_for_token(session_token)
     except ObjectNotFound as exc:
         raise SessionNotFound("Session not found for token") from exc
+
+    # Update "last used" timestamp
+    now = datetime.now(UTC)
+    await repo.auth.session.set_last_used_at(session.session_id, now)
+    session.last_used_at = now
 
     return session
 
