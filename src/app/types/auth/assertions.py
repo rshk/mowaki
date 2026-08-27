@@ -8,6 +8,7 @@ from typing import Annotated, Any, NewType, Protocol, Self
 
 from pydantic import Field, PlainSerializer, PlainValidator
 
+from app.lib.keygen import generate_uuid
 from app.lib.models import BaseModel
 from app.lib.protocols import FromDict, ToDict
 from app.types.user import UserID
@@ -21,7 +22,7 @@ AssertionKind = NewType("AssertionKind", str)
 class Assertion(BaseModel):
     """Authentication assertion"""
 
-    id: AssertionID = Field(default_factory=lambda: AssertionID(uuid.uuid4()))
+    id: AssertionID = Field(default_factory=lambda: AssertionID(generate_uuid()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     expires_at: datetime | None = None
     params: Annotated[

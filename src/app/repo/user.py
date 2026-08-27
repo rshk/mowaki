@@ -1,7 +1,7 @@
-import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+from app.lib.keygen import generate_uuid
 from app.lib.sql.table_helper import TableHelper
 from app.lib.validation import normalize_email
 from app.resources import get_database
@@ -26,7 +26,7 @@ async def get_by_email(email: str) -> User:
 
 
 async def create(email: str) -> UserID:
-    user_id = UserID(uuid.uuid4())
+    user_id = UserID(generate_uuid())
     email = normalize_email(email)
 
     await _crud.insert(id=user_id, email=email)

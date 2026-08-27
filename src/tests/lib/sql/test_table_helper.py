@@ -5,6 +5,7 @@ import pytest
 import sqlalchemy as sa
 
 from app.exceptions import ObjectNotFound
+from app.lib.keygen import generate_uuid
 from app.lib.models import BaseModel
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.resources import get_database
@@ -35,7 +36,7 @@ def database_metadata():
     sa.Table(
         "sample_blog",
         metadata,
-        sa.Column("id", sa.Uuid, primary_key=True, default=lambda: uuid.uuid4()),
+        sa.Column("id", sa.Uuid, primary_key=True, default=generate_uuid),
         sa.Column("title", sa.Text),
         sa.Column("text", sa.Text),
         sa.Column(

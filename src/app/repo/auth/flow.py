@@ -1,4 +1,3 @@
-import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime, timedelta
@@ -6,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.exc import NoResultFound
 
 from app.exceptions import ObjectNotFound
+from app.lib.keygen import generate_uuid
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.repo._schema.auth_flow import FlowTable
 from app.resources import get_database
@@ -26,7 +26,7 @@ async def create(
     session_id: SessionID | None = None,
 ) -> FlowID:
 
-    flow_id = FlowID(uuid.uuid4())
+    flow_id = FlowID(generate_uuid())
     created_at = datetime.now(UTC)
     expires_at = None if expires_in is None else created_at + expires_in
 

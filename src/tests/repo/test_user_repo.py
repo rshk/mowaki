@@ -4,6 +4,7 @@ import pytest
 
 from app import repo
 from app.exceptions import ObjectNotFound
+from app.lib.keygen import generate_uuid
 from app.types.user import UserID, UserMetadata
 
 pytestmark = [
@@ -33,7 +34,7 @@ async def test_create_and_retrieve_user(subtests):
 @pytest.mark.asyncio()
 async def test_get_nonexisting_user():
     with pytest.raises(ObjectNotFound):
-        await repo.user.get(UserID(uuid.uuid4()))
+        await repo.user.get(UserID(generate_uuid()))
 
 
 @pytest.mark.asyncio()

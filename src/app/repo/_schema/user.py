@@ -3,8 +3,8 @@ import sqlalchemy as sa
 from app.lib.sql.json_with_schema import JsonWithSchema
 from app.types.user import UserMetadata
 
+from ._utils import primary_key_column
 from .metadata import metadata
-from .utils import primary_key_column
 
 UserTable = sa.Table(
     "user",
