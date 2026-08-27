@@ -1,8 +1,12 @@
+import uuid
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from typing import NewType
 
 from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.session import AuthSession, SessionToken
+
+RequestID = NewType("RequestID", uuid.UUID)
 
 
 @dataclass(slots=True)
@@ -20,11 +24,14 @@ class RequestContext:
     # X-Set-Session-Token header).
     new_session_token: SessionToken | None = None
 
+    # Request ID. Mostly used for logging.
+    request_id: RequestID | None = field(default_factory=lambda: generate_request_id())
+
 
 @dataclass(slots=True)
 class ClientInfo:
-    # User preferred language, xx_XX format
-    language: str | None = None
+    # User preferred locale, xx_XX format
+    locale: str | None = None
 
     # User agent string, from the user agent header
     # TODO: add parsed version too?
@@ -59,3 +66,7 @@ def get_auth_subject() -> AuthSubject:
 
 def get_client_info() -> ClientInfo:
     return get_request_context().client_info
+
+
+def generate_request_id() -> RequestID:
+    return RequestID(uuid.uuid7())
