@@ -10,7 +10,7 @@ from pydantic.main import BaseModel
 from app.config import load_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.authn.exceptions import SessionNotFound
-from app.core.authn.session import create_session, get_or_create_session_from_token, get_session_from_token
+from app.core.authn.session import create_session, get_session_from_token
 from app.core.authz.exceptions import AuthorizationError
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context

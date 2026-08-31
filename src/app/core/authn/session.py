@@ -39,6 +39,9 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
 
     The token secret is validated, and SessionNotFound raised if
     either the session doesn't exist, or the secret is invalid.
+
+    Calling this function will also update the session last_used_at
+    timestamp.
     """
     try:
         session_token = parse_session_token(token)
@@ -58,21 +61,12 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
     return session
 
 
-async def get_or_create_session_from_token(
-    token: SessionToken | None,
-) -> tuple[AuthSession, SessionToken | None]:
-    if token is not None:
-        try:
-            session = await get_session_from_token(token)
-        except SessionNotFound:
-            pass
-        else:
-            return session, None  # Existing session
-
-    return await create_session()
-
-
 async def get_session(session_id: SessionID) -> AuthSession:
+    """
+    Retrieve a session by ID.
+
+    Does not update last_used_at.
+    """
     return await repo.auth.session.get(session_id)
 
 
