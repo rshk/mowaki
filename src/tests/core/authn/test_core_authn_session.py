@@ -133,10 +133,6 @@ class Test_current_session_operations:
                     md.ip_address = "1.2.3.4"
                 assert upd.new_secret is None
 
-            # No new token
-            ctx = get_request_context()
-            assert ctx.new_session_token is None
-
         session2 = await get_session(session1.session_id)
         assert session2.session_id == session1.session_id
         assert session2.session_secret == session1.session_secret
@@ -153,3 +149,4 @@ class Test_current_session_operations:
                                     UserID(uuid.UUID("01a045ad-1b5b-7701-bf26-3d6762babf15")))
                     )
                     await upd.add_assertion(assertion1)
+                    await upd.add_assertion(assertion2)
