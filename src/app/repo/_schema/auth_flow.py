@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import JSONB
 
-from ._utils import primary_key_column, primary_key_reference
+from ._utils import primary_key_column
 from .metadata import metadata
 
 FlowTable = sa.Table(
@@ -12,6 +12,6 @@ FlowTable = sa.Table(
     sa.Column("kind", sa.Text, nullable=False),
     sa.Column("state", JSONB, nullable=False),
     sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True, index=True),
-    primary_key_reference("session_id", fk="auth_session.session_id"),
+    sa.Column("session_id", sa.Text, sa.ForeignKey("auth_session.session_id"), nullable=True, index=True),
     sa.Column("is_completed", sa.Boolean, default=False),  # logical deletion
 )

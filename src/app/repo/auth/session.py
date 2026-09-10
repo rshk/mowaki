@@ -139,7 +139,12 @@ class SessionUpdater:
 
     async def add_assertion(self, assertion: Assertion):
         session = await self.get()
-        await self._update(assertions=[*session.assertions, assertion])
+        key = assertion.get_assertion_text()
+        assertions = [
+            *(x for x in session.assertions if x.get_assertion_text() != key),
+            assertion,
+        ]
+        await self._update(assertions=assertions)
 
     async def set_assertions(self, assertions: list[Assertion]):
         await self._update(assertions=assertions)

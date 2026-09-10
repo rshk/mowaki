@@ -6,26 +6,20 @@ from app.exceptions import AppException
 class AuthorizationError(AppException):
     """Used to indicate a user is not authorized to perform an action"""
 
-    # User may upgrade the session to include extra scopes in order to
-    # perform this action.
-    upgrade_possible: bool
+    __slots__ = ["actions", "message"]
 
-    # Scopes that may be requested in order to perform this action.
-    # Only populated if upgrade_possible=True.
-    require_scopes: list[Any]
+    # Error message
+    message: str | None
+
+    # Actions that can be taken to gain the required privileges, if any
+    actions: list[Any] | None
 
     def __init__(
-        self, upgrade_possible: bool = False, require_scopes: list[Any] | None = None
+        self,
+        message: str | None = None,
+        actions: list[Any] | None = None,
     ):
-        self.upgrade_possible = upgrade_possible
-        if require_scopes is None:
-            require_scopes = []
-        self.require_scopes = require_scopes
-
-    @classmethod
-    def definitive(cls):
-        return AuthorizationError(upgrade_possible=False)
-
-    @classmethod
-    def require_upgrade(cls, require_scopes: list[Any]):
-        return AuthorizationError(upgrade_possible=True, require_scopes=require_scopes)
+        self.message = message
+        self.actions = actions
+        if self.actions is None:
+            self.actions = []

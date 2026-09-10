@@ -1,21 +1,23 @@
-from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+from typing import AsyncGenerator
 
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
+from app.core.authz.exceptions import AuthorizationError
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
-from app.repo.auth.session import SessionUpdater
 from app.types.auth.assertions import Assertion
 from app.types.auth.session import (
     AuthSession,
+    AuthSessionMetadata,
     SessionID,
     SessionSecret,
     SessionToken,
     SessionTokenData,
 )
+from app.types.user import UserID
 
 
 async def create_session() -> tuple[AuthSession, SessionToken]:
@@ -40,8 +42,7 @@ async def get_session_from_token(token: SessionToken) -> AuthSession:
     The token secret is validated, and SessionNotFound raised if
     either the session doesn't exist, or the secret is invalid.
 
-    Calling this function will also update the session last_used_at
-    timestamp.
+    Calling this function will also update ``last_used_at``.
     """
     try:
         session_token = parse_session_token(token)
@@ -95,29 +96,15 @@ async def invalidate_session(session_id: SessionID):
 
 
 def get_current_session() -> AuthSession:
+    """Get the current session, from context"""
     return _get_current_session()
 
 
-@asynccontextmanager
-async def edit_current_session() -> AsyncGenerator[SessionUpdater]:
-    """
-    Edit the current session.
-
-    Editing a generic session (by id) is currently not supported, as
-    we have no way to pass the newly-rotated token to the owner,
-    basically rendering it useless.
-    """
-
+async def refresh_current_session():
+    """Refresh the current session contained in context"""
     ctx = get_request_context()
-    session = ctx.auth_session
-    async with repo.auth.session.for_update(session.session_id) as upd:
-        try:
-            yield upd
-
-        finally:
-            if upd.new_secret is not None:
-                token = format_session_token(session.session_id, upd.new_secret)
-                ctx.new_session_token = token
+    session_id = ctx.auth_session.session_id
+    ctx.auth_session = await get_session(session_id)
 
 
 async def invalidate_current_session() -> AuthSession:
@@ -134,22 +121,93 @@ async def invalidate_current_session() -> AuthSession:
     return new_session
 
 
+async def rotate_current_session_secret():
+    ctx = get_request_context()
+    session = ctx.auth_session
+
+    async with repo.auth.session.for_update(session.session_id) as upd:
+        new_secret = await upd.rotate_secret()
+
+    new_token = format_session_token(session.session_id, new_secret)
+    ctx.new_session_token = new_token
+
+    await refresh_current_session()
+
+
 async def add_session_assertion(assertion: Assertion):
-    """
-    Grant a new assertion to the current session.
+    """Grant a new assertion to the current session.
 
-    Pre-existing assertions with the same text will be removed.
+    - Pre-existing assertions with the same text will be removed.
+    - If session.current_user_id is not set, set it to the one
+      provided by the new assertion (if any).
+    - Rotate the session secret
     """
 
-    async with edit_current_session() as upd:
+    ctx = get_request_context()
+    session_id = ctx.auth_session.session_id
+
+    async with repo.auth.session.for_update(session_id) as upd:
         session = await upd.get()
-        assertions = _add_assertion_to_list(session.assertions, assertion)
-        await upd.set_assertions(assertions)
+
+        await upd.add_assertion(assertion)
+
+        # Set current_user_id, if not previously set
+        if session.current_user_id is None:
+            user_id = assertion.get_user_id()
+            if user_id is not None:
+                await upd.set_current_user_id(user_id)
+
+        # Rotate secret and update context
+        new_secret = await upd.rotate_secret()
+        new_token = format_session_token(session_id, new_secret)
+        ctx.new_session_token = new_token
+
+    await refresh_current_session()
 
 
-def _add_assertion_to_list(assertions: list[Assertion], assertion: Assertion):
-    key = assertion.get_assertion_text()
-    return [
-        *(x for x in assertions if x.get_assertion_text() != key),
-        assertion,
-    ]
+async def set_current_user_id(user_id: UserID):
+    """
+    Change user_id associated with the current session
+
+    - Check that at least one assertion contains the selected user_id
+    - Rotates the session secret
+    """
+
+    ctx = get_request_context()
+    session_id = ctx.auth_session.session_id
+
+    async with repo.auth.session.for_update(session_id) as upd:
+        session = await upd.get()
+        if (user_id is not None) and (user_id not in _get_allowable_user_ids(session)):
+            raise AuthorizationError("Requested user id is not allowable")
+
+        await upd.set_current_user_id(user_id)
+
+        # Rotate secret and update context
+        new_secret = await upd.rotate_secret()
+        new_token = format_session_token(session_id, new_secret)
+        ctx.new_session_token = new_token
+
+    await refresh_current_session()
+
+
+def _get_allowable_user_ids(session: AuthSession) -> set[UserID]:
+    """Get a list of user IDs associated with this session"""
+    result = set()
+    for assertion in session.assertions:
+        user_id = assertion.get_user_id()
+        if user_id is not None:
+            result.add(user_id)
+    return result
+
+
+@asynccontextmanager
+async def edit_session_metadata() -> AsyncGenerator[AuthSessionMetadata]:
+    ctx = get_request_context()
+    session_id = ctx.auth_session.session_id
+
+    async with (
+        repo.auth.session.for_update(session_id) as upd,
+        upd.edit_metadata() as metadata,
+    ):
+        yield metadata

@@ -38,6 +38,9 @@ class Assertion(BaseModel):
     def get_assertion_text(self) -> str:
         return self.params.get_assertion_text()
 
+    def get_user_id(self) -> UserID | None:
+        return self.params.get_user_id()
+
 
 def validate_assertion_params(value: Any) -> BaseAssertionParams:
     if isinstance(value, dict):
@@ -62,6 +65,9 @@ class BaseAssertionParams(FromDict, ToDict, Protocol):
     def get_assertion_text(self) -> str:
         pass
 
+    def get_user_id(self) -> UserID | None:
+        return None
+
 
 ASSERTION_TYPES: dict[AssertionKind, type[BaseAssertionParams]] = {}
 ASSERTION_KIND_FROM_TYPE: dict[type[BaseAssertionParams], AssertionKind] = {}
@@ -85,16 +91,26 @@ class EmailAuth(BaseAssertionParams):
     """Solved an email-based OTP challenge"""
 
     email_address: str
+    user_id: UserID | None = None
 
     def get_assertion_text(self) -> str:
         return f"email-auth:{self.email_address}"
 
+    def get_user_id(self) -> UserID | None:
+        return self.user_id
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
-        return cls(email_address=data["email_address"])
+        email_address = data["email_address"]
+
+        user_id = None
+        if (_user_id := data.get("user_id")) is not None:
+            user_id = UserID(uuid.UUID(_user_id))
+
+        return cls(email_address=email_address, user_id=user_id)
 
     def to_dict(self):
-        return {"email_address": self.email_address}
+        return {"email_address": self.email_address, "user_id": self.user_id}
 
 
 @register_assertion("passkey-auth")
@@ -108,9 +124,15 @@ class PasskeyAuth(BaseAssertionParams):
     def get_assertion_text(self) -> str:
         return f"passkey-auth:{self.passkey_id}"
 
+    def get_user_id(self) -> UserID | None:
+        return self.user_id
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
-        return cls(passkey_id=data["passkey_id"], user_id=data["user_id"])
+        passkey_id = data["passkey_id"]
+        user_id = UserID(uuid.UUID(data["user_id"]))
+
+        return cls(passkey_id=passkey_id, user_id=user_id)
 
     def to_dict(self):
         return {"passkey_id": self.passkey_id, "user_id": self.user_id}

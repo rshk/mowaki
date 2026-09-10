@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
 from app.core.authn.session import (
-    edit_current_session,
     get_current_session,
     invalidate_current_session,
+    rotate_current_session_secret,
 )
 from app.core.authz.exceptions import AuthorizationError
 
@@ -25,18 +25,16 @@ async def post_dev_logout():
 
 @router.post("/rotate")
 async def post_dev_rotate_secret():
-    async with edit_current_session() as upd:
-        await upd.rotate_secret()
-
+    await rotate_current_session_secret()
     session = get_current_session()
     return {"session_id": session.session_id}
 
 
 @router.post("/403")
 def post_dev_403():
-    raise AuthorizationError.definitive()
+    raise AuthorizationError("You cannot do this")
 
 
 @router.post("/403-upgrade")
 def post_dev_403_upgrade():
-    raise AuthorizationError.require_upgrade(["scope1", ["scope2", "foobar"]])
+    raise AuthorizationError("Need more authn", actions=["one", "two"])
