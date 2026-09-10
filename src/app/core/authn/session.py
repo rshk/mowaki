@@ -1,6 +1,6 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
-from typing import AsyncGenerator
 
 from app import repo
 from app.core.authn.exceptions import SessionNotFound

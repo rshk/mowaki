@@ -12,6 +12,12 @@ FlowTable = sa.Table(
     sa.Column("kind", sa.Text, nullable=False),
     sa.Column("state", JSONB, nullable=False),
     sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True, index=True),
-    sa.Column("session_id", sa.Text, sa.ForeignKey("auth_session.session_id"), nullable=True, index=True),
+    sa.Column(
+        "session_id",
+        sa.Text,
+        sa.ForeignKey("auth_session.session_id"),
+        nullable=True,
+        index=True,
+    ),
     sa.Column("is_completed", sa.Boolean, default=False),  # logical deletion
 )

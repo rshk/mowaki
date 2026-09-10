@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 import pytest
+
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
 from app.core.authn.session import (
@@ -17,6 +18,7 @@ from app.core.authn.session import (
     parse_session_token,
     rotate_current_session_secret,
     set_current_user_id,
+    unset_current_user_id,
 )
 from app.core.authz.exceptions import AuthorizationError
 from app.core.context import RequestContext, get_request_context, request_context
@@ -633,7 +635,9 @@ class Test_current_session_operations:
                 Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
             ]
 
-            async with request_context_factory(assertions=assertions, current_user_id=user_id):
+            async with request_context_factory(
+                assertions=assertions, current_user_id=user_id
+            ):
                 session_id = get_current_session().session_id
                 _prev_secret = get_current_session().session_secret
 
@@ -661,8 +665,42 @@ class Test_current_session_operations:
                 # Make sure a new session token has NOT been generated
                 assert get_request_context().new_session_token is None
 
-    class Test_edit_metadata:
-        pass
+        async def test_unset_current_user_id(self, request_context_factory):
+            user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
+            assertions = [
+                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
+            ]
+
+            async with request_context_factory(
+                assertions=assertions, current_user_id=user_id
+            ):
+                session_id = get_current_session().session_id
+                _prev_secret = get_current_session().session_secret
+                _prev_token = get_request_context().new_session_token
+
+                await unset_current_user_id()
+
+                # Verify both the session in the request context
+                # and the one stored in the database.
+
+                ctx_session = get_current_session()
+                db_session = await get_session(session_id)
+
+                for session in (ctx_session, db_session):
+                    assert session.session_id == session_id
+                    assert session.session_secret != _prev_secret  # rotated
+                    assert session.current_user_id is None
+
+                assert ctx_session.session_secret == db_session.session_secret
+                _new_secret = db_session.session_secret
+
+                # Make sure a new session token has been generated
+                _new_token = get_request_context().new_session_token
+                assert _new_token is not None
+                assert _new_token != _prev_token
+
+                # Make sure the new token matches the secret
+                assert _token_matches_secret(_new_token, _new_secret)
 
 
 # Helper functions ---------------------------------------------------
