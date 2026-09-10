@@ -252,12 +252,7 @@ class Test_current_session_operations:
                     assert _new_token != _prev_token
 
                     # Make sure the new token matches the secret
-                    assert (
-                        hash_session_secret(
-                            parse_session_token(_new_token).session_secret
-                        )
-                        == _new_secret
-                    )
+                    assert _token_matches_secret(_new_token, _new_secret)
 
                     # Update "previous" values
                     _prev_secret = _new_secret
@@ -303,12 +298,7 @@ class Test_current_session_operations:
                     assert _new_token != _prev_token
 
                     # Make sure the new token matches the secret
-                    assert (
-                        hash_session_secret(
-                            parse_session_token(_new_token).session_secret
-                        )
-                        == _new_secret
-                    )
+                    assert _token_matches_secret(_new_token, _new_secret)
 
                     # Update "previous" values
                     _prev_secret = _new_secret
@@ -398,10 +388,7 @@ class Test_current_session_operations:
                 assert _new_token != _prev_token
 
                 # Make sure the new token matches the secret
-                assert (
-                    hash_session_secret(parse_session_token(_new_token).session_secret)
-                    == _new_secret
-                )
+                assert _token_matches_secret(_new_token, _new_secret)
 
         async def test_add_assertion_for_different_user(self, request_context_factory):
 
@@ -459,10 +446,7 @@ class Test_current_session_operations:
                 assert _new_token != _prev_token
 
                 # Make sure the new token matches the secret
-                assert (
-                    hash_session_secret(parse_session_token(_new_token).session_secret)
-                    == _new_secret
-                )
+                assert _token_matches_secret(_new_token, _new_secret)
 
         async def test_add_same_assertion_twice(self, request_context_factory):
 
@@ -512,10 +496,55 @@ class Test_current_session_operations:
                 assert _new_token != _prev_token
 
                 # Make sure the new token matches the secret
-                assert (
-                    hash_session_secret(parse_session_token(_new_token).session_secret)
-                    == _new_secret
-                )
+                assert _token_matches_secret(_new_token, _new_secret)
+
+        async def test_add_same_assertion_with_different_user_id(
+            self, request_context_factory
+        ):
+
+            # Add the same assertion again, only this time it is
+            # associated to a different user ID!
+
+            user_email = "user-1@example.com"
+
+            user_id1 = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
+            assertion1 = Assertion.from_params(EmailAuth(user_email, user_id=user_id1))
+
+            user_id2 = UserID(uuid.UUID("d117eb12-9db6-4c08-ae5d-206aafdeba94"))
+            assertion2 = Assertion.from_params(EmailAuth(user_email, user_id=user_id2))
+
+            async with request_context_factory(
+                assertions=[assertion1], current_user_id=user_id1
+            ):
+                session_id = get_current_session().session_id
+                _prev_secret = get_current_session().session_secret
+                _prev_token = get_request_context().new_session_token
+
+                # Same email, different user ID
+                await add_session_assertion(assertion2)
+
+                # Verify both the session in the request context
+                # and the one stored in the database.
+
+                ctx_session = get_current_session()
+                db_session = await get_session(session_id)
+
+                for session in (ctx_session, db_session):
+                    assert session.session_id == session_id
+                    assert session.session_secret != _prev_secret  # rotated
+                    assert session.assertions == [assertion2]
+                    assert session.current_user_id == user_id2  # updated!
+
+                assert ctx_session.session_secret == db_session.session_secret
+                _new_secret = db_session.session_secret
+
+                # Make sure a new session token has been generated
+                _new_token = get_request_context().new_session_token
+                assert _new_token is not None
+                assert _new_token != _prev_token
+
+                # Make sure the new token matches the secret
+                assert _token_matches_secret(_new_token, _new_secret)
 
 
 # Helper functions ---------------------------------------------------

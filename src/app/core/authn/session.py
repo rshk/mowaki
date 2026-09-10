@@ -151,6 +151,13 @@ async def add_session_assertion(assertion: Assertion):
 
         await upd.add_assertion(assertion)
 
+        # Make sure current_user_id is still valid, unset it
+        # otherwise.
+        session = await upd.get()
+        if session.current_user_id not in _get_allowable_user_ids(session):
+            await upd.unset_current_user_id()
+            session.current_user_id = None
+
         # Set current_user_id, if not previously set
         if session.current_user_id is None:
             user_id = assertion.get_user_id()
