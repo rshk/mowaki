@@ -9,7 +9,6 @@ from app.core.authn.session import (
     add_session_assertion,
     create_session,
     edit_session_metadata,
-    format_session_token,
     get_current_session,
     get_session,
     get_session_from_token,
@@ -17,19 +16,19 @@ from app.core.authn.session import (
     invalidate_session,
     parse_session_token,
     rotate_current_session_secret,
+    set_current_user_id,
 )
+from app.core.authz.exceptions import AuthorizationError
 from app.core.context import RequestContext, get_request_context, request_context
 from app.exceptions import ObjectNotFound
 from app.lib.context import scoped_context
 from app.repo.auth.session import hash_session_secret
 from app.svc.webapi import get_auth_subject_from_session
-from app.types.auth.assertions import Assertion, EmailAuth, PasskeyAuth
-from app.types.auth.passkey_data import PasskeyID
+from app.types.auth.assertions import Assertion, EmailAuth
 from app.types.auth.session import (
     AuthSession,
     AuthSessionMetadata,
     HashedSessionSecret,
-    SessionSecret,
     SessionToken,
 )
 from app.types.user import UserID
@@ -119,7 +118,6 @@ class Test_current_session_operations:
                     Set a ``last_used_at`` for the session.
             """
             session, new_token = await create_session()
-            auth_subject = await get_auth_subject_from_session(session)
 
             async with repo.auth.session.for_update(session.session_id) as upd:
                 if used:
@@ -128,6 +126,9 @@ class Test_current_session_operations:
                     await upd.set_assertions(assertions)
                 if current_user_id is not None:
                     await upd.set_current_user_id(current_user_id)
+
+            session = await repo.auth.session.get(session.session_id)  # refresh
+            auth_subject = await get_auth_subject_from_session(session)
 
             ctx = RequestContext(
                 auth_session=session,
@@ -545,6 +546,123 @@ class Test_current_session_operations:
 
                 # Make sure the new token matches the secret
                 assert _token_matches_secret(_new_token, _new_secret)
+
+    class Test_set_current_user_id:
+        async def test_set_current_user_id_to_valid_id(self, request_context_factory):
+            user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
+            assertions = [
+                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
+            ]
+
+            async with request_context_factory(assertions=assertions):
+                session_id = get_current_session().session_id
+                _prev_secret = get_current_session().session_secret
+                _prev_token = get_request_context().new_session_token
+
+                await set_current_user_id(user_id)
+
+                # Verify both the session in the request context
+                # and the one stored in the database.
+
+                ctx_session = get_current_session()
+                db_session = await get_session(session_id)
+
+                for session in (ctx_session, db_session):
+                    assert session.session_id == session_id
+                    assert session.session_secret != _prev_secret  # rotated
+                    assert session.current_user_id == user_id  # updated
+
+                assert ctx_session.session_secret == db_session.session_secret
+                _new_secret = db_session.session_secret
+
+                # Make sure a new session token has been generated
+                _new_token = get_request_context().new_session_token
+                assert _new_token is not None
+                assert _new_token != _prev_token
+
+                # Make sure the new token matches the secret
+                assert _token_matches_secret(_new_token, _new_secret)
+
+        async def test_set_current_user_id_to_second_valid_id(
+            self, request_context_factory
+        ):
+            user_id1 = UserID(uuid.UUID("4e81dca7-1111-4fad-b056-e767acda47c3"))
+            user_id2 = UserID(uuid.UUID("6c87c6e3-2222-4ac2-a578-6bc7bcc9fce4"))
+            assertions = [
+                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id1)),
+                Assertion.from_params(EmailAuth("u2@example.com", user_id=user_id2)),
+            ]
+
+            async with request_context_factory(
+                assertions=assertions,
+                current_user_id=user_id1,
+            ):
+                session_id = get_current_session().session_id
+                _prev_secret = get_current_session().session_secret
+                _prev_token = get_request_context().new_session_token
+
+                await set_current_user_id(user_id2)
+
+                # Verify both the session in the request context
+                # and the one stored in the database.
+
+                ctx_session = get_current_session()
+                db_session = await get_session(session_id)
+
+                for session in (ctx_session, db_session):
+                    assert session.session_id == session_id
+                    assert session.session_secret != _prev_secret  # rotated
+                    assert session.current_user_id == UserID(user_id2)  # updated
+
+                assert ctx_session.session_secret == db_session.session_secret
+                _new_secret = db_session.session_secret
+
+                # Make sure a new session token has been generated
+                _new_token = get_request_context().new_session_token
+                assert _new_token is not None
+                assert _new_token != _prev_token
+
+                # Make sure the new token matches the secret
+                assert _token_matches_secret(_new_token, _new_secret)
+
+        async def test_attempt_to_set_current_user_id_to_invalid_id(
+            self, request_context_factory
+        ):
+            user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
+            assertions = [
+                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
+            ]
+
+            async with request_context_factory(assertions=assertions, current_user_id=user_id):
+                session_id = get_current_session().session_id
+                _prev_secret = get_current_session().session_secret
+
+                assert get_current_session().current_user_id == user_id
+
+                with pytest.raises(AuthorizationError):
+                    # This fails. Session is not updated.
+                    await set_current_user_id(
+                        UserID(uuid.UUID("99999999-9999-4999-9999-999999999999"))
+                    )
+
+                # Verify both the session in the request context
+                # and the one stored in the database.
+
+                ctx_session = get_current_session()
+                db_session = await get_session(session_id)
+
+                for session in (ctx_session, db_session):
+                    assert session.session_id == session_id
+                    assert session.session_secret == _prev_secret  # NOT rotated
+                    assert session.current_user_id == user_id  # NOT updated
+
+                assert ctx_session.session_secret == db_session.session_secret
+
+                # Make sure a new session token has NOT been generated
+                assert get_request_context().new_session_token is None
+
+    class Test_edit_metadata:
+        pass
 
 
 # Helper functions ---------------------------------------------------

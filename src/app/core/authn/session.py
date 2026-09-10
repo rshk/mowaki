@@ -208,6 +208,21 @@ def _get_allowable_user_ids(session: AuthSession) -> set[UserID]:
     return result
 
 
+async def unset_current_user_id():
+    ctx = get_request_context()
+    session_id = ctx.auth_session.session_id
+
+    async with repo.auth.session.for_update(session_id) as upd:
+        await upd.unset_current_user_id()
+
+        # Rotate secret and update context
+        new_secret = await upd.rotate_secret()
+        new_token = format_session_token(session_id, new_secret)
+        ctx.new_session_token = new_token
+
+    await refresh_current_session()
+
+
 @asynccontextmanager
 async def edit_session_metadata() -> AsyncGenerator[AuthSessionMetadata]:
     ctx = get_request_context()
