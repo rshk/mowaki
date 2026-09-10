@@ -43,7 +43,7 @@ async def test_create_and_update_flow(subtests):
 async def test_flow_with_associated_session_id(subtests):
 
     flow_state = FlowState({})
-    session_id = SessionID("bb10f8f5-8c77-4305-b829-b3a0fed8acf7")
+    session_id, _ = await repo.auth.session.create()
 
     with subtests.test("Create flow"):
         flow_id = await repo.auth.flow.create(
@@ -62,3 +62,10 @@ async def test_flow_with_associated_session_id(subtests):
             await repo.auth.flow.get(
                 flow_id, session_id=SessionID("993c2a5f-9b6c-4cbf-b2f7-cf071aa42742")
             )
+
+    with subtests.test("Update flow state"):
+        async with repo.auth.flow.for_update(flow_id, session_id=session_id) as upd:
+            await upd.update(state=FlowState({"state": 1}))
+
+        flow = await repo.auth.flow.get(flow_id)
+        assert flow.state == {"state": 1}
