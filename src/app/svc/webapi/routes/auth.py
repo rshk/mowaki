@@ -14,7 +14,6 @@ from app.core.authn.flows.actions import (
 )
 from app.core.authn.flows.actions import get_flow as _get_flow
 from app.core.authn.flows.base import FlowStatus
-from app.core.authn.flows.email_otp_auth import FLD_EMAIL
 from app.core.context import get_current_session
 from app.types.auth.auth_flow import (
     AuthFlow,
@@ -25,22 +24,6 @@ from app.types.auth.auth_flow import (
 )
 
 router = APIRouter(tags=["authentication"])
-
-
-class InitEmailOtpInput(BaseModel):
-    address: str
-
-
-@router.post("/init/email-otp")  # ????????????
-async def post_auth_init_email_otp(body: InitEmailOtpInput):
-    # Create a flow and set an email address to it.
-    # This will trigger the notification email containing the OTP code
-    flow_id = await create_flow(kind="email-otp-auth")
-    await process_flow_action(flow_id, FlowAction({FLD_EMAIL: body.address}))
-    return {  # TODO: return some kind of standardized response
-        "flow_id": flow_id,
-        "msg": "Check your email",
-    }
 
 
 class PublicFlowInfo(BaseModel):

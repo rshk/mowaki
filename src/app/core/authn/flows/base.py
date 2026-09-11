@@ -38,6 +38,6 @@ class BaseFlowProcessor(metaclass=ABCMeta):
 
 
 class FlowStatus(Enum):
-    SUCCESS = "success"
-    FAILED = "failed"
-    IN_PROGRESS = "in_progress"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    IN_PROGRESS = "IN_PROGRESS"
