@@ -14,8 +14,8 @@ SESSION_SOFT_VALIDITY = timedelta(days=30)
 # Session expiration time since creation
 SESSION_HARD_VALIDITY = timedelta(days=90)
 
-# Default max validity for authentication challenges
-CHALLENGE_HARD_VALIDITY = timedelta(minutes=60)
+# Max validity for authentication flows
+AUTH_FLOW_HARD_VALIDITY = timedelta(minutes=60)
 
 # Maximum age for an authentication assertion to be considered
 # "recent" for authorization purposes.

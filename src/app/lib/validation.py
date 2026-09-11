@@ -1,8 +1,13 @@
+from typing import NewType
+
 import email_validator
+
+# Normalized email address
+EmailStr = NewType("EmailStr", str)
 
 
 def validate_email(
-    email, *, check_deliverability: bool = False
+    email: str, *, check_deliverability: bool = False
 ) -> email_validator.ValidatedEmail:
     """
     Validate an email address using email_validator.
@@ -16,6 +21,6 @@ def validate_email(
     )
 
 
-def normalize_email(email: str) -> str:
+def normalize_email(email: str) -> EmailStr:
     """Validate and normalize an email address"""
-    return validate_email(email).normalized
+    return EmailStr(validate_email(email).normalized)

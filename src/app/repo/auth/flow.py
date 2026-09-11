@@ -78,7 +78,9 @@ async def for_update(
     )
 
     if session_id is not None:
-        query = query.filter_by(session_id=session_id)
+        query = query.where(
+            FlowTable.c.session_id.is_(None) | (FlowTable.c.session_id == session_id)
+        )
 
     db = get_database()
     async with db.connect() as conn, conn.begin():
@@ -109,5 +111,24 @@ async def delete_completed():
     """Delete completed flows"""
     db = get_database()
     query = FlowTable.delete().filter_by(is_completed=True)
+    async with db.connect() as conn, conn.begin():
+        await conn.execute(query)
+
+
+async def delete_expired(
+    now: datetime | None = None, max_validity: timedelta | None = None
+):
+    """Delete expired flows"""
+
+    if now is None:
+        now = datetime.now(UTC)
+
+    condition = FlowTable.c.expires_at.is_not(None) & (FlowTable.c.expires_at <= now)
+    if max_validity is not None:
+        condition = condition | (FlowTable.c.created_at <= (now - max_validity))
+
+    db = get_database()
+    query = FlowTable.delete().where(condition)
+
     async with db.connect() as conn, conn.begin():
         await conn.execute(query)

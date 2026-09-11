@@ -1,14 +1,28 @@
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated, Literal, Self
 
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
 
 from app.config import get_config
-from app.core.authn.flows.actions import create_flow, process_flow_action
+from app.core.authn.flows.actions import (
+    create_flow,
+    delete_flow,
+    get_flow_expiration_date,
+    get_flow_processor,
+    process_flow_action,
+)
+from app.core.authn.flows.actions import get_flow as _get_flow
 from app.core.authn.flows.base import FlowStatus
 from app.core.authn.flows.email_otp_auth import FLD_EMAIL
 from app.core.context import get_current_session
-from app.types.auth.auth_flow import FlowAction, FlowID
+from app.types.auth.auth_flow import (
+    AuthFlow,
+    FlowAction,
+    FlowChallengeData,
+    FlowID,
+    FlowKind,
+)
 
 router = APIRouter(tags=["authentication"])
 
@@ -17,7 +31,7 @@ class InitEmailOtpInput(BaseModel):
     address: str
 
 
-@router.post("/init/email-otp")
+@router.post("/init/email-otp")  # ????????????
 async def post_auth_init_email_otp(body: InitEmailOtpInput):
     # Create a flow and set an email address to it.
     # This will trigger the notification email containing the OTP code
@@ -29,63 +43,59 @@ async def post_auth_init_email_otp(body: InitEmailOtpInput):
     }
 
 
+class PublicFlowInfo(BaseModel):
+    flow_id: FlowID
+    created_at: datetime
+    expires_at: datetime
+    kind: FlowKind
+    challenge: FlowChallengeData
+    status: Literal["in-progress", "expired", "completed", "canceled"]
+
+    @classmethod
+    def from_flow(cls, flow: AuthFlow) -> Self:
+        return cls(
+            flow_id=flow.flow_id,
+            created_at=flow.created_at,
+            expires_at=get_flow_expiration_date(flow),
+            kind=flow.kind,
+            challenge=get_flow_processor(flow).get_challenge_data(),
+            status="in-progress",  # Or it would have failed
+        )
+
+
+@router.post("/flow/init/{flow_kind}")
+async def init_flow(flow_kind: FlowKind) -> PublicFlowInfo:
+    """Initiate an authentication flow of the specified type"""
+    flow_id = await create_flow(kind=flow_kind)
+    flow = await _get_flow(flow_id)
+    return PublicFlowInfo.from_flow(flow)
+
+
+@router.get("/flow/{flow_id}")
+async def get_flow(flow_id: FlowID):
+    flow = await _get_flow(flow_id)
+    return PublicFlowInfo.from_flow(flow)
+
+
+class FlowActionResult(BaseModel):
+    flow: PublicFlowInfo
+    status: FlowStatus
+
+
 @router.post("/flow/{flow_id}")
 async def post_flow_action(
     flow_id: FlowID,
     action: Annotated[FlowAction, Body(default_factory=dict)],
-):
-    result = await process_flow_action(flow_id, action)
-
-    status = {
-        FlowStatus.IN_PROGRESS: "in-progress",
-        FlowStatus.SUCCESS: "success",
-        FlowStatus.FAILED: "failed",
-    }[result]
-
-    return {
-        "flow_id": flow_id,
-        "action": action,
-        "status": status,
-    }
+) -> FlowActionResult:
+    status = await process_flow_action(flow_id, action)
+    flow = await _get_flow(flow_id)
+    return FlowActionResult(flow=PublicFlowInfo.from_flow(flow), status=status)
 
 
-# @router.post("/initiate/email-otp")
-# async def post_auth_initiate_email_otp(body: InitiateEmailOtpInput) -> ChallengeRequest:
-#     """Initiate authentication using email OTP"""
-
-#     return await initiate_with_email_otp(body.address)
-
-
-# class UpgradeEmailOtpInput(BaseModel):
-#     address: str | None
-
-
-# @router.post("/upgrade/email-otp")
-# async def post_auth_upgrade_email_top(body: UpgradeEmailOtpInput) -> ChallengeRequest:
-#     """Upgrade authentication using email OTP"""
-
-#     # TODO: in some cases, we already have an email address associated
-#     # with this user, so upgrade doesn't necessarily need to specify
-#     # one; in fact it might even be undesirable as it could lead to an
-#     # inconsistent state challenge that will turn the session to an
-#     # invalid state once solved.
-#     #
-#     # Instead, we could:
-#     # - Check assertions for a previous EmailOTP or related challenge
-#     # - Check assertions for a user_id, use it for email OTP
-#     # To add a secondary email address, we could have a separate OTP
-#     # verification method?
-
-#     return await upgrade_with_email_otp(body.address)
-
-
-# @router.post("/challenge/respond")
-# async def post_challenge_respond(resp: ChallengeResponse):
-#     print("CHALLENGE RESPOND", resp)
-#     await process_challenge_response(resp)
-
-
-# # /upgrade/... methods to add / refresh assertions
+@router.delete("/flow/{flow_id}")
+async def cancel_flow(flow_id: FlowID):
+    """Cancel / abort an in-progress flow"""
+    await delete_flow(flow_id)
 
 
 @router.get("/session")

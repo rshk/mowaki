@@ -12,6 +12,7 @@ FlowID = NewType("FlowID", uuid.UUID)
 FlowKind = NewType("FlowKind", str)
 FlowState = NewType("FlowState", dict[str, Any])
 FlowAction = NewType("FlowAction", dict[str, Any])
+FlowChallengeData = NewType("FlowChallengeData", dict[str, Any])
 
 
 class AuthFlow(BaseModel):

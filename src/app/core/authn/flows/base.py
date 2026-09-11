@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Self
 
-from app.types.auth.auth_flow import FlowAction, FlowState
+from app.types.auth.auth_flow import FlowAction, FlowChallengeData, FlowState
 
 
 class BaseFlowProcessor(metaclass=ABCMeta):
@@ -22,7 +22,7 @@ class BaseFlowProcessor(metaclass=ABCMeta):
         """Serialize internal state"""
 
     @abstractmethod
-    def get_challenge_data(self) -> FlowState:
+    def get_challenge_data(self) -> FlowChallengeData:
         """Get challenge data to be presented to the user"""
 
     @abstractmethod

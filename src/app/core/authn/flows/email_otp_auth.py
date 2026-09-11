@@ -8,7 +8,7 @@ from app.exceptions import ItsABug
 from app.lib.email_builder import EmailBuilder
 from app.resources import get_mailer
 from app.types.auth import assertions
-from app.types.auth.auth_flow import FlowAction
+from app.types.auth.auth_flow import FlowAction, FlowChallengeData
 
 from .base import BaseFlowProcessor, FlowState, FlowStatus
 
@@ -44,10 +44,10 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
             }
         )
 
-    def get_challenge_data(self) -> FlowState:
+    def get_challenge_data(self) -> FlowChallengeData:
         # TODO: still return something along the lines of "check your email"?
         # We might want to define a schema for  this.
-        return FlowState({})
+        return FlowChallengeData({})
 
     async def process(self, action: FlowAction) -> FlowStatus:
         # STEP 1: get email address -> generate and send OTP code
