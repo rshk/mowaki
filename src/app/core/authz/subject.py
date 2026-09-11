@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from app.const import RECENT_ASSERTION_MAX_AGE
-from app.core.authz.trust_level import get_user_id_and_level_from_assertion
+from app.core.authz.trust_level import get_trust_level_granted_by_assertion, get_user_id_and_level_from_assertion
 from app.exceptions import AppException
 from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.session import AuthSession
@@ -28,17 +28,19 @@ async def get_auth_subject_from_session(session: AuthSession) -> AuthSubject:
     # *combinations* of assertions (eg. multiple factors -> higher
     # *trust level).
 
+    # TODO: do we need to validate that the current_user_id is indeed valid?
+    if session.current_user_id is not None:
+        bld.set_user_id(session.current_user_id)
+
     for assertion in session.assertions:
         assertion_age = assertion.created_at - now
         is_recent = assertion_age <= RECENT_ASSERTION_MAX_AGE
 
-        if (result := get_user_id_and_level_from_assertion(assertion)) is not None:
-            user_id, trust = result
-
-            bld.set_user_id(user_id)
-            bld.set_current_trust_level(trust)
+        trust_level = get_trust_level_granted_by_assertion(type(assertion.params))
+        if trust_level is not None:
+            bld.set_current_trust_level(trust_level)
             if is_recent:
-                bld.set_recent_trust_level(trust)
+                bld.set_recent_trust_level(trust_level)
 
     return bld.build()
 

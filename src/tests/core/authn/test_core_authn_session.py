@@ -21,11 +21,11 @@ from app.core.authn.session import (
     unset_current_user_id,
 )
 from app.core.authz.exceptions import AuthorizationError
+from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import RequestContext, get_request_context, request_context
 from app.exceptions import ObjectNotFound
 from app.lib.context import scoped_context
 from app.repo.auth.session import hash_session_secret
-from app.svc.webapi import get_auth_subject_from_session
 from app.types.auth.assertions import Assertion, EmailAuth
 from app.types.auth.session import (
     AuthSession,
