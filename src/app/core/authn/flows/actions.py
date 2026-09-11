@@ -13,7 +13,7 @@ from app.core.context import get_current_session
 from app.lib.sql.table_helper import UpdateHelper
 from app.types.auth.auth_flow import AuthFlow, FlowAction, FlowID
 
-from .base import BaseFlowProcessor, FlowStatus
+from .base import BaseFlowProcessor, FlowActionResultStatus
 from .registry import get_flow_processor_class
 
 
@@ -72,7 +72,9 @@ def _ensure_flow_is_processable(flow: AuthFlow):
         raise FlowExpired("This flow has expired")
 
 
-async def process_flow_action(flow_id: FlowID, action: FlowAction) -> FlowStatus:
+async def process_flow_action(
+    flow_id: FlowID, action: FlowAction
+) -> FlowActionResultStatus:
     async with get_flow_for_update(flow_id) as upd:
         flow = await upd.get()
         flow_class = get_flow_processor_class(flow.kind)
@@ -80,7 +82,10 @@ async def process_flow_action(flow_id: FlowID, action: FlowAction) -> FlowStatus
 
         result = await flow.process(action)
 
-        is_completed = result in (FlowStatus.SUCCESS, FlowStatus.FAILED)
+        is_completed = result in (
+            FlowActionResultStatus.SUCCESS,
+            FlowActionResultStatus.FAILED,
+        )
         new_state = flow.dump_state()
 
         if is_completed:

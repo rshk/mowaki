@@ -1,23 +1,18 @@
-import logging
-from typing import Any
-
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security.utils import get_authorization_scheme_param
 from pydantic.main import BaseModel
 
-from app.config import get_config, load_config
+from app.config import get_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.authn.exceptions import SessionNotFound
 from app.core.authn.session import create_session, get_session_from_token
 from app.core.authz.exceptions import AuthorizationError
+from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
-from app.resources import initialize_resources
-from app.core.authz.subject import get_auth_subject_from_session
-from app.types.auth.auth_subject import AuthSubject
-from app.types.auth.session import AuthSession, SessionToken
+from app.types.auth.session import SessionToken
 
 from .routes import router
 

@@ -10,7 +10,7 @@ from app.resources import get_mailer
 from app.types.auth import assertions
 from app.types.auth.auth_flow import FlowAction, FlowChallengeData
 
-from .base import BaseFlowProcessor, FlowState, FlowStatus
+from .base import BaseFlowProcessor, FlowActionResultStatus, FlowState
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
         # We might want to define a schema for  this.
         return FlowChallengeData({})
 
-    async def process(self, action: FlowAction) -> FlowStatus:
+    async def process(self, action: FlowAction) -> FlowActionResultStatus:
         # STEP 1: get email address -> generate and send OTP code
 
         if self.email_address is None:
@@ -59,7 +59,7 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
                 await compose_and_send_otp_challenge_email(
                     self.email_address, self.otp_code
                 )
-            return FlowStatus.IN_PROGRESS
+            return FlowActionResultStatus.IN_PROGRESS
 
         # If an email address was provided (not required), it must
         # match the one we already have
@@ -82,13 +82,13 @@ class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
                         assertions.EmailAuth(email_address=self.email_address)
                     )
                 )
-                return FlowStatus.SUCCESS
+                return FlowActionResultStatus.SUCCESS
 
             else:
                 # FAILED -> wrong OTP code
-                return FlowStatus.FAILED
+                return FlowActionResultStatus.FAILED
 
-        return FlowStatus.IN_PROGRESS
+        return FlowActionResultStatus.IN_PROGRESS
 
 
 async def compose_and_send_otp_challenge_email(address: str, otp_code: str):

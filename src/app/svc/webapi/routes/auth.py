@@ -13,7 +13,7 @@ from app.core.authn.flows.actions import (
     process_flow_action,
 )
 from app.core.authn.flows.actions import get_flow as _get_flow
-from app.core.authn.flows.base import FlowStatus
+from app.core.authn.flows.base import FlowActionResultStatus
 from app.core.context import get_current_session
 from app.types.auth.auth_flow import (
     AuthFlow,
@@ -62,7 +62,7 @@ async def get_flow(flow_id: FlowID):
 
 class FlowActionResult(BaseModel):
     flow: PublicFlowInfo
-    status: FlowStatus
+    status: FlowActionResultStatus
 
 
 @router.post("/flow/{flow_id}")

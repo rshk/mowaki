@@ -1,9 +1,10 @@
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import pytest_asyncio
+from httpx2 import ASGITransport, AsyncClient, Response
+
 from app.const import SESSION_TOKEN_HEADER
 from app.svc.webapi.app import create_app
-from httpx2 import ASGITransport, AsyncClient, Response
 
 
 class AsyncTestClient(AsyncClient):

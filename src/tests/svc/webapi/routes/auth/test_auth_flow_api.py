@@ -2,9 +2,9 @@
 Tests for app.svc.webapi.routes.auth
 """
 
-from fastapi.testclient import TestClient
-from httpx2 import AsyncClient
 import pytest
+from httpx2 import AsyncClient
+
 # from app.svc.webapi import app
 # from fastapi.testclient import TestClient
 
@@ -33,7 +33,9 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         flow_id = obj["flow_id"]
 
     with subtests.test("Provide email address"):
-        resp = await testclient.post(f"/auth/flow/{flow_id}", json={"email_address": "user@example.com"})
+        resp = await testclient.post(
+            f"/auth/flow/{flow_id}", json={"email_address": "user@example.com"}
+        )
         assert resp.status_code == 200
 
         obj = resp.json()

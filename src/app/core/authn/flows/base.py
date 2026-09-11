@@ -26,7 +26,7 @@ class BaseFlowProcessor(metaclass=ABCMeta):
         """Get challenge data to be presented to the user"""
 
     @abstractmethod
-    async def process(self, action: FlowAction) -> FlowStatus:
+    async def process(self, action: FlowAction) -> FlowActionResultStatus:
         """
         Process a workflow "action", updating state.
 
@@ -37,7 +37,9 @@ class BaseFlowProcessor(metaclass=ABCMeta):
         """
 
 
-class FlowStatus(Enum):
+class FlowActionResultStatus(Enum):
+    """Result from processing a flow action"""
+
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     IN_PROGRESS = "IN_PROGRESS"
