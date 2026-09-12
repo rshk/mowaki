@@ -1,16 +1,11 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
-import pytest
-from app.core.authn.flows.actions import get_flow, get_flow_processor
-from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowProcessor
-from app.core.authn.session import get_session, get_session_from_token
+from app.core.authn.session import get_session
 from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
-from app.types.auth.session import SessionID, SessionToken
-from fastapi.security.utils import get_authorization_scheme_param
-from httpx2 import AsyncClient
+from app.types.auth.session import SessionID
 
 
 @asynccontextmanager

@@ -4,6 +4,15 @@ COMMAND="$( basename "$0" )"
 
 case "$COMMAND" in
     start)
+        # Ensure containers are up to date before starting.
+        # This is pretty quick due to caching, but prevents headaches
+        # caused by running outdated code when restarting containers.
+        docker compose build
+
+        # Start docker containers, enabling watch. Notice that "watch"
+        # will only update code in the *running* containers, but
+        # changes are lost on restart (requiring the "build" step
+        # above).
         exec docker compose up --watch
         ;;
 

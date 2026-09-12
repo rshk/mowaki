@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 
 from app.const import RECENT_ASSERTION_MAX_AGE
-from app.core.authz.trust_level import get_trust_level_granted_by_assertion, get_user_id_and_level_from_assertion
+from app.core.authz.trust_level import (
+    get_trust_level_granted_by_assertion,
+)
 from app.exceptions import AppException
 from app.types.auth.auth_subject import AuthSubject
 from app.types.auth.session import AuthSession

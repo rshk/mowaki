@@ -2,20 +2,15 @@
 Tests for app.svc.webapi.routes.auth
 """
 
-from contextlib import asynccontextmanager
-from typing import AsyncGenerator
-
 import pytest
-from app.core.authn.flows.actions import get_flow, get_flow_processor
-from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowProcessor
-from app.core.authn.session import get_session, get_session_from_token
-from app.core.authz.subject import get_auth_subject_from_session
-from app.core.context import RequestContext, request_context
-from app.lib.context import scoped_context
-from app.types.auth.session import SessionID, SessionToken
 from fastapi.security.utils import get_authorization_scheme_param
 from httpx2 import AsyncClient
 
+from app.core.authn.flows.actions import get_flow, get_flow_processor
+from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowProcessor
+from app.core.authn.session import get_session, get_session_from_token
+from app.types.auth.assertions import EmailAuth
+from app.types.auth.session import SessionToken
 from tests.utils.session import set_request_context_from_session_id
 
 pytestmark = [
@@ -54,7 +49,7 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
 
     with subtests.test("Provide email address"):
         resp = await testclient.post(
-            f"/auth/flow/{flow_id}", json={"email_address": "user@example.com"}
+            f"/auth/flow/{flow_id}", json={"email": "user@example.com"}
         )
         assert resp.status_code == 200
 
@@ -73,17 +68,23 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         flowp = get_flow_processor(flow)
 
         assert isinstance(flowp, EmailOTPAuthFlowProcessor)
+        assert flowp.state.email == "user@example.com"
         otp = flowp.state.code
         assert otp is not None
 
     with subtests.test("Submit OTP"):
-        resp = await testclient.post(f"/auth/flow/{flow_id}", json={"otp_code": otp})
+        resp = await testclient.post(f"/auth/flow/{flow_id}", json={"code": otp})
         assert resp.status_code == 200
 
         obj = resp.json()
-        assert obj["status"] == "COMPLETED"
-        assert obj["flow"]["flow_id"] == flow_id
-        assert obj["flow"]["challenge"] == {}
-        assert obj["flow"]["status"] == "in-progress"
+        assert obj["status"] == "SUCCESS"
+        assert obj["flow"] is None
 
-        # TODO: check that assertion has been added to the session
+        # Check that a new assertion has been added to the session
+        session = await get_session(session_id)
+        assert len(session.assertions) == 1
+        [assertion] = session.assertions
+        assert isinstance(assertion.params, EmailAuth)
+        assert assertion.params.email_address == "user@example.com"
+        assert assertion.params.user_id is None
+        assert session.current_user_id is None

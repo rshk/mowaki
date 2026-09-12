@@ -61,7 +61,7 @@ async def get_flow(flow_id: FlowID):
 
 
 class FlowActionResult(BaseModel):
-    flow: PublicFlowInfo
+    flow: PublicFlowInfo | None
     status: FlowActionResultStatus
 
 
@@ -71,6 +71,9 @@ async def post_flow_action(
     action: Annotated[FlowAction, Body(default_factory=dict)],
 ) -> FlowActionResult:
     status = await process_flow_action(flow_id, action)
+    if status != FlowActionResultStatus.IN_PROGRESS:
+        return FlowActionResult(flow=None, status=status)
+
     flow = await _get_flow(flow_id)
     return FlowActionResult(flow=PublicFlowInfo.from_flow(flow), status=status)
 

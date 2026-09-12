@@ -12,12 +12,12 @@ pytestmark = [
     pytest.mark.usefixtures("database_schema"),
 ]
 
+
 async def test_flow_happy_path(resources):
     session, _ = await create_session()
     session_id = session.session_id
 
     async with set_request_context_from_session_id(session_id):
-
         processor = EmailOTPAuthFlowProcessor.new()
 
         assert processor.get_challenge_data() == {"state": "EMAIL_REQUIRED"}
@@ -44,6 +44,7 @@ async def test_flow_happy_path(resources):
         assert session.assertions[0].params.user_id is None
         assert session.current_user_id is None
 
+
 async def test_flow_happy_path_with_state_freezing(resources):
     # Same happy-path test, but dumping/restoring state at each step
 
@@ -51,7 +52,6 @@ async def test_flow_happy_path_with_state_freezing(resources):
     session_id = session.session_id
 
     async with set_request_context_from_session_id(session_id):
-
         processor = EmailOTPAuthFlowProcessor.new()
 
         assert processor.get_challenge_data() == {"state": "EMAIL_REQUIRED"}
