@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Self
 
+from pydantic import BaseModel
+
 from app.types.auth.auth_flow import FlowAction, FlowChallengeData, FlowState
 
 
@@ -43,3 +45,40 @@ class FlowActionResultStatus(Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
     IN_PROGRESS = "IN_PROGRESS"
+
+
+class BaseStandardFlowProcessor[S: BaseModel, A: BaseModel](BaseFlowProcessor):
+    """Base for standardized flow processors, using pydantic models"""
+
+    __slots__ = ["state"]
+
+    state_type: type[S]
+    action_type: type[A]
+    state: S
+
+    def __init__(self, state: S):
+        self.state = state
+
+    @classmethod
+    def new(cls) -> Self:
+        return cls(cls.state_type())
+
+    @classmethod
+    def from_state(cls, state: FlowState) -> Self:
+        _state = cls.state_type.model_validate(state)
+        return cls(_state)
+
+    def dump_state(self) -> FlowState:
+        _state = self.state.model_dump(mode="json")
+        return FlowState(_state)
+
+    def get_challenge_data(self) -> FlowChallengeData:
+        return FlowChallengeData({})
+
+    async def process(self, action: FlowAction) -> FlowActionResultStatus:
+        _action = self.action_type.model_validate(action)
+        return await self.process_action(_action)
+
+    @abstractmethod
+    async def process_action(self, action: A) -> FlowActionResultStatus:
+        pass
