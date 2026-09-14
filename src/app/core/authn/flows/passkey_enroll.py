@@ -3,22 +3,13 @@ from typing import Any, Self
 from pydantic import BaseModel
 from webauthn import generate_registration_options, verify_registration_response
 from webauthn.helpers import options_to_json_dict
-from webauthn.helpers.cose import COSEAlgorithmIdentifier
-from webauthn.helpers.structs import (
-    AttestationConveyancePreference,
-    AuthenticatorAttachment,
-    AuthenticatorSelectionCriteria,
-    PublicKeyCredentialCreationOptions,
-    PublicKeyCredentialDescriptor,
-    ResidentKeyRequirement,
-)
 from webauthn.registration.verify_registration_response import VerifiedRegistration
 
 from app import repo
 from app.config import get_config
 from app.core.authn.exceptions import FlowProcessingError
 from app.core.authz.trust_level import check_trust_level
-from app.core.context import get_auth_subject, get_current_session
+from app.core.context import get_auth_subject
 from app.types.auth.auth_flow import FlowChallengeData
 from app.types.auth.auth_user_passkey import PasskeyCredentialID, PasskeyPublicKeyData
 from app.types.auth.trust_level import TRUST_LEVEL_HIGH
