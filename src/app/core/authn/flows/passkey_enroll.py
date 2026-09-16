@@ -1,4 +1,4 @@
-from typing import Any, Self
+from typing import Any
 
 from pydantic import BaseModel
 from webauthn import generate_registration_options, verify_registration_response
@@ -10,11 +10,10 @@ from app.config import get_config
 from app.core.authn.exceptions import FlowProcessingError
 from app.core.authz.trust_level import check_trust_level
 from app.core.context import get_auth_subject
-from app.types.auth.auth_flow import FlowChallengeData
 from app.types.auth.auth_user_passkey import PasskeyCredentialID, PasskeyPublicKeyData
 from app.types.auth.trust_level import TRUST_LEVEL_HIGH
 
-from .base import BaseStandardFlowProcessor, FlowActionResultStatus
+from .processor import FlowActionResult, FlowProcessor, JSONObject
 
 
 class PasskeyEnrollFlowState(BaseModel):
@@ -25,30 +24,45 @@ class PasskeyEnrollFlowAction(BaseModel):
     credential: Any
 
 
-class PasskeyEnrollFlowProcessor(BaseStandardFlowProcessor):
-    __slots__ = ["state"]
+class PasskeyEnrollFlowChallenge(BaseModel):
+    options: Any
 
-    state_type = PasskeyEnrollFlowState
-    action_type = PasskeyEnrollFlowAction
 
-    @classmethod
-    def new(cls) -> Self:
-        state = generate_challenge_state()
-        return cls(state)
+# Shortcut aliases
+StateModel = PasskeyEnrollFlowState
+ActionModel = PasskeyEnrollFlowAction
+ChallengeModel = PasskeyEnrollFlowChallenge
 
-    async def process_action(
-        self, action: PasskeyEnrollFlowAction
-    ) -> FlowActionResultStatus:
-        result = await verify_challenge_response(self.state, action)
 
-        # Didn't raise -> valid -> store new passkey
-        # TODO: do we need to validate transports?
-        await register_new_passkey(result, action.credential["response"]["transports"])
+PROCESSOR = FlowProcessor(
+    state_model=StateModel,
+    action_model=ActionModel,
+    challenge_model=ChallengeModel,
+)
 
-        return FlowActionResultStatus.IN_PROGRESS
 
-    def get_challenge_data(self) -> FlowChallengeData:
-        return FlowChallengeData(self.state.options)
+@PROCESSOR.state_creator
+async def create_passkey_enroll_initial_state(_: JSONObject) -> StateModel:
+    return await generate_challenge_state()
+
+
+@PROCESSOR.action_processor
+async def process(
+    state: StateModel, action: ActionModel
+) -> FlowActionResult[StateModel]:
+
+    result = await verify_challenge_response(state, action)
+
+    # Didn't raise -> valid -> store new passkey
+    # TODO: do we need to validate transports?
+    await register_new_passkey(result, action.credential["response"]["transports"])
+
+    return FlowActionResult.success()
+
+
+@PROCESSOR.challenge_getter
+def get_email_otp_auth_challenge(state: StateModel) -> ChallengeModel:
+    return ChallengeModel(options=state.options)
 
 
 async def generate_challenge_state() -> PasskeyEnrollFlowState:

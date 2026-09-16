@@ -4,12 +4,12 @@ from .actions import (
     delete_flow,
     process_flow_action,
 )
-from .registry import get_flow_processor_class
+from .registry import get_flow_processor
 
 __all__ = [
     "cleanup_completed_flows",
     "create_flow",
     "delete_flow",
-    "get_flow_processor_class",
+    "get_flow_processor",
     "process_flow_action",
 ]

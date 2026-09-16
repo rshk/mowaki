@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Annotated, Literal, Self
 
 from fastapi import APIRouter, Body
@@ -13,7 +14,6 @@ from app.core.authn.flows.actions import (
     process_flow_action,
 )
 from app.core.authn.flows.actions import get_flow as _get_flow
-from app.core.authn.flows.base import FlowActionResultStatus
 from app.core.context import get_current_session
 from app.types.auth.auth_flow import (
     AuthFlow,
@@ -41,7 +41,9 @@ class PublicFlowInfo(BaseModel):
             created_at=flow.created_at,
             expires_at=get_flow_expiration_date(flow),
             kind=flow.kind,
-            challenge=get_flow_processor(flow).get_challenge_data(),
+            challenge=FlowChallengeData(
+                get_flow_processor(flow.kind).get_challenge(flow.state)
+            ),
             status="in-progress",  # Or it would have failed
         )
 
@@ -60,9 +62,15 @@ async def get_flow(flow_id: FlowID):
     return PublicFlowInfo.from_flow(flow)
 
 
+class FlowStatus(Enum):
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    IN_PROGRESS = "IN_PROGRESS"
+
+
 class FlowActionResult(BaseModel):
     flow: PublicFlowInfo | None
-    status: FlowActionResultStatus
+    status: FlowStatus
 
 
 @router.post("/flow/{flow_id}")
@@ -70,12 +78,18 @@ async def post_flow_action(
     flow_id: FlowID,
     action: Annotated[FlowAction, Body(default_factory=dict)],
 ) -> FlowActionResult:
-    status = await process_flow_action(flow_id, action)
-    if status != FlowActionResultStatus.IN_PROGRESS:
-        return FlowActionResult(flow=None, status=status)
+    result = await process_flow_action(flow_id, action)
+    if result.is_completed():
+        return FlowActionResult(
+            flow=None,
+            status=FlowStatus.SUCCESS if result.result else FlowStatus.FAILED,
+        )
 
     flow = await _get_flow(flow_id)
-    return FlowActionResult(flow=PublicFlowInfo.from_flow(flow), status=status)
+    return FlowActionResult(
+        flow=PublicFlowInfo.from_flow(flow),
+        status=FlowStatus.IN_PROGRESS,
+    )
 
 
 @router.delete("/flow/{flow_id}")
@@ -102,10 +116,3 @@ async def get_session_info():
         "metadata": session.metadata,
         "assertions": session.assertions,
     }
-
-
-# @router.post("/session/invalidate", status_code=status.HTTP_204_NO_CONTENT)
-# async def post_auth_session_invalidate():
-#     """Invalidate current session"""
-
-#     await invalidate_current_session()

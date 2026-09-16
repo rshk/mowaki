@@ -7,7 +7,11 @@ from fastapi.security.utils import get_authorization_scheme_param
 from httpx2 import AsyncClient
 
 from app.core.authn.flows.actions import get_flow, get_flow_processor
-from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowProcessor
+from app.core.authn.flows.email_otp_auth import (
+    PROCESSOR as EMAIL_OTP_AUTH_FLOW_PROCESSOR,
+)
+from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowState
+from app.core.authn.flows.processor import FlowProcessor
 from app.core.authn.session import get_session, get_session_from_token
 from app.types.auth.assertions import EmailAuth
 from app.types.auth.session import SessionToken
@@ -29,7 +33,7 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         assert obj["created_at"] is not None
         assert obj["expires_at"] is not None
         assert obj["kind"] == "email-otp-auth"
-        assert obj["challenge"] == {"state": "EMAIL_REQUIRED"}
+        assert obj["challenge"] == {"next_step": "EMAIL_REQUIRED"}
         assert obj["status"] == "in-progress"
 
         # Ensure a session token has been saved on the client.
@@ -56,7 +60,7 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         obj = resp.json()
         assert obj["status"] == "IN_PROGRESS"
         assert obj["flow"]["flow_id"] == flow_id
-        assert obj["flow"]["challenge"] == {"state": "CODE_REQUIRED"}
+        assert obj["flow"]["challenge"] == {"next_step": "CODE_REQUIRED"}
         assert obj["flow"]["status"] == "in-progress"
 
         # Check that the OTP email was sent
@@ -65,11 +69,15 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
 
     async with set_request_context_from_session_id(session_id):
         flow = await get_flow(flow_id)
-        flowp = get_flow_processor(flow)
+        flowp = get_flow_processor(flow.kind)
 
-        assert isinstance(flowp, EmailOTPAuthFlowProcessor)
-        assert flowp.state.email == "user@example.com"
-        otp = flowp.state.code
+        assert flowp is EMAIL_OTP_AUTH_FLOW_PROCESSOR
+        assert isinstance(flowp, FlowProcessor)
+        state = flowp.state_model.model_validate(flow.state)
+        assert isinstance(state, EmailOTPAuthFlowState)
+
+        assert state.email == "user@example.com"
+        otp = state.code
         assert otp is not None
 
     with subtests.test("Submit OTP"):

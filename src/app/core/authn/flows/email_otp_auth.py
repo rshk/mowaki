@@ -1,6 +1,6 @@
 import logging
 import secrets
-from typing import Self
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr
 
@@ -10,9 +10,8 @@ from app.exceptions import ItsABug
 from app.lib.email_builder import EmailBuilder
 from app.resources import get_mailer
 from app.types.auth import assertions
-from app.types.auth.auth_flow import FlowAction, FlowChallengeData
 
-from .base import BaseFlowProcessor, FlowActionResultStatus, FlowState
+from .processor import FlowActionResult, FlowProcessor
 
 logger = logging.getLogger(__name__)
 
@@ -27,76 +26,80 @@ class EmailOTPAuthFlowAction(BaseModel):
     code: str | None = None
 
 
-class EmailOTPAuthFlowProcessor(BaseFlowProcessor):
-    __slots__ = ["state"]
+class EmailOTPAuthFlowChallenge(BaseModel):
+    next_step: Literal["EMAIL_REQUIRED", "CODE_REQUIRED"]
 
-    def __init__(self, state: EmailOTPAuthFlowState):
-        self.state = state
 
-    @classmethod
-    def new(cls) -> Self:
-        return cls(EmailOTPAuthFlowState())
+# Shortcut aliases
+StateModel = EmailOTPAuthFlowState
+ActionModel = EmailOTPAuthFlowAction
+ChallengeModel = EmailOTPAuthFlowChallenge
 
-    @classmethod
-    def from_state(cls, state: FlowState) -> Self:
-        _state = EmailOTPAuthFlowState.model_validate(state)
-        return cls(_state)
 
-    def dump_state(self) -> FlowState:
-        _state = self.state.model_dump(mode="json")
-        return FlowState(_state)
+PROCESSOR = FlowProcessor(
+    state_model=StateModel,
+    action_model=ActionModel,
+    challenge_model=ChallengeModel,
+)
 
-    def get_challenge_data(self) -> FlowChallengeData:
-        # TODO: we should define a better schema for the "challenge data".
-        # Right now, we just return a string indicating the flow state.
 
-        if self.state.email is None:
-            return FlowChallengeData({"state": "EMAIL_REQUIRED"})
+@PROCESSOR.challenge_getter
+def get_email_otp_auth_challenge(
+    state: StateModel,
+) -> ChallengeModel:
+    if state.email is None:
+        return ChallengeModel(next_step="EMAIL_REQUIRED")
+    return ChallengeModel(next_step="CODE_REQUIRED")
 
-        return FlowChallengeData({"state": "CODE_REQUIRED"})
 
-    async def process(self, action: FlowAction) -> FlowActionResultStatus:
-        _action = EmailOTPAuthFlowAction.model_validate(action)
+@PROCESSOR.action_processor
+async def process(
+    state: StateModel, action: ActionModel
+) -> FlowActionResult[StateModel]:
 
-        # STEP 1: get email address -> generate and send OTP code
+    # STEP 1: get email address -> generate and send OTP code
 
-        if self.state.email is None:
-            if _action.email is not None:
-                self.state.email = _action.email
-                self.state.code = generate_otp_code()
-                await compose_and_send_otp_challenge_email(
-                    self.state.email, self.state.code
+    if state.email is None:
+        if action.email is not None:
+            _email = action.email
+            _code = generate_otp_code()
+            await compose_and_send_otp_challenge_email(_email, _code)
+            _state = StateModel(email=_email, code=_code)
+            return FlowActionResult.new_state(_state)
+        return FlowActionResult.new_state(state)  # unchanged
+
+    # To prevent mistakes, if an email address (not required) was
+    # provided in the response to a code challenge, make sure it
+    # matches the stored one.
+    if action.email is not None:  # noqa: SIM102
+        if action.email != state.email:
+            raise ValueError("Specified email address does not match state")
+
+    # STEP 2: verify OTP code
+
+    if state.code is None:
+        raise ItsABug("Missing OTP code")
+
+    if action.code is not None:
+        # User provided an OTP for verification
+        if action.code == state.code:
+            # SUCCESS: user provided a valid OTP
+            # Grant new assertion to the session
+            await add_session_assertion(
+                assertions.Assertion.from_params(
+                    assertions.EmailAuth(email_address=state.email)
                 )
-            return FlowActionResultStatus.IN_PROGRESS
+            )
+            return FlowActionResult.success()
 
-        # If an email address was provided (not required), it must
-        # match the one we already have
-        if _action.email is not None:  # noqa: SIM102
-            if _action.email != self.state.email:
-                raise ValueError("Specified email address does not match state")
+        else:
+            # FAILED -> wrong OTP code
+            return FlowActionResult.failure()
 
-        # STEP 2: verify OTP code
+    return FlowActionResult.new_state(state)  # unchanged
 
-        if self.state.code is None:
-            raise ItsABug("Missing OTP code")
 
-        if _action.code is not None:
-            # User provided an OTP code for verification
-            if _action.code == self.state.code:
-                # SUCCESS -> valid OTP code
-                # Grant new assertion to the session
-                await add_session_assertion(
-                    assertions.Assertion.from_params(
-                        assertions.EmailAuth(email_address=self.state.email)
-                    )
-                )
-                return FlowActionResultStatus.SUCCESS
-
-            else:
-                # FAILED -> wrong OTP code
-                return FlowActionResultStatus.FAILED
-
-        return FlowActionResultStatus.IN_PROGRESS
+# --------------------------------------------------------------------
 
 
 async def compose_and_send_otp_challenge_email(email: str, code: str):

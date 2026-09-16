@@ -9,24 +9,25 @@ from app.core.authn.exceptions import (
     FlowAlreadyCompleted,
     FlowExpired,
 )
+from app.core.authn.flows.processor import FlowActionResult, JSONObject
 from app.core.context import get_current_session
 from app.lib.sql.table_helper import UpdateHelper
-from app.types.auth.auth_flow import AuthFlow, FlowAction, FlowID
+from app.types.auth.auth_flow import AuthFlow, FlowAction, FlowID, FlowState
 
-from .base import BaseFlowProcessor, FlowActionResultStatus
-from .registry import get_flow_processor_class
+from .registry import get_flow_processor
 
 
-async def create_flow(kind: str, expires_in: timedelta | None = None) -> FlowID:
+async def create_flow(
+    kind: str, expires_in: timedelta | None = None, params: JSONObject | None = None
+) -> FlowID:
     session = get_current_session()
 
-    flow_class = get_flow_processor_class(kind)
-    flow = flow_class.new()
-    flow_state = flow.dump_state()
+    processor = get_flow_processor(kind)
+    initial_state = await processor.create(params)
 
     flow_id = await repo.auth.flow.create(
         kind=kind,
-        state=flow_state,
+        state=FlowState(initial_state),
         expires_in=expires_in,
         session_id=session.session_id,
     )
@@ -72,21 +73,14 @@ def _ensure_flow_is_processable(flow: AuthFlow):
         raise FlowExpired("This flow has expired")
 
 
-async def process_flow_action(
-    flow_id: FlowID, action: FlowAction
-) -> FlowActionResultStatus:
+async def process_flow_action(flow_id: FlowID, action: FlowAction) -> FlowActionResult:
     async with get_flow_for_update(flow_id) as upd:
         flow = await upd.get()
-        flow_class = get_flow_processor_class(flow.kind)
-        flow = flow_class.from_state(flow.state)
+        processor = get_flow_processor(flow.kind)
 
-        result = await flow.process(action)
+        result = await processor.process(flow.state, action)
 
-        is_completed = result in (
-            FlowActionResultStatus.SUCCESS,
-            FlowActionResultStatus.FAILED,
-        )
-        new_state = flow.dump_state()
+        is_completed = result.is_completed()
 
         if is_completed:
             # Logical deletion, to prevent race conditions between the
@@ -94,7 +88,7 @@ async def process_flow_action(
             await upd.update(is_completed=True)
         else:
             # Update stored flow state
-            await upd.update(state=new_state)
+            await upd.update(state=result.state)
 
     if is_completed:
         await repo.auth.flow.delete(flow_id)
@@ -126,7 +120,3 @@ def get_flow_expiration_date(flow: AuthFlow) -> datetime:
 
 def is_flow_expired(flow: AuthFlow) -> bool:
     return get_flow_expiration_date(flow) <= datetime.now(UTC)
-
-
-def get_flow_processor(flow: AuthFlow) -> BaseFlowProcessor:
-    return get_flow_processor_class(flow.kind).from_state(flow.state)

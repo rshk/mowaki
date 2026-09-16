@@ -1,3 +1,5 @@
+from typing import Any, Literal, Self
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,7 +10,7 @@ from app.config import get_config
 from app.const import CUSTOM_HEADERS, SESSION_TOKEN_HEADER
 from app.core.authn.exceptions import SessionNotFound
 from app.core.authn.session import create_session, get_session_from_token
-from app.core.authz.exceptions import AuthorizationError
+from app.core.authz.exceptions import AuthorizationError, FixActionFlow
 from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import RequestContext, request_context
 from app.lib.context import scoped_context
@@ -88,16 +90,10 @@ def create_app():
 
     # Exception handling -------------------------------------------------
 
-    class AuthorizationErrorResponse(BaseModel):
-        pass
-
     @app.exception_handler(AuthorizationError)
     async def handle_authorization_error(request: Request, exc: AuthorizationError):
-        obj = AuthorizationErrorResponse()
-        return JSONResponse(
-            status_code=403,
-            content=obj.model_dump(),
-        )
+        obj = AuthorizationErrorResponse.from_exception(exc)
+        return JSONResponse(status_code=403, content=obj.model_dump())
 
     app.router.responses[403] = {"model": AuthorizationErrorResponse}
 
@@ -132,3 +128,36 @@ def get_client_ip_address(request: Request) -> str | None:
 
 def get_user_agent(request: Request) -> str | None:
     return request.headers.get("User-Agent")
+
+
+# Exception handling -------------------------------------------------
+
+
+class AuthorizationErrorResponse(BaseModel):
+    msg_id: str | None
+    msg_args: dict[str, str]
+    fix_actions: list[AuthzErrorFixAction]
+
+    @classmethod
+    def from_exception(cls, exc: AuthorizationError) -> Self:
+        fix_actions = [_fix_action_from_obj(x) for x in exc.fix_actions]
+        return cls(msg_id=exc.msg_id, msg_args=exc.msg_args, fix_actions=fix_actions)
+
+
+def _fix_action_from_obj(obj: Any) -> AuthzErrorFixAction:
+    if isinstance(obj, FixActionFlow):
+        return AuthzErrorFixActionFlow(
+            kind="flow",
+            flow_kind=obj.flow_kind,
+            flow_params=obj.flow_params,
+        )
+    raise TypeError(f"{type(obj)} cannot be converted into AuthzErrorFixAction")
+
+
+type AuthzErrorFixAction = AuthzErrorFixActionFlow  # union
+
+
+class AuthzErrorFixActionFlow(BaseModel):
+    kind: Literal["flow"]
+    flow_kind: str
+    flow_params: dict[str, Any]
