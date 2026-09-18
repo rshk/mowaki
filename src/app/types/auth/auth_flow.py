@@ -1,6 +1,6 @@
 import uuid
 from datetime import UTC, datetime
-from typing import Any, NewType
+from typing import NewType
 
 from pydantic import Field
 
@@ -8,11 +8,13 @@ from app.lib.keygen import generate_uuid
 from app.lib.models import BaseModel
 from app.types.auth.session import SessionID
 
+from ..base import JSONObject
+
 FlowID = NewType("FlowID", uuid.UUID)
 FlowKind = NewType("FlowKind", str)
-FlowState = NewType("FlowState", dict[str, Any])
-FlowAction = NewType("FlowAction", dict[str, Any])
-FlowChallengeData = NewType("FlowChallengeData", dict[str, Any])
+FlowState = NewType("FlowState", JSONObject)
+FlowAction = NewType("FlowAction", JSONObject)
+FlowChallenge = NewType("FlowChallenge", JSONObject)
 
 
 class AuthFlow(BaseModel):

@@ -6,12 +6,12 @@ import abc
 from abc import abstractmethod
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Protocol, cast
 
 from pydantic import BaseModel
 
-type JSONType = str | int | float | bool | list[JSONType] | dict[str, JSONType]
-type JSONObject = dict[str, JSONType]
+from app.types.auth.auth_flow import FlowAction, FlowChallenge, FlowState
+from app.types.base import JSONObject
 
 
 @dataclass(slots=True)
@@ -48,17 +48,17 @@ class FlowActionResult[S]:
 
 class FlowProcessorProtocol(Protocol):
     @abstractmethod
-    async def create(self, params: JSONObject | None = None) -> JSONObject:
+    async def create(self, params: JSONObject | None = None) -> FlowState:
         """Initialize new flow state"""
 
     @abstractmethod
-    async def process(
-        self, state: JSONObject, action: JSONObject
-    ) -> FlowActionResult[JSONObject]:
+    async def process[S: FlowState](
+        self, state: S, action: FlowAction
+    ) -> FlowActionResult[S]:
         """Process action, returning eitgher"""
 
     @abstractmethod
-    def get_challenge(self, state: JSONObject) -> JSONObject:
+    def get_challenge(self, state: FlowState) -> FlowChallenge:
         """Get user-facing challenge for this state"""
 
 
@@ -73,24 +73,26 @@ class ModelBasedFlowProcessor[S: BaseModel, A: BaseModel, C: BaseModel](
 
     # FlowProcessor iterface -----------------------------------------
 
-    async def create(self, params: JSONObject | None = None) -> JSONObject:
+    async def create(self, params: JSONObject | None = None) -> FlowState:
         if params is None:
             params = {}
-        return (await self.create_state(params)).model_dump()
+        _data = (await self.create_state(params)).model_dump()
+        return FlowState(_data)
 
-    async def process(
-        self, state: JSONObject, action: JSONObject
-    ) -> FlowActionResult[JSONObject]:
+    async def process[StateJson: FlowState](
+        self, state: StateJson, action: FlowAction
+    ) -> FlowActionResult[StateJson]:
         """Process action, returning eitgher"""
         _state = self.state_model.model_validate(state)
         _action = self.action_model.model_validate(action)
         result = await self.process_action(_state, _action)
-        return result.map(lambda s: s.model_dump())
+        return result.map(lambda s: cast(StateJson, s.model_dump()))
 
-    def get_challenge(self, state: JSONObject) -> JSONObject:
+    def get_challenge(self, state: FlowState) -> FlowChallenge:
         """Get user-facing challenge for this state"""
         _state = self.state_model.model_validate(state)
-        return self.get_challenge_from_state(_state).model_dump()
+        _data = self.get_challenge_from_state(_state).model_dump()
+        return FlowChallenge(_data)
 
     # Interface methods ----------------------------------------------
 

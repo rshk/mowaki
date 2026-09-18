@@ -37,4 +37,9 @@ def post_dev_403():
 
 @router.post("/403-upgrade")
 def post_dev_403_upgrade():
-    raise AuthorizationError("Need more authn", actions=["one", "two"])
+    raise (
+        AuthorizationError("Need more authn")
+        .set_user_message("LOGIN_REQUIRED")
+        .add_fix_action_flow("email-otp-auth")
+        .add_fix_action_flow("passkey-auth")
+    )

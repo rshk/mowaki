@@ -18,7 +18,7 @@ from app.core.context import get_current_session
 from app.types.auth.auth_flow import (
     AuthFlow,
     FlowAction,
-    FlowChallengeData,
+    FlowChallenge,
     FlowID,
     FlowKind,
 )
@@ -31,7 +31,7 @@ class PublicFlowInfo(BaseModel):
     created_at: datetime
     expires_at: datetime
     kind: FlowKind
-    challenge: FlowChallengeData
+    challenge: FlowChallenge
     status: Literal["in-progress", "expired", "completed", "canceled"]
 
     @classmethod
@@ -41,7 +41,7 @@ class PublicFlowInfo(BaseModel):
             created_at=flow.created_at,
             expires_at=get_flow_expiration_date(flow),
             kind=flow.kind,
-            challenge=FlowChallengeData(
+            challenge=FlowChallenge(
                 get_flow_processor(flow.kind).get_challenge(flow.state)
             ),
             status="in-progress",  # Or it would have failed
