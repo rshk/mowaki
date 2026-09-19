@@ -10,25 +10,25 @@
 include:
   - ./.compose/backend.yml
   - ./.compose/services.yml
-  # - ./web/_compose.yml
+  - ./.compose/web.yml
 
 services:
 
   api:
     ports:  # host:container
-      - "8001:8100"
+      - "8001:8001"
     environment:
-      PORT: "8100"  # Port to listen to
+      PORT: "8001"  # Port to listen to
       FRONTEND_URL: "http://localhost:8000"
       CORS_ORIGINS: "http://localhost:8000"
       DEVELOPMENT_MODE: "true"
 
-  # web:
-  #   ports:
-  #     - "8000:8000"
-  #   environment:
-  #     APP_PORT: "8000"
-  #     VITE_API_URL: "http://localhost:8001"
+  web:
+    ports:
+      - "8000:8000"
+    environment:
+      APP_PORT: "8000"
+      VITE_API_URL: "http://localhost:8001"
 
   mailslurper:
     image: oryd/mailslurper:smtps-latest

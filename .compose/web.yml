@@ -1,0 +1,30 @@
+---
+services:
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+
+    environment:
+      # NODE_ENV: production
+      NODE_ENV: development
+      VITE_API_URL: "http://localhost:8000"  # default
+
+    develop:
+      # Create a `watch` configuration to update the app
+      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+      watch:
+        # Sync the working directory with the `/app` directory
+        # in the container
+        - action: sync
+          path: ../web
+          target: /app
+          # Exclude the project node_modules — it could be for a
+          # different platform in the container
+          ignore:
+            - ../web/node_modules/
+
+        # Rebuild the image if dependencies change by checking
+        # package-lock.json
+        - action: rebuild
+          path: ../web/package-lock.json
