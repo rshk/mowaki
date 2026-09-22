@@ -105,7 +105,7 @@ export default function AppAppBar() {
                             color="primary"
                             variant="contained"
                             size="small"
-                             component={Link} to="/sign-up"
+                            component={Link} to="/log-in"
                         >
                             Sign up
                         </Button>
@@ -160,6 +160,7 @@ export default function AppAppBar() {
                                         color="primary"
                                         variant="contained"
                                         fullWidth
+                                        component={Link} to="/log-in"
                                     >
                                         Sign up
                                     </Button>
@@ -169,6 +170,7 @@ export default function AppAppBar() {
                                         color="primary"
                                         variant="outlined"
                                         fullWidth
+                                        component={Link} to="/log-in"
                                     >
                                         Sign in
                                     </Button>

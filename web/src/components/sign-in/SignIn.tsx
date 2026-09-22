@@ -14,13 +14,13 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import AppTheme from "../shared-theme/AppTheme";
-import ColorModeSelect from "../shared-theme/ColorModeSelect";
 import {
     FacebookIcon,
     GoogleIcon,
     SitemarkIcon,
 } from "./components/CustomIcons";
 import ForgotPassword from "./components/ForgotPassword";
+import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: "flex",
@@ -129,9 +129,9 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 direction="column"
                 sx={{ justifyContent: "space-between" }}
             >
-                <ColorModeSelect
-                    sx={{ position: "fixed", top: "1rem", right: "1rem" }}
-                />
+                <Box sx={{ alignSelf: "flex-end" }}>
+                    <ColorModeIconDropdown size="medium" />
+                </Box>
                 <Card variant="outlined">
                     <SitemarkIcon />
                     <Typography
