@@ -5,6 +5,9 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
+import CssBaseline from "@mui/material/CssBaseline";
+import * as React from "react";
+
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
@@ -54,23 +57,38 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <HeadContent />
             </head>
             <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
-                <Header />
-                {children}
-                <Footer />
-                <TanStackDevtools
-                    config={{
-                        position: "bottom-right",
-                    }}
-                    plugins={[
-                        {
-                            name: "Tanstack Router",
-                            render: <TanStackRouterDevtoolsPanel />,
-                        },
-                        TanStackQueryDevtools,
-                    ]}
-                />
+                <CssBaseline />
+                <PageLayout children={children} />
+                <DevTools />
                 <Scripts />
             </body>
         </html>
+    );
+}
+
+function DevTools() {
+    return (
+        <TanStackDevtools
+            config={{
+                position: "bottom-right",
+            }}
+            plugins={[
+                {
+                    name: "Tanstack Router",
+                    render: <TanStackRouterDevtoolsPanel />,
+                },
+                TanStackQueryDevtools,
+            ]}
+        />
+    );
+}
+
+function PageLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <React.Fragment>
+            <Header />
+            {children}
+            <Footer />
+        </React.Fragment>
     );
 }

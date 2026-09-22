@@ -4,7 +4,6 @@ import { devtools } from "@tanstack/devtools-vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 import viteReact from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import { nitro } from "nitro/vite";
 
 const config = defineConfig(({ mode }) => {
@@ -14,12 +13,11 @@ const config = defineConfig(({ mode }) => {
         plugins: [
             devtools(),
             nitro({ rollupConfig: { external: [/^@sentry\//] } }),
-            tailwindcss(),
             tanstackStart(),
             viteReact(),
         ],
         server: {
-            host: true,  // expose on 0.0.0.0
+            host: true, // expose on 0.0.0.0
             port: env.APP_PORT ? Number(env.APP_PORT) : 8000,
         },
     };

@@ -51,10 +51,7 @@ function App() {
                         "Streaming by Default",
                         "Ship progressively rendered responses for faster experiences.",
                     ],
-                    [
-                        "Tailwind Native",
-                        "Design quickly with utility-first styling and reusable tokens.",
-                    ],
+                    ["Material UI", "Tailwind sucks"],
                 ].map(([title, desc], index) => (
                     <article
                         key={title}
