@@ -5,5 +5,5 @@ import MarketingPage from "#/components/marketing-page/MarketingPage";
 export const Route = createFileRoute("/")({ component: App });
 
 function App() {
-    return <main>Hello</main>;
+    return <MarketingPage />;
 }

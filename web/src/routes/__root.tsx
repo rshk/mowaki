@@ -54,7 +54,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </head>
             <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
                 <CssBaseline enableColorScheme />
-                <PageLayout children={children} />
+                {children}
                 <DevTools />
                 <Scripts />
             </body>
@@ -76,15 +76,5 @@ function DevTools() {
                 TanStackQueryDevtools,
             ]}
         />
-    );
-}
-
-function PageLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <React.Fragment>
-            <Header />
-            {children}
-            <Footer />
-        </React.Fragment>
     );
 }
