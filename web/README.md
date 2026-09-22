@@ -1,4 +1,10 @@
-Welcome to your new TanStack Start app!
+Welcome to your new MoWAKi web frontend!
+
+This is based on the [TanStack Start](https://tanstack.com/start/latest) app,
+fully integrated with the MoWAKi backend.
+
+Some opinionated decisions have been taken to improve development
+velocity, and reduce the number of decisions required early on.
 
 # Getting Started
 
@@ -19,16 +25,8 @@ npm run build
 
 ## Styling
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+This project uses [Material UI](https://mui.com/material-ui/) for styling.
 
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Remove `@tailwindcss/vite` and `tailwindcss` from `package.json`
 
 ## Linting & Formatting
 
@@ -142,11 +140,11 @@ const getServerTime = createServerFn({
 // Use in a component
 function MyComponent() {
   const [time, setTime] = useState('')
-  
+
   useEffect(() => {
     getServerTime().then(setTime)
   }, [])
-  
+
   return <div>Server time: {time}</div>
 }
 ```
