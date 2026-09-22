@@ -1,21 +1,17 @@
+import CssBaseline from "@mui/material/CssBaseline";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import type { QueryClient } from "@tanstack/react-query";
 import {
+    createRootRouteWithContext,
     HeadContent,
     Scripts,
-    createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import CssBaseline from "@mui/material/CssBaseline";
 import * as React from "react";
-
 import Footer from "../components/Footer";
 import Header from "../components/Header";
-
 import TanStackQueryDevtools from "../integrations/tanstack-query/devtools";
-
 import appCss from "../styles.css?url";
-
-import type { QueryClient } from "@tanstack/react-query";
 
 interface MyRouterContext {
     queryClient: QueryClient;
