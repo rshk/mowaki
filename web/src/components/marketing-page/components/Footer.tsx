@@ -23,7 +23,7 @@ function Copyright() {
                 }}
             >
                 Sitemark
-            </Link>
+            </Link>{" "}
             {new Date().getFullYear()}
         </Typography>
     );
