@@ -53,7 +53,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
                 <HeadContent />
             </head>
             <body className="font-sans antialiased [overflow-wrap:anywhere] selection:bg-[rgba(79,184,178,0.24)]">
-                <CssBaseline />
+                <CssBaseline enableColorScheme />
                 <PageLayout children={children} />
                 <DevTools />
                 <Scripts />
