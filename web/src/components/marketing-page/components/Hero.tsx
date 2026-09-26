@@ -76,7 +76,7 @@ export default function Hero() {
                             fontSize: "clamp(3rem, 10vw, 3.5rem)",
                         }}
                     >
-                        Our&nbsp;latest&nbsp;
+                        MoWAKi&nbsp;app&nbsp;
                         <Typography
                             component="span"
                             variant="h1"
@@ -88,7 +88,7 @@ export default function Hero() {
                                 }),
                             })}
                         >
-                            products
+                            demo
                         </Typography>
                     </Typography>
                     <Typography

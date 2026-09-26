@@ -10,12 +10,11 @@ import Highlights from "./components/Highlights";
 import LogoCollection from "./components/LogoCollection";
 import Pricing from "./components/Pricing";
 import Testimonials from "./components/Testimonials";
+import * as React from "react";
 
 export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
     return (
-        <AppTheme {...props}>
-            <CssBaseline enableColorScheme />
-
+        <React.Fragment>
             <AppAppBar />
             <Hero />
             <div>
@@ -32,6 +31,6 @@ export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
                 <Divider />
                 <Footer />
             </div>
-        </AppTheme>
+        </React.Fragment>
     );
 }

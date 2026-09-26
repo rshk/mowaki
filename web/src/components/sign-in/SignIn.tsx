@@ -21,6 +21,7 @@ import {
 } from "./components/CustomIcons";
 import ForgotPassword from "./components/ForgotPassword";
 import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
+import KeyIcon from '@mui/icons-material/Key';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: "flex",
@@ -87,7 +88,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         const data = new FormData(event.currentTarget);
         console.log({
             email: data.get("email"),
-            password: data.get("password"),
+            // password: data.get("password"),
         });
     };
 
@@ -108,23 +109,21 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             setEmailErrorMessage("");
         }
 
-        if (!password.value || password.value.length < 6) {
-            setPasswordError(true);
-            setPasswordErrorMessage(
-                "Password must be at least 6 characters long.",
-            );
-            isValid = false;
-        } else {
-            setPasswordError(false);
-            setPasswordErrorMessage("");
-        }
+        /* if (!password.value || password.value.length < 6) {
+*     setPasswordError(true);
+*     setPasswordErrorMessage(
+*         "Password must be at least 6 characters long.",
+*     );
+*     isValid = false;
+* } else {
+*     setPasswordError(false);
+*     setPasswordErrorMessage("");
+* } */
 
         return isValid;
     };
 
     return (
-        <AppTheme {...props}>
-            <CssBaseline enableColorScheme />
             <SignInContainer
                 direction="column"
                 sx={{ justifyContent: "space-between" }}
@@ -142,7 +141,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                             fontSize: "clamp(2rem, 10vw, 2.15rem)",
                         }}
                     >
-                        Sign in
+                        Welcome
                     </Typography>
                     <Box
                         component="form"
@@ -172,7 +171,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                                 color={emailError ? "error" : "primary"}
                             />
                         </FormControl>
-                        <FormControl>
+                        {/* <FormControl>
                             <FormLabel htmlFor="password">Password</FormLabel>
                             <TextField
                                 error={passwordError}
@@ -188,14 +187,13 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                                 variant="outlined"
                                 color={passwordError ? "error" : "primary"}
                             />
-                        </FormControl>
-                        <FormControlLabel
+                        </FormControl> */}
+                        {/* <FormControlLabel
                             control={
                                 <Checkbox value="remember" color="primary" />
                             }
                             label="Remember me"
-                        />
-                        <ForgotPassword open={open} handleClose={handleClose} />
+                        /> */}
                         <Button
                             type="submit"
                             fullWidth
@@ -204,15 +202,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                         >
                             Sign in
                         </Button>
-                        <Link
-                            component="button"
-                            type="button"
-                            onClick={handleClickOpen}
-                            variant="body2"
-                            sx={{ alignSelf: "center" }}
-                        >
-                            Forgot your password?
-                        </Link>
                     </Box>
                     <Divider>or</Divider>
                     <Box
@@ -225,32 +214,21 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                         <Button
                             fullWidth
                             variant="outlined"
+                            onClick={() => alert("Sign in with a passkey")}
+                            startIcon={<KeyIcon />}
+                        >
+                            Sign in with a passkey
+                        </Button>
+                        {/* <Button
+                            fullWidth
+                            variant="outlined"
                             onClick={() => alert("Sign in with Google")}
                             startIcon={<GoogleIcon />}
                         >
                             Sign in with Google
-                        </Button>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert("Sign in with Facebook")}
-                            startIcon={<FacebookIcon />}
-                        >
-                            Sign in with Facebook
-                        </Button>
-                        <Typography sx={{ textAlign: "center" }}>
-                            Don&apos;t have an account?{" "}
-                            <Link
-                                href="/material-ui/getting-started/templates/sign-in/"
-                                variant="body2"
-                                sx={{ alignSelf: "center" }}
-                            >
-                                Sign up
-                            </Link>
-                        </Typography>
+                        </Button> */}
                     </Box>
                 </Card>
             </SignInContainer>
-        </AppTheme>
     );
 }
