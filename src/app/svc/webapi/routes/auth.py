@@ -49,9 +49,12 @@ class PublicFlowInfo(BaseModel):
 
 
 @router.post("/flow/init/{flow_kind}")
-async def init_flow(flow_kind: FlowKind) -> PublicFlowInfo:
+async def init_flow(
+    flow_kind: FlowKind,
+    params: Annotated[FlowAction, Body(default_factory=dict)],
+) -> PublicFlowInfo:
     """Initiate an authentication flow of the specified type"""
-    flow_id = await create_flow(kind=flow_kind)
+    flow_id = await create_flow(kind=flow_kind, params=params)
     flow = await _get_flow(flow_id)
     return PublicFlowInfo.from_flow(flow)
 

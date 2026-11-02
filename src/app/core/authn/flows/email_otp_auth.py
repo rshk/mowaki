@@ -16,6 +16,10 @@ from .processor import FlowActionResult, FlowProcessor
 logger = logging.getLogger(__name__)
 
 
+class EmailOTPAuthFlowParams(BaseModel):
+    email: EmailStr | None = None
+
+
 class EmailOTPAuthFlowState(BaseModel):
     email: EmailStr | None = None
     code: str | None = None
@@ -43,13 +47,8 @@ PROCESSOR = FlowProcessor(
 )
 
 
-@PROCESSOR.challenge_getter
-def get_email_otp_auth_challenge(
-    state: StateModel,
-) -> ChallengeModel:
-    if state.email is None:
-        return ChallengeModel(next_step="EMAIL_REQUIRED")
-    return ChallengeModel(next_step="CODE_REQUIRED")
+# @PROCESSOR.state_creator
+# async def create(params: )
 
 
 @PROCESSOR.action_processor
@@ -97,6 +96,15 @@ async def process(
             return FlowActionResult.failure()
 
     return FlowActionResult.new_state(state)  # unchanged
+
+
+@PROCESSOR.challenge_getter
+def get_email_otp_auth_challenge(
+    state: StateModel,
+) -> ChallengeModel:
+    if state.email is None:
+        return ChallengeModel(next_step="EMAIL_REQUIRED")
+    return ChallengeModel(next_step="CODE_REQUIRED")
 
 
 # --------------------------------------------------------------------

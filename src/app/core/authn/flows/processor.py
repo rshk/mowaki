@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Protocol, cast
 
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 
 from app.types.auth.auth_flow import FlowAction, FlowChallenge, FlowState
 from app.types.base import JSONObject
@@ -55,21 +55,22 @@ class FlowProcessorProtocol(Protocol):
     async def process[S: FlowState](
         self, state: S, action: FlowAction
     ) -> FlowActionResult[S]:
-        """Process action, returning eitgher"""
+        """Process action"""
 
     @abstractmethod
     def get_challenge(self, state: FlowState) -> FlowChallenge:
         """Get user-facing challenge for this state"""
 
 
-class ModelBasedFlowProcessor[S: BaseModel, A: BaseModel, C: BaseModel](
+class ModelBasedFlowProcessor[S: BaseModel, A: BaseModel, C: BaseModel, P: BaseModel](
     FlowProcessorProtocol, abc.ABC
 ):
-    __slots__ = []
+    __slots__ = ()
 
     state_model: type[S]
-    action_model: type[A]
-    challenge_model: type[C]
+    action_model: type[A] | TypeAdapter[A]
+    challenge_model: type[C] | TypeAdapter[C]
+    params_model: type[P] | TypeAdapter[P]
 
     # FlowProcessor iterface -----------------------------------------
 
