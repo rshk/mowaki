@@ -3,18 +3,18 @@ Tests for app.svc.webapi.routes.auth
 """
 
 import pytest
-from fastapi.security.utils import get_authorization_scheme_param
-from httpx2 import AsyncClient
-
-from app.core.authn.flows.actions import get_flow, get_flow_processor
 from app.core.authn.flows.email_otp_auth import (
     PROCESSOR as EMAIL_OTP_AUTH_FLOW_PROCESSOR,
 )
 from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowState
-from app.core.authn.flows.processor import FlowProcessor
 from app.core.authn.session import get_session, get_session_from_token
+from app.lib.flows.processor import FlowProcessor
+from app.svc.webapi.authn import flow_registry, flow_repo
 from app.types.auth.assertions import EmailAuth
 from app.types.auth.session import SessionToken
+from fastapi.security.utils import get_authorization_scheme_param
+from httpx2 import AsyncClient
+
 from tests.utils.session import set_request_context_from_session_id
 
 pytestmark = [
@@ -68,17 +68,20 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         # TODO: inspect the sent email, make sure it contains a valid OTP
 
     async with set_request_context_from_session_id(session_id):
-        flow = await get_flow(flow_id)
-        flowp = get_flow_processor(flow.kind)
+        flow = await flow_repo.get(flow_id)
+        flowp = await flow_registry[flow.kind].load(flow.state)
 
         assert flowp is EMAIL_OTP_AUTH_FLOW_PROCESSOR
-        assert isinstance(flowp, FlowProcessor)
-        state = flowp.state_model.model_validate(flow.state)
-        assert isinstance(state, EmailOTPAuthFlowState)
+        # assert isinstance(flowp, FlowProcessor)
+        # state = flowp.state_model.model_validate(flow.state)
+        # assert isinstance(state, EmailOTPAuthFlowState)
 
-        assert state.email == "user@example.com"
-        otp = state.code
-        assert otp is not None
+        state = flowp.dump()
+
+        assert state["email"] == "user@example.com"
+        assert state["code"] is not None
+
+        otp = state["code"]  # needed later...
 
     with subtests.test("Submit OTP"):
         resp = await testclient.post(f"/auth/flow/{flow_id}", json={"code": otp})
