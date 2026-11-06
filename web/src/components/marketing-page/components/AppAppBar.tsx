@@ -10,10 +10,10 @@ import IconButton from "@mui/material/IconButton";
 import MenuItem from "@mui/material/MenuItem";
 import { alpha, styled } from "@mui/material/styles";
 import Toolbar from "@mui/material/Toolbar";
+import { Link } from "@tanstack/react-router";
 import * as React from "react";
-import ColorModeIconDropdown from "../../shared-theme/ColorModeIconDropdown";
 import * as config from "#/config";
-import { Link } from '@tanstack/react-router'
+import ColorModeIconDropdown from "../../shared-theme/ColorModeIconDropdown";
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
     display: "flex",
@@ -59,7 +59,9 @@ export default function AppAppBar() {
                             px: 0,
                         }}
                     >
-                        <Box sx={{ fontWeight: "bold" }}>{config.SITE_TITLE}</Box>
+                        <Box sx={{ fontWeight: "bold" }}>
+                            {config.SITE_TITLE}
+                        </Box>
                         <Box sx={{ display: { xs: "none", md: "flex" } }}>
                             <Button variant="text" color="info" size="small">
                                 Features
@@ -98,14 +100,21 @@ export default function AppAppBar() {
                             alignItems: "center",
                         }}
                     >
-                        <Button color="primary" variant="text" size="small" component={Link} to="/log-in">
+                        <Button
+                            color="primary"
+                            variant="text"
+                            size="small"
+                            component={Link}
+                            to="/log-in"
+                        >
                             Log in
                         </Button>
                         <Button
                             color="primary"
                             variant="contained"
                             size="small"
-                            component={Link} to="/log-in"
+                            component={Link}
+                            to="/log-in"
                         >
                             Sign up
                         </Button>
@@ -160,7 +169,8 @@ export default function AppAppBar() {
                                         color="primary"
                                         variant="contained"
                                         fullWidth
-                                        component={Link} to="/log-in"
+                                        component={Link}
+                                        to="/log-in"
                                     >
                                         Sign up
                                     </Button>
@@ -170,7 +180,8 @@ export default function AppAppBar() {
                                         color="primary"
                                         variant="outlined"
                                         fullWidth
-                                        component={Link} to="/log-in"
+                                        component={Link}
+                                        to="/log-in"
                                     >
                                         Sign in
                                     </Button>

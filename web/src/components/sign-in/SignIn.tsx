@@ -1,3 +1,4 @@
+import KeyIcon from "@mui/icons-material/Key";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MuiCard from "@mui/material/Card";
@@ -14,14 +15,13 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import * as React from "react";
 import AppTheme from "../shared-theme/AppTheme";
+import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
 import {
     FacebookIcon,
     GoogleIcon,
     SitemarkIcon,
 } from "./components/CustomIcons";
 import ForgotPassword from "./components/ForgotPassword";
-import ColorModeIconDropdown from "../shared-theme/ColorModeIconDropdown";
-import KeyIcon from '@mui/icons-material/Key';
 
 const Card = styled(MuiCard)(({ theme }) => ({
     display: "flex",
@@ -110,68 +110,68 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
         }
 
         /* if (!password.value || password.value.length < 6) {
-*     setPasswordError(true);
-*     setPasswordErrorMessage(
-*         "Password must be at least 6 characters long.",
-*     );
-*     isValid = false;
-* } else {
-*     setPasswordError(false);
-*     setPasswordErrorMessage("");
-* } */
+         *     setPasswordError(true);
+         *     setPasswordErrorMessage(
+         *         "Password must be at least 6 characters long.",
+         *     );
+         *     isValid = false;
+         * } else {
+         *     setPasswordError(false);
+         *     setPasswordErrorMessage("");
+         * } */
 
         return isValid;
     };
 
     return (
-            <SignInContainer
-                direction="column"
-                sx={{ justifyContent: "space-between" }}
-            >
-                <Box sx={{ alignSelf: "flex-end" }}>
-                    <ColorModeIconDropdown size="medium" />
-                </Box>
-                <Card variant="outlined">
-                    <SitemarkIcon />
-                    <Typography
-                        component="h1"
-                        variant="h4"
-                        sx={{
-                            width: "100%",
-                            fontSize: "clamp(2rem, 10vw, 2.15rem)",
-                        }}
-                    >
-                        Welcome
-                    </Typography>
-                    <Box
-                        component="form"
-                        onSubmit={handleSubmit}
-                        noValidate
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            width: "100%",
-                            gap: 2,
-                        }}
-                    >
-                        <FormControl>
-                            <FormLabel htmlFor="email">Email</FormLabel>
-                            <TextField
-                                error={emailError}
-                                helperText={emailErrorMessage}
-                                id="email"
-                                type="email"
-                                name="email"
-                                placeholder="your@email.com"
-                                autoComplete="email"
-                                autoFocus
-                                required
-                                fullWidth
-                                variant="outlined"
-                                color={emailError ? "error" : "primary"}
-                            />
-                        </FormControl>
-                        {/* <FormControl>
+        <SignInContainer
+            direction="column"
+            sx={{ justifyContent: "space-between" }}
+        >
+            <Box sx={{ alignSelf: "flex-end" }}>
+                <ColorModeIconDropdown size="medium" />
+            </Box>
+            <Card variant="outlined">
+                <SitemarkIcon />
+                <Typography
+                    component="h1"
+                    variant="h4"
+                    sx={{
+                        width: "100%",
+                        fontSize: "clamp(2rem, 10vw, 2.15rem)",
+                    }}
+                >
+                    Welcome
+                </Typography>
+                <Box
+                    component="form"
+                    onSubmit={handleSubmit}
+                    noValidate
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "100%",
+                        gap: 2,
+                    }}
+                >
+                    <FormControl>
+                        <FormLabel htmlFor="email">Email</FormLabel>
+                        <TextField
+                            error={emailError}
+                            helperText={emailErrorMessage}
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="your@email.com"
+                            autoComplete="email"
+                            autoFocus
+                            required
+                            fullWidth
+                            variant="outlined"
+                            color={emailError ? "error" : "primary"}
+                        />
+                    </FormControl>
+                    {/* <FormControl>
                             <FormLabel htmlFor="password">Password</FormLabel>
                             <TextField
                                 error={passwordError}
@@ -188,38 +188,38 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                                 color={passwordError ? "error" : "primary"}
                             />
                         </FormControl> */}
-                        {/* <FormControlLabel
+                    {/* <FormControlLabel
                             control={
                                 <Checkbox value="remember" color="primary" />
                             }
                             label="Remember me"
                         /> */}
-                        <Button
-                            type="submit"
-                            fullWidth
-                            variant="contained"
-                            onClick={validateInputs}
-                        >
-                            Sign in
-                        </Button>
-                    </Box>
-                    <Divider>or</Divider>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                        }}
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        onClick={validateInputs}
                     >
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={() => alert("Sign in with a passkey")}
-                            startIcon={<KeyIcon />}
-                        >
-                            Sign in with a passkey
-                        </Button>
-                        {/* <Button
+                        Sign in
+                    </Button>
+                </Box>
+                <Divider>or</Divider>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                    }}
+                >
+                    <Button
+                        fullWidth
+                        variant="outlined"
+                        onClick={() => alert("Sign in with a passkey")}
+                        startIcon={<KeyIcon />}
+                    >
+                        Sign in with a passkey
+                    </Button>
+                    {/* <Button
                             fullWidth
                             variant="outlined"
                             onClick={() => alert("Sign in with Google")}
@@ -227,8 +227,8 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                         >
                             Sign in with Google
                         </Button> */}
-                    </Box>
-                </Card>
-            </SignInContainer>
+                </Box>
+            </Card>
+        </SignInContainer>
     );
 }

@@ -1,5 +1,6 @@
 import CssBaseline from "@mui/material/CssBaseline";
 import Divider from "@mui/material/Divider";
+import * as React from "react";
 import AppTheme from "../shared-theme/AppTheme";
 import AppAppBar from "./components/AppAppBar";
 import FAQ from "./components/FAQ";
@@ -10,7 +11,6 @@ import Highlights from "./components/Highlights";
 import LogoCollection from "./components/LogoCollection";
 import Pricing from "./components/Pricing";
 import Testimonials from "./components/Testimonials";
-import * as React from "react";
 
 export default function MarketingPage(props: { disableCustomTheme?: boolean }) {
     return (
