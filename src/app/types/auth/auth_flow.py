@@ -26,4 +26,4 @@ class AuthFlow(BaseModel):
     session_id: SessionID | None = None
     kind: FlowKind
     state: FlowState
-    is_completed: bool = False
+    is_ended: bool = False

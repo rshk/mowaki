@@ -19,5 +19,5 @@ FlowTable = sa.Table(
         nullable=True,
         index=True,
     ),
-    sa.Column("is_completed", sa.Boolean, default=False),  # logical deletion
+    sa.Column("is_ended", sa.Boolean, default=False),  # logical deletion
 )

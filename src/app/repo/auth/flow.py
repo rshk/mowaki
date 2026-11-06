@@ -37,14 +37,14 @@ async def create(
         state=state,
         expires_at=expires_at,
         session_id=session_id,
-        is_completed=False,
+        is_ended=False,
     )
 
     return flow_id
 
 
 async def get(flow_id: FlowID, session_id: SessionID | None = None) -> AuthFlow:
-    query = FlowTable.select().filter_by(flow_id=flow_id, is_completed=False)
+    query = FlowTable.select().filter_by(flow_id=flow_id, is_ended=False)
 
     if session_id is not None:
         query = query.filter_by(session_id=session_id)
@@ -66,14 +66,14 @@ async def for_update(
     flow_id: FlowID, session_id: SessionID | None = None
 ) -> AsyncGenerator[UpdateHelper[AuthFlow]]:
     # ----------------------------------------------------------------
-    # Use ``is_completed`` as logic deletion, since we cannot
+    # Use ``is_ended`` as logic deletion, since we cannot
     # immediately delete an object that's currently locked with
     # ``SELECT .. FOR UPDATE``.
     # ----------------------------------------------------------------
 
     query = (
         FlowTable.select()
-        .filter_by(flow_id=flow_id, is_completed=False)
+        .filter_by(flow_id=flow_id, is_ended=False)
         .with_for_update()
     )
 
@@ -90,7 +90,7 @@ async def for_update(
         async def get_object():
             query = (
                 FlowTable.select()
-                .filter_by(flow_id=flow_id, is_completed=False)
+                .filter_by(flow_id=flow_id, is_ended=False)
                 .with_for_update()
             )
             result = await conn.execute(query)
@@ -110,7 +110,7 @@ async def delete(flow_id: FlowID):
 async def delete_completed():
     """Delete completed flows"""
     db = get_database()
-    query = FlowTable.delete().filter_by(is_completed=True)
+    query = FlowTable.delete().filter_by(is_ended=True)
     async with db.connect() as conn, conn.begin():
         await conn.execute(query)
 
