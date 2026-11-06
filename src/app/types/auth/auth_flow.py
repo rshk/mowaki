@@ -11,7 +11,10 @@ from app.types.auth.session import SessionID
 from ..base import JSONObject
 
 FlowID = NewType("FlowID", uuid.UUID)
+
+# TODO: move these types to app.lib.flows?
 FlowKind = NewType("FlowKind", str)
+FlowParams = NewType("FlowParams", JSONObject)
 FlowState = NewType("FlowState", JSONObject)
 FlowAction = NewType("FlowAction", JSONObject)
 FlowChallenge = NewType("FlowChallenge", JSONObject)

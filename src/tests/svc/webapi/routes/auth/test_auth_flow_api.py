@@ -98,11 +98,15 @@ async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):
         assert session.current_user_id is None
 
 
-async def test_email_otp_flow_with_params(subtests, testclient: AsyncClient, email_outbox):
+async def test_email_otp_flow_with_params(
+    subtests, testclient: AsyncClient, email_outbox
+):
     EMAIL_ADDR = "user@example.com"
 
     with subtests.test("Initialize flow"):
-        resp = await testclient.post("/auth/flow/init/email-otp-auth", json={"email": EMAIL_ADDR})
+        resp = await testclient.post(
+            "/auth/flow/init/email-otp-auth", json={"email": EMAIL_ADDR}
+        )
         assert resp.status_code == 200
 
         obj = resp.json()

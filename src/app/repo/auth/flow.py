@@ -72,9 +72,7 @@ async def for_update(
     # ----------------------------------------------------------------
 
     query = (
-        FlowTable.select()
-        .filter_by(flow_id=flow_id, is_ended=False)
-        .with_for_update()
+        FlowTable.select().filter_by(flow_id=flow_id, is_ended=False).with_for_update()
     )
 
     if session_id is not None:

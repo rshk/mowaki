@@ -1,12 +1,10 @@
-import uuid
 from abc import abstractmethod
 from collections.abc import AsyncGenerator
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
-from typing import NewType, Protocol
+from contextlib import asynccontextmanager
+from typing import Protocol
 
 from app.lib.flows.processor import FlowProcessor
-
-from .registry import FlowKind, FlowRegistry
+from app.types.auth.auth_flow import FlowKind
 
 
 class FlowRepo[FlowID](Protocol):

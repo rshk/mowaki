@@ -1,4 +1,3 @@
-import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -12,10 +11,10 @@ from app.core.authn.exceptions import (
 )
 from app.core.context import get_current_session
 from app.lib.flows.processor import FlowProcessor
-from app.lib.flows.registry import FlowKind, FlowRegistry
+from app.lib.flows.registry import FlowRegistry
 from app.lib.flows.repo import FlowRepo
 from app.lib.sql.table_helper import UpdateHelper
-from app.types.auth.auth_flow import AuthFlow, FlowID, FlowState
+from app.types.auth.auth_flow import AuthFlow, FlowID, FlowKind, FlowState
 
 
 class AuthnFlowRepo(FlowRepo[FlowID]):

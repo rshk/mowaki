@@ -1,5 +1,4 @@
 from datetime import datetime
-from enum import Enum
 from typing import Annotated, Literal, Self
 
 from fastapi import APIRouter, Body
@@ -8,13 +7,18 @@ from pydantic import BaseModel
 from app.config import get_config
 from app.core.authn.flows.repo import get_flow_expiration_date
 from app.core.context import get_current_session
+from app.lib.flows.constants import FlowStatus
+from app.lib.flows.processor import FlowProcessor
 from app.types.auth.auth_flow import (
     AuthFlow,
     FlowAction,
     FlowChallenge,
     FlowID,
     FlowKind,
+    FlowParams,
 )
+
+from ..authn import flow_registry, flow_repo
 
 router = APIRouter(tags=["authentication"])
 
@@ -28,15 +32,14 @@ class PublicFlowInfo(BaseModel):
     status: Literal["in-progress", "expired", "completed", "canceled"]
 
     @classmethod
-    def from_flow(cls, flow: AuthFlow) -> Self:
+    async def from_flow(cls, flow: AuthFlow) -> Self:
+        processor: FlowProcessor = await flow_registry[flow.kind].load(flow.state)
         return cls(
             flow_id=flow.flow_id,
             created_at=flow.created_at,
             expires_at=get_flow_expiration_date(flow),
             kind=flow.kind,
-            challenge=FlowChallenge(
-                get_flow_processor(flow.kind).get_challenge(flow.state)
-            ),
+            challenge=processor.get_challenge(),
             status="in-progress",  # Or it would have failed
         )
 
@@ -44,24 +47,20 @@ class PublicFlowInfo(BaseModel):
 @router.post("/flow/init/{flow_kind}")
 async def init_flow(
     flow_kind: FlowKind,
-    params: Annotated[FlowAction, Body(default_factory=dict)],
+    params: Annotated[FlowParams, Body(default_factory=dict)],
 ) -> PublicFlowInfo:
     """Initiate an authentication flow of the specified type"""
-    flow_id = await create_flow(kind=flow_kind, params=params)
-    flow = await _get_flow(flow_id)
-    return PublicFlowInfo.from_flow(flow)
+
+    # TODO: pass parameters through
+    flow_id = await flow_repo.create(flow_kind)
+    flow_info = await flow_repo.get(flow_id)
+    return await PublicFlowInfo.from_flow(flow_info)
 
 
 @router.get("/flow/{flow_id}")
 async def get_flow(flow_id: FlowID):
-    flow = await _get_flow(flow_id)
-    return PublicFlowInfo.from_flow(flow)
-
-
-class FlowStatus(Enum):
-    SUCCESS = "SUCCESS"
-    FAILED = "FAILED"
-    IN_PROGRESS = "IN_PROGRESS"
+    flow_info = await flow_repo.get(flow_id)
+    return await PublicFlowInfo.from_flow(flow_info)
 
 
 class FlowActionResult(BaseModel):
@@ -74,24 +73,26 @@ async def post_flow_action(
     flow_id: FlowID,
     action: Annotated[FlowAction, Body(default_factory=dict)],
 ) -> FlowActionResult:
-    result = await process_flow_action(flow_id, action)
-    if result.is_completed():
-        return FlowActionResult(
-            flow=None,
-            status=FlowStatus.SUCCESS if result.result else FlowStatus.FAILED,
-        )
 
-    flow = await _get_flow(flow_id)
-    return FlowActionResult(
-        flow=PublicFlowInfo.from_flow(flow),
-        status=FlowStatus.IN_PROGRESS,
-    )
+    async with flow_repo.for_processing(flow_id) as proc:
+        await proc.execute(action)
+
+    status = proc.get_status()
+
+    if status.is_ended():
+        return FlowActionResult(flow=None, status=status)
+
+    # TODO: avoid this call
+    flow_info = await flow_repo.get(flow_id)
+    flow = await PublicFlowInfo.from_flow(flow_info)
+
+    return FlowActionResult(flow=flow, status=status)
 
 
 @router.delete("/flow/{flow_id}")
 async def cancel_flow(flow_id: FlowID):
     """Cancel / abort an in-progress flow"""
-    await delete_flow(flow_id)
+    await flow_repo.delete(flow_id)
 
 
 @router.get("/session")

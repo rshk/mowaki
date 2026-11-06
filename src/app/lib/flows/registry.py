@@ -1,9 +1,8 @@
 from collections.abc import Iterator, MutableMapping
-from typing import NewType
+
+from app.types.auth.auth_flow import FlowKind
 
 from .factory import FlowFactory
-
-FlowKind = NewType("FlowKind", str)
 
 
 class FlowRegistry(MutableMapping):

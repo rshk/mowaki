@@ -1,17 +1,7 @@
 import logging
-import secrets
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Discriminator, EmailStr, Field, TypeAdapter
-
-from app.config import get_config
-from app.core.authn.session import add_session_assertion
-from app.exceptions import ItsABug
-from app.lib.email_builder import EmailBuilder
-from app.resources import get_mailer
-from app.types.auth import assertions
-
-from ..processor import FlowActionResult, FlowProcessor
+from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +15,7 @@ StateModel = LoginFlowState
 
 
 # Actions ------------------------------------------------------------
+
 
 class EmailAddrAction:
     # action: Annotated[Literal["email_address"], Field(default="email_address")]
@@ -40,6 +31,7 @@ ActionModel = TypeAdapter(ActionType)
 
 
 # Challenges ---------------------------------------------------------
+
 
 class InitialChallenge:
     kind: Literal["init"] = "init"

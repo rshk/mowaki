@@ -1,27 +1,27 @@
 from abc import abstractmethod
 from typing import Protocol, Self
 
-from app.types.base import JSONObject
+from app.types.auth.auth_flow import FlowAction, FlowChallenge, FlowState
 
 from .constants import FlowStatus
 
 
 class FlowProcessor(Protocol):
     @abstractmethod
-    async def execute(self, action: JSONObject):
+    async def execute(self, action: FlowAction):
         """Execute an action"""
 
     @abstractmethod
-    def get_challenge(self) -> JSONObject:
+    def get_challenge(self) -> FlowChallenge:
         """Get challenge parameters to be presented to the user"""
 
     @classmethod
     @abstractmethod
-    def load(cls, state: JSONObject) -> Self:
+    def load(cls, state: FlowState) -> Self:
         """Create instance with state"""
 
     @abstractmethod
-    def dump(self) -> JSONObject:
+    def dump(self) -> FlowState:
         """Dump state from this processor"""
 
     @abstractmethod
