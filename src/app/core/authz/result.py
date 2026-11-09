@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.types.auth.auth_flow import FlowKind
+from app.lib.flows.types import FlowKind
 
 
 @dataclass(slots=True)

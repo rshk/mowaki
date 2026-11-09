@@ -3,8 +3,8 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Protocol
 
-from app.lib.flows.processor import FlowProcessor
-from app.types.auth.auth_flow import FlowKind
+from .processor import FlowProcessor
+from .types import FlowKind
 
 
 class FlowRepo[FlowID](Protocol):

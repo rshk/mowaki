@@ -4,24 +4,16 @@ from typing import NewType
 
 from pydantic import Field
 
+from app.lib.flows.types import FlowKind, FlowState
 from app.lib.keygen import generate_uuid
 from app.lib.models import BaseModel
 from app.types.auth.session import SessionID
 
-from ..base import JSONObject
-
 FlowID = NewType("FlowID", uuid.UUID)
-
-# TODO: move these types to app.lib.flows?
-FlowKind = NewType("FlowKind", str)
-FlowParams = NewType("FlowParams", JSONObject)
-FlowState = NewType("FlowState", JSONObject)
-FlowAction = NewType("FlowAction", JSONObject)
-FlowChallenge = NewType("FlowChallenge", JSONObject)
 
 
 class AuthFlow(BaseModel):
-    """Authentication flow"""
+    """Authentication flow state and metadata"""
 
     flow_id: FlowID = Field(default_factory=lambda: FlowID(generate_uuid()))
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

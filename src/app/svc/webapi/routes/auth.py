@@ -9,14 +9,8 @@ from app.core.authn.flows.repo import get_flow_expiration_date
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
 from app.lib.flows.processor import FlowProcessor
-from app.types.auth.auth_flow import (
-    AuthFlow,
-    FlowAction,
-    FlowChallenge,
-    FlowID,
-    FlowKind,
-    FlowParams,
-)
+from app.lib.flows.types import FlowAction, FlowChallenge, FlowKind, FlowParams
+from app.types.auth.auth_flow import AuthFlow, FlowID
 
 from ..authn import flow_registry, flow_repo
 

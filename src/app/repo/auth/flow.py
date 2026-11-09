@@ -5,11 +5,12 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.exc import NoResultFound
 
 from app.exceptions import ObjectNotFound
+from app.lib.flows.types import FlowState
 from app.lib.keygen import generate_uuid
 from app.lib.sql.table_helper import TableHelper, UpdateHelper
 from app.repo._schema.auth_flow import FlowTable
 from app.resources import get_database
-from app.types.auth.auth_flow import AuthFlow, FlowID, FlowState
+from app.types.auth.auth_flow import AuthFlow, FlowID
 from app.types.auth.session import SessionID
 
 _crud = TableHelper[AuthFlow, FlowID](

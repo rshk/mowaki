@@ -1,8 +1,7 @@
 from collections.abc import Iterator, MutableMapping
 
-from app.types.auth.auth_flow import FlowKind
-
 from .factory import FlowFactory
+from .types import FlowKind
 
 
 class FlowRegistry(MutableMapping):

@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from app.types.base import JSONObject
+from app.lib.types import JSONObject
 
 from .processor import FlowProcessor
 

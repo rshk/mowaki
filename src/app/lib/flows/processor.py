@@ -1,9 +1,8 @@
 from abc import abstractmethod
 from typing import Protocol, Self
 
-from app.types.auth.auth_flow import FlowAction, FlowChallenge, FlowState
-
 from .constants import FlowStatus
+from .types import FlowAction, FlowChallenge, FlowState
 
 
 class FlowProcessor(Protocol):
