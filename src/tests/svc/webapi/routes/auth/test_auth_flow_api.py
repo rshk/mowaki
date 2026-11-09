@@ -3,6 +3,9 @@ Tests for app.svc.webapi.routes.auth
 """
 
 import pytest
+from fastapi.security.utils import get_authorization_scheme_param
+from httpx2 import AsyncClient
+
 from app.core.authn.flows.email_otp_auth import (
     PROCESSOR as EMAIL_OTP_AUTH_FLOW_PROCESSOR,
 )
@@ -12,9 +15,6 @@ from app.lib.flows.processor import FlowProcessor
 from app.svc.webapi.authn import flow_registry, flow_repo
 from app.types.auth.assertions import EmailAuth
 from app.types.auth.session import SessionToken
-from fastapi.security.utils import get_authorization_scheme_param
-from httpx2 import AsyncClient
-
 from tests.utils.session import set_request_context_from_session_id
 
 pytestmark = [
