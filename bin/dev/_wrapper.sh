@@ -8,8 +8,10 @@ if [ "$COMMAND" == "tool" ]; then
 fi
 
 function print_commands_help() {
-    echo "Available commands:"
-    echo "TODO"
+    echo "Usage: $0 <command> [args]"
+    echo
+    echo "SUPPORTED COMMANDS"
+    sed -n 's/    \([a-zA-Z0-9\-]\+\)).*/\n\x1b[1m\1\x1b[0m/p;s/^ *# \(.*\)$/    \1/p;s/^ *#$//p' < "$BASH_SOURCE"
 }
 
 function style_fix_all() {
@@ -49,11 +51,12 @@ function style_check_js() {
 
 case "$COMMAND" in
     start)
-        # Start docker containers
-
+        # Start docker containers.
+        #
         # Ensure containers are up to date before starting.
         # This is pretty quick due to caching, but prevents headaches
         # caused by running outdated code when restarting containers.
+        #
         docker compose build
 
         # Start docker containers, enabling watch. Notice that "watch"
@@ -88,17 +91,28 @@ case "$COMMAND" in
         # Fix code to match linting and formatting rules
         style_fix_all ;;
 
-    style-fix-py) style_fix_py ;;
-    style-fix-js) style_fix_js ;;
+    style-fix-py)
+        # Format Python code
+        style_fix_py ;;
+
+    style-fix-js)
+        # Format Javascript code
+        style_fix_js ;;
 
     style-check)
         # Check linting and formatting rules, without writing
         style_check_all ;;
 
-    style-check-py) style_check_py ;;
-    style-check-js) style_check_js ;;
+    style-check-py)
+        # Check formatting of Python code
+        style_check_py ;;
+
+    style-check-js)
+        # Check formatting of Javascript code
+        style_check_js ;;
 
     psql)
+        # Open a postgresql CLI in the running container
         exec docker compose exec db psql
         ;;
 
@@ -118,18 +132,24 @@ case "$COMMAND" in
         ;;
 
     install-py)
+        # Install Python dependencies locally.
+        # Seldom needed.
         exec uv sync --group dev
         ;;
 
     install-js)
+        # Install NPM dependencies locally.
+        # Seldom needed.
         cd web && exec npm install
         ;;
 
     docs)
+        # Build HTML documentation
         exec uv run make -C docs help
         ;;
 
     docs-watch)
+        # Continuously build HTML documentation, monitoring changes
         exec uv run sphinx-autobuild docs docs/_build/html -b html
         ;;
 
