@@ -1,16 +1,16 @@
 from abc import abstractmethod
 from typing import Protocol
 
-from app.lib.types import JSONObject
+from app.lib.flows.types import FlowParams, FlowState
 
 from .processor import FlowProcessor
 
 
 class FlowFactory[P: FlowProcessor](Protocol):
     @abstractmethod
-    async def create(self) -> P:
-        """Create a new flow of this kind"""
+    async def create(self, params: FlowParams | None = None) -> P:
+        """Initialize a new flow and return a Processor instance"""
 
     @abstractmethod
-    async def load(self, state: JSONObject) -> P:
-        """Load state to create a flow processor instance"""
+    async def load(self, state: FlowState) -> P:
+        """Load state and return a Processor instance"""

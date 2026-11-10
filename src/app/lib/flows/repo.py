@@ -1,22 +1,39 @@
 from abc import abstractmethod
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Protocol
+from typing import NamedTuple, Protocol
 
-from .processor import FlowProcessor
+from app.lib.flows.processor import FlowProcessor
+
 from .types import FlowKind
 
 
-class FlowRepo[FlowID](Protocol):
+class LockedFlow[FlowObject](NamedTuple):
+    info: FlowObject
+    processor: FlowProcessor
+
+
+class FlowRepo[FlowID, FlowObject](Protocol):
     @abstractmethod
     async def create(self, kind: FlowKind) -> FlowID:
         """Create a new flow"""
         yield  # type: ignore
 
+    @abstractmethod
+    async def get(self, flow_id: FlowID) -> FlowObject:
+        pass
+
     @asynccontextmanager
     @abstractmethod
-    async def for_processing(self, flow_id: FlowID) -> AsyncGenerator[FlowProcessor]:
-        """Lock for processing"""
+    async def for_processing(
+        self, flow_id: FlowID
+    ) -> AsyncGenerator[LockedFlow[FlowObject]]:
+        """
+        Retrieve a flow, locking it for processing.
+
+        Once processing is done, the flow will be updated with state
+        from the processor.
+        """
         yield  # type: ignore
 
     async def delete(self, flow_id: FlowID):

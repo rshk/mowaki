@@ -8,7 +8,11 @@ from .types import FlowAction, FlowChallenge, FlowState
 class FlowProcessor(Protocol):
     @abstractmethod
     async def execute(self, action: FlowAction):
-        """Execute an action"""
+        """
+        Execute an action, usually modifying the flow state.
+
+        Action execution may have side effects.
+        """
 
     @abstractmethod
     def get_challenge(self) -> FlowChallenge:
@@ -17,7 +21,7 @@ class FlowProcessor(Protocol):
     @classmethod
     @abstractmethod
     def load(cls, state: FlowState) -> Self:
-        """Create instance with state"""
+        """Create a processor instance from state"""
 
     @abstractmethod
     def dump(self) -> FlowState:

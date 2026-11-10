@@ -17,31 +17,40 @@ StateModel = LoginFlowState
 # Actions ------------------------------------------------------------
 
 
-class EmailAddrAction:
-    # action: Annotated[Literal["email_address"], Field(default="email_address")]
-    action: Literal["email_address"] = "email_address"
+class EmailAddrAction(BaseModel):
+    kind: Literal["email_address"] = "email_address"
+    email: EmailStr
 
 
-class WebauthnInitAction:
-    action: Literal["webauthn_init"] = "webauthn_init"
+class OtpAction(BaseModel):
+    kind: Literal["otp_response"] = "otp_response"
+    otp: str
 
 
-ActionType = Annotated[EmailAddrAction | WebauthnInitAction, Discriminator("action")]
+class WebauthnInitAction(BaseModel):
+    kind: Literal["webauthn_init"] = "webauthn_init"
+
+
+ActionType = Annotated[
+    EmailAddrAction | OtpAction | WebauthnInitAction, Discriminator("kind")
+]
 ActionModel = TypeAdapter(ActionType)
+ActionTypeAdapter = TypeAdapter(ActionType)
 
 
 # Challenges ---------------------------------------------------------
 
 
-class InitialChallenge:
+class InitialChallenge(BaseModel):
     kind: Literal["init"] = "init"
     email_auth_available: bool
     webauthn_available: bool
 
 
-class EmailOtpChallenge:
+class EmailOtpChallenge(BaseModel):
     kind: Literal["email_otp"] = "email_otp"
 
 
 ChallengeType = Annotated[InitialChallenge | EmailOtpChallenge, Discriminator("kind")]
 ChallengeModel = TypeAdapter(ChallengeType)
+ChallengeTypeAdapter = TypeAdapter(ChallengeType)
