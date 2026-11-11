@@ -8,7 +8,7 @@ from app.core.authz.exceptions import AuthorizationError
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
-from app.types.auth.assertions import Assertion
+from app.types.auth.assertions import Assertion, BaseAssertionParams
 from app.types.auth.session import (
     AuthSession,
     AuthSessionMetadata,
@@ -170,6 +170,12 @@ async def add_session_assertion(assertion: Assertion):
         ctx.new_session_token = new_token
 
     await refresh_current_session()
+
+
+async def add_session_assertion_from_params(params: BaseAssertionParams, expires_at: datetime | None = None):
+    # TODO: use this to replace add_session_assertion() entirely?
+    assertion = Assertion(params=params, expires_at=expires_at)
+    return await add_session_assertion(assertion)
 
 
 async def set_current_user_id(user_id: UserID):

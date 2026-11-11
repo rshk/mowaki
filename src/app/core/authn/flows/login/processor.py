@@ -15,7 +15,11 @@ from app.lib.flows.constants import FlowStatus
 from app.lib.flows.processor import FlowProcessor
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowState
 
-from .utils import compose_and_send_otp_challenge_email, do_add_session_assertion, generate_otp_code
+from .utils import (
+    compose_and_send_otp_challenge_email,
+    do_add_session_assertion,
+    generate_otp_code,
+)
 
 
 class LoginFlowProcessor(FlowProcessor):
