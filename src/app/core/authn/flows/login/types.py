@@ -3,6 +3,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
+from app.lib.types import JSONObject
+
 logger = logging.getLogger(__name__)
 
 
@@ -45,10 +47,12 @@ class InitialChallenge(BaseModel):
     kind: Literal["init"] = "init"
     email_auth_available: bool
     webauthn_available: bool
+    actions: list[JSONObject]
 
 
 class EmailOtpChallenge(BaseModel):
     kind: Literal["email_otp"] = "email_otp"
+    actions: list[JSONObject]
 
 
 ChallengeType = Annotated[InitialChallenge | EmailOtpChallenge, Discriminator("kind")]

@@ -28,7 +28,7 @@ class LoginFlowProcessor(FlowProcessor):
         self._status = FlowStatus.IN_PROGRESS
 
     @classmethod
-    def new(cls, params: FlowParams | None = None, foo: int = 123) -> Self:
+    def new(cls, params: FlowParams | None = None) -> Self:
         state = LoginFlowState()
         return cls(state)
 
@@ -79,11 +79,18 @@ class LoginFlowProcessor(FlowProcessor):
             return InitialChallenge(
                 email_auth_available=True,
                 webauthn_available=False,
+                actions=[
+                    EmailAddrAction.model_json_schema(),
+                ],
             )
 
         assert self._state.otp is not None
 
-        return EmailOtpChallenge()
+        return EmailOtpChallenge(
+            actions=[
+                OtpAction.model_json_schema(),
+            ]
+        )
 
     @classmethod
     def load(cls, state: FlowState) -> Self:

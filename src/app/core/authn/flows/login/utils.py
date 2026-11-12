@@ -35,7 +35,7 @@ async def compose_and_send_otp_challenge_email(email: str, code: str):
     await mailer.send_message(msg)
 
 
-def generate_otp_code(length: int = 6) -> str:
+def generate_otp(length: int = 6) -> str:
     """
     Generate OTP code.
 
