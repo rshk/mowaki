@@ -2,10 +2,15 @@ from abc import abstractmethod
 from typing import Protocol, Self
 
 from .constants import FlowStatus
-from .types import FlowAction, FlowChallenge, FlowState
+from .types import FlowAction, FlowChallenge, FlowParams, FlowState
 
 
 class FlowProcessor(Protocol):
+    @classmethod
+    @abstractmethod
+    def new(cls, params: FlowParams | None = None) -> Self:
+        pass
+
     @abstractmethod
     async def execute(self, action: FlowAction):
         """

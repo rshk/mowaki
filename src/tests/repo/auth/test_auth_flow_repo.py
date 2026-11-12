@@ -34,7 +34,7 @@ async def test_create_and_update_flow(subtests):
 
     with subtests.test("Logically delete flow"):
         async with repo.auth.flow.for_update(flow_id) as upd:
-            await upd.update(is_completed=True)
+            await upd.update(is_ended=True)
 
         with pytest.raises(ObjectNotFound):
             await repo.auth.flow.get(flow_id)

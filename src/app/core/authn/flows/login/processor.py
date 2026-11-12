@@ -13,7 +13,7 @@ from app.core.authn.flows.login.types import (
 from app.exceptions import ItsABug
 from app.lib.flows.constants import FlowStatus
 from app.lib.flows.processor import FlowProcessor
-from app.lib.flows.types import FlowAction, FlowChallenge, FlowState
+from app.lib.flows.types import FlowAction, FlowChallenge, FlowParams, FlowState
 
 from .utils import (
     compose_and_send_otp_challenge_email,
@@ -26,6 +26,11 @@ class LoginFlowProcessor(FlowProcessor):
     def __init__(self, state: LoginFlowState):
         self._state = state
         self._status = FlowStatus.IN_PROGRESS
+
+    @classmethod
+    def new(cls, params: FlowParams | None = None, foo: int = 123) -> Self:
+        state = LoginFlowState()
+        return cls(state)
 
     async def execute(self, action: FlowAction):
         action = ActionTypeAdapter.validate_python(action)

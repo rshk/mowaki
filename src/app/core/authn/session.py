@@ -172,7 +172,9 @@ async def add_session_assertion(assertion: Assertion):
     await refresh_current_session()
 
 
-async def add_session_assertion_from_params(params: BaseAssertionParams, expires_at: datetime | None = None):
+async def add_session_assertion_from_params(
+    params: BaseAssertionParams, expires_at: datetime | None = None
+):
     # TODO: use this to replace add_session_assertion() entirely?
     assertion = Assertion(params=params, expires_at=expires_at)
     return await add_session_assertion(assertion)
