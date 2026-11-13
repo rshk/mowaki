@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from typing import Protocol
+
 from .utils import (
     compose_and_send_otp_challenge_email,
     do_add_session_assertion,

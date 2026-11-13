@@ -36,7 +36,9 @@ class LoginFlowProcessor(FlowProcessor):
         self._deps = deps
 
     @classmethod
-    def new(cls, params: FlowParams | None = None, deps: LoginSideFxProto | None = None) -> Self:
+    def new(
+        cls, params: FlowParams | None = None, deps: LoginSideFxProto | None = None
+    ) -> Self:
         _ = params  # ignored
         state = LoginFlowState()
         return cls(state, deps=deps)

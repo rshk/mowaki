@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
@@ -106,5 +106,5 @@ async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
         expires_at=get_flow_expiration_date(flow),
         kind=flow.kind,
         challenge=processor.get_challenge(),
-        status="in-progress"
+        status="in-progress",
     )
