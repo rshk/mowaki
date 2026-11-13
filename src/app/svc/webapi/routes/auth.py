@@ -25,18 +25,6 @@ class PublicFlowInfo(BaseModel):
     challenge: FlowChallenge
     status: Literal["in-progress", "expired", "completed", "canceled"]
 
-    @classmethod
-    async def from_flow(cls, flow: AuthFlow) -> Self:
-        processor: FlowProcessor = await flow_registry[flow.kind].load(flow.state)
-        return cls(
-            flow_id=flow.flow_id,
-            created_at=flow.created_at,
-            expires_at=get_flow_expiration_date(flow),
-            kind=flow.kind,
-            challenge=processor.get_challenge(),
-            status="in-progress",  # Or it would have failed
-        )
-
 
 @router.post("/flow/init/{flow_kind}")
 async def init_flow(
@@ -45,16 +33,15 @@ async def init_flow(
 ) -> PublicFlowInfo:
     """Initiate an authentication flow of the specified type"""
 
-    # TODO: pass parameters through
-    flow_id = await flow_repo.create(flow_kind)
+    flow_id = await flow_repo.create(flow_kind, params=params)
     flow_info = await flow_repo.get(flow_id)
-    return await PublicFlowInfo.from_flow(flow_info)
+    return await _build_public_flow_info(flow_info)
 
 
 @router.get("/flow/{flow_id}")
 async def get_flow(flow_id: FlowID):
     flow_info = await flow_repo.get(flow_id)
-    return await PublicFlowInfo.from_flow(flow_info)
+    return await _build_public_flow_info(flow_info)
 
 
 class FlowActionResult(BaseModel):
@@ -68,19 +55,18 @@ async def post_flow_action(
     action: Annotated[FlowAction, Body(default_factory=dict)],
 ) -> FlowActionResult:
 
-    async with flow_repo.for_processing(flow_id) as proc:
-        await proc.execute(action)
-
-    status = proc.get_status()
+    async with flow_repo.for_processing(flow_id) as flow:
+        await flow.processor.execute(action)
+        status = flow.processor.get_status()
 
     if status.is_ended():
         return FlowActionResult(flow=None, status=status)
 
     # TODO: avoid this call
     flow_info = await flow_repo.get(flow_id)
-    flow = await PublicFlowInfo.from_flow(flow_info)
+    public_flow_info = await _build_public_flow_info(flow_info)
 
-    return FlowActionResult(flow=flow, status=status)
+    return FlowActionResult(flow=public_flow_info, status=status)
 
 
 @router.delete("/flow/{flow_id}")
@@ -107,3 +93,18 @@ async def get_session_info():
         "metadata": session.metadata,
         "assertions": session.assertions,
     }
+
+
+async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
+    """
+    Create a PublicFlowInfo instance from an AuthFlow (database) record
+    """
+    processor: FlowProcessor = await flow_registry[flow.kind].load(flow.state)
+    return PublicFlowInfo(
+        flow_id=flow.flow_id,
+        created_at=flow.created_at,
+        expires_at=get_flow_expiration_date(flow),
+        kind=flow.kind,
+        challenge=processor.get_challenge(),
+        status="in-progress"
+    )

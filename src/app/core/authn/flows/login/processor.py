@@ -1,6 +1,7 @@
 from typing import Self
 
 from app.core.authn.exceptions import FlowProcessingError
+from app.core.authn.flows.login.sidefx import LoginSideFx, LoginSideFxProto
 from app.core.authn.flows.login.types import (
     ActionTypeAdapter,
     ChallengeType,
@@ -18,19 +19,27 @@ from app.lib.flows.types import FlowAction, FlowChallenge, FlowParams, FlowState
 from .utils import (
     compose_and_send_otp_challenge_email,
     do_add_session_assertion,
-    generate_otp_code,
+    generate_otp,
 )
 
 
 class LoginFlowProcessor(FlowProcessor):
-    def __init__(self, state: LoginFlowState):
+    _state: LoginFlowState
+    _status: FlowStatus
+    _deps: LoginSideFxProto
+
+    def __init__(self, state: LoginFlowState, deps: LoginSideFxProto | None = None):
         self._state = state
         self._status = FlowStatus.IN_PROGRESS
+        if deps is None:
+            deps = LoginSideFx()
+        self._deps = deps
 
     @classmethod
-    def new(cls, params: FlowParams | None = None) -> Self:
+    def new(cls, params: FlowParams | None = None, deps: LoginSideFxProto | None = None) -> Self:
+        _ = params  # ignored
         state = LoginFlowState()
-        return cls(state)
+        return cls(state, deps=deps)
 
     async def execute(self, action: FlowAction):
         action = ActionTypeAdapter.validate_python(action)
@@ -40,7 +49,7 @@ class LoginFlowProcessor(FlowProcessor):
         if self._state.email is None:
             if isinstance(action, EmailAddrAction):
                 _email = action.email
-                _code = generate_otp_code()
+                _code = generate_otp()
                 await compose_and_send_otp_challenge_email(_email, _code)
 
                 self._state.email = _email
@@ -93,9 +102,9 @@ class LoginFlowProcessor(FlowProcessor):
         )
 
     @classmethod
-    def load(cls, state: FlowState) -> Self:
+    def load(cls, state: FlowState, deps: LoginSideFxProto | None = None) -> Self:
         _state = LoginFlowState.model_validate(state)
-        return cls(_state)
+        return cls(_state, deps=deps)
 
     def dump(self) -> FlowState:
         data = self._state.model_dump(mode="python")

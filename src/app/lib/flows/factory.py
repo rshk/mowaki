@@ -3,14 +3,14 @@ from typing import Protocol
 
 from app.lib.flows.types import FlowParams, FlowState
 
-from .processor import FlowProcessor
+from .flow import FlowStateBlock
 
 
-class FlowFactory[P: FlowProcessor](Protocol):
+class FlowFactory(Protocol):
     @abstractmethod
-    async def create(self, params: FlowParams | None = None) -> P:
-        """Initialize a new flow and return a Processor instance"""
+    async def create(self, params: FlowParams | None = None) -> FlowStateBlock:
+        """Initialize flow state"""
 
     @abstractmethod
-    async def load(self, state: FlowState) -> P:
-        """Load state and return a Processor instance"""
+    async def load(self, state: FlowState) -> FlowStateBlock:
+        """Load flow state"""

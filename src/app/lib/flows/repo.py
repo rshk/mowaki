@@ -5,7 +5,7 @@ from typing import NamedTuple, Protocol
 
 from app.lib.flows.processor import FlowProcessor
 
-from .types import FlowKind
+from .types import FlowKind, FlowParams
 
 
 class LockedFlow[FlowObject](NamedTuple):
@@ -15,7 +15,7 @@ class LockedFlow[FlowObject](NamedTuple):
 
 class FlowRepo[FlowID, FlowObject](Protocol):
     @abstractmethod
-    async def create(self, kind: FlowKind) -> FlowID:
+    async def create(self, kind: FlowKind, params: FlowParams | None = None) -> FlowID:
         """Create a new flow"""
         yield  # type: ignore
 

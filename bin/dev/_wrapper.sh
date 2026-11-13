@@ -116,6 +116,16 @@ case "$COMMAND" in
         exec docker compose exec db psql
         ;;
 
+    python)
+        # Run an interactive Python interpreter
+        exec docker compose exec api uv run python "$@"
+        ;;
+
+    ipython)
+        # Run an interactive IPython interpreter
+        exec docker compose exec api uv run ipython "$@"
+        ;;
+
     cli)
         # Run the Python app CLI
         exec docker compose exec api uv run app-cli "$@"

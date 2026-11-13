@@ -13,6 +13,7 @@ from app.core.context import get_current_session
 from app.lib.flows.processor import FlowProcessor
 from app.lib.flows.registry import FlowRegistry
 from app.lib.flows.repo import FlowRepo, LockedFlow
+from app.lib.flows.types import FlowParams
 from app.lib.sql.table_helper import UpdateHelper
 from app.types.auth.auth_flow import AuthFlow, FlowID, FlowKind, FlowState
 
@@ -21,7 +22,7 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
     def __init__(self, registry: FlowRegistry):
         self._registry = registry
 
-    async def create(self, kind: FlowKind) -> FlowID:
+    async def create(self, kind: FlowKind, params: FlowParams | None = None) -> FlowID:
         session = get_current_session()
         factory = self._registry[kind]
         proc: FlowProcessor = await factory.create()
