@@ -2,50 +2,21 @@
 Definition of states for the login flow
 """
 
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
 from app import repo
-from app.core.authn.exceptions import FlowProcessingError
 from app.core.authn.flows.login.utils import generate_otp
+from app.core.authn.flows.state import ModelStateBlock
 from app.core.authn.session import set_current_user_id
 from app.exceptions import ObjectNotFound
-from app.lib.flows.constants import FlowStatus
 from app.lib.flows.flow import FailureStateBlock, FlowStateBlock, SuccessStateBlock
-from app.lib.flows.types import FlowAction, FlowChallenge, FlowState
+from app.lib.flows.types import FlowAction, FlowChallenge
 
 from .utils import compose_and_send_otp_challenge_email, do_add_session_assertion
 
 OTP_MAX_TRIES = 3
-
-
-# --------------------------------------------------------------------
-# Base implementation of the FlowStateBlock protocol
-# --------------------------------------------------------------------
-
-
-class ModelStateBlock(BaseModel, FlowStateBlock):
-    """
-    Base class for Pydantic-model-based flow states
-    """
-
-    @classmethod
-    def load(cls, state: FlowState) -> Self:
-        return cls.model_validate(state)
-
-    def dump(self) -> FlowState:
-        return FlowState(self.model_dump(mode="python"))
-
-    def _unsupported_action(self, action: Any):
-        state_type_name = self.__class__.__name__
-        action_type_name = action.__class__.__name__
-        return FlowProcessingError(
-            f"Action {action_type_name} is not supported in state {state_type_name}"
-        )
-
-    def get_status(self) -> FlowStatus:
-        return FlowStatus.IN_PROGRESS
 
 
 # --------------------------------------------------------------------
@@ -60,6 +31,7 @@ class InitialState(ModelStateBlock):
         _action = InitialStateActionsTA.validate_python(action)
 
         if isinstance(_action, StartOTPAction):
+            # TODO: run captcha checks before sending email
             otp = generate_otp()
             email = _action.email
             await compose_and_send_otp_challenge_email(email=email, code=otp)
@@ -73,6 +45,7 @@ class InitialState(ModelStateBlock):
                 "kind": "login-init",
                 "actions": [
                     StartOTPAction.model_json_schema(),
+                    StartWebauthnAction.model_json_schema(),
                 ],
             }
         )
@@ -85,8 +58,14 @@ class StartOTPAction(BaseModel):
     email: EmailStr
 
 
+class StartWebauthnAction(BaseModel):
+    kind: Literal["start-webauthn"] = "start-webauthn"
+
+
 # Actions available in the initial state
-InitialStateActions = Annotated[StartOTPAction, Discriminator("kind")]
+InitialStateActions = Annotated[
+    StartOTPAction | StartWebauthnAction, Discriminator("kind")
+]
 InitialStateActionsTA = TypeAdapter(InitialStateActions)
 
 
@@ -133,7 +112,6 @@ class OtpPendingState(ModelStateBlock):
 
         # TODO: if user has an associated passkey, require using it for verification
         # TODO: if user has MFA, require it for verification
-        # TODO: captcha checks (reCAPTCHA or CF Turnstile)
         # TODO: if user has no MFA, prompt to add a method?
 
         return SuccessStateBlock()
