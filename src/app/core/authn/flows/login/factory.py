@@ -5,15 +5,11 @@ from app.core.authn.flows.login.flow import (
     LoginFlowStates,
     LoginFlowStatesTA,
 )
-from app.core.authn.flows.login.sidefx import LoginSideFxProto
 from app.lib.flows.factory import FlowFactory
 from app.lib.flows.types import FlowParams, FlowState
 
 
 class LoginFlowFactory(FlowFactory):
-    def __init__(self, deps: LoginSideFxProto | None = None):
-        self._deps = deps
-
     async def create(self, params: FlowParams | None = None) -> LoginFlowStates:
         _ = params  # ignore
         return InitialState()

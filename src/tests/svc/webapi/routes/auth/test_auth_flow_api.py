@@ -1,26 +1,53 @@
-# """
-# Tests for app.svc.webapi.routes.auth
-# """
+"""
+Tests for app.svc.webapi.routes.auth
+"""
 
-# import pytest
-# from fastapi.security.utils import get_authorization_scheme_param
-# from httpx2 import AsyncClient
+from typing import Annotated, Literal
 
-# from app.core.authn.flows.email_otp_auth import (
-#     PROCESSOR as EMAIL_OTP_AUTH_FLOW_PROCESSOR,
-# )
-# from app.core.authn.flows.email_otp_auth import EmailOTPAuthFlowState
-# from app.core.authn.session import get_session, get_session_from_token
-# from app.lib.flows.processor import FlowProcessor
-# from app.svc.webapi.authn import flow_registry, flow_repo
-# from app.types.auth.assertions import EmailAuth
-# from app.types.auth.session import SessionToken
-# from tests.utils.session import set_request_context_from_session_id
+import pytest
+from pydantic import BaseModel, Discriminator, TypeAdapter
 
-# pytestmark = [
-#     pytest.mark.asyncio,
-#     pytest.mark.usefixtures("database_schema"),
-# ]
+from app.core.authn.flows.state import ModelStateBlock
+from app.lib.flows.flow import FlowStateBlock
+from app.lib.flows.types import FlowAction, FlowChallenge
+
+pytestmark = [
+    pytest.mark.asyncio,
+    pytest.mark.usefixtures("database_schema"),
+]
+
+# --------------------------------------------------------------------
+# TEST Fixtures
+# --------------------------------------------------------------------
+
+
+def _create_dummy_flow():
+    # FIXME maybe make this flow more complex?
+
+    class InitialState(ModelStateBlock):
+        kind: Literal["initial"] = "initial"
+
+        async def execute(self, action: FlowAction) -> FlowStateBlock:
+            _action = InitialStateActionsTA.validate_python(action)
+            if isinstance(_action, GotoFooAction):
+                pass
+
+        def get_challenge(self) -> FlowChallenge:
+            return FlowChallenge({"kind": "initial"})
+
+    class GotoFooAction(BaseModel):
+        kind: Literal["goto-foo"] = "goto-foo"
+
+    class GotoBarAction(BaseModel):
+        kind: Literal["goto-bar"] = "goto-bar"
+
+    InitialStateActions = Annotated[
+        GotoFooAction | GotoBarAction, Discriminator("kind")
+    ]
+    InitialStateActionsTA = TypeAdapter(InitialStateActions)
+
+
+# --------------------------------------------------------------------
 
 
 # async def test_email_otp_flow(subtests, testclient: AsyncClient, email_outbox):

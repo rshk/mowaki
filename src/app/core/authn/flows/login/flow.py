@@ -8,10 +8,10 @@ from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
 from app import repo
 from app.core.authn.flows.login.utils import generate_otp
-from app.core.authn.flows.state import ModelStateBlock
 from app.core.authn.session import set_current_user_id
 from app.exceptions import ObjectNotFound
-from app.lib.flows.flow import FailureStateBlock, FlowStateBlock, SuccessStateBlock
+from app.lib.flows.base import FailureStateBlock, ModelStateBlock, SuccessStateBlock
+from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.types import FlowAction, FlowChallenge
 
 from .utils import compose_and_send_otp_challenge_email, do_add_session_assertion

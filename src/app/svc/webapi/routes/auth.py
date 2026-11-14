@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated
 
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
@@ -23,7 +23,7 @@ class PublicFlowInfo(BaseModel):
     expires_at: datetime
     kind: FlowKind
     challenge: FlowChallenge
-    status: Literal["in-progress", "expired", "completed", "canceled"]
+    status: FlowStatus
 
 
 @router.post("/flow/init/{flow_kind}")
@@ -44,29 +44,18 @@ async def get_flow(flow_id: FlowID):
     return await _build_public_flow_info(flow_info)
 
 
-class FlowActionResult(BaseModel):
-    flow: PublicFlowInfo | None
-    status: FlowStatus
-
-
 @router.post("/flow/{flow_id}")
 async def post_flow_action(
     flow_id: FlowID,
     action: Annotated[FlowAction, Body(default_factory=dict)],
-) -> FlowActionResult:
+) -> PublicFlowInfo:
 
     async with flow_repo.for_processing(flow_id) as flow:
         await flow.state.execute(action)
-        status = flow.state.get_status()
+        # TODO: handle exceptions during execution of the action, return appropriate error results
 
-    if status.is_ended():
-        return FlowActionResult(flow=None, status=status)
-
-    # TODO: avoid this call
     flow_info = await flow_repo.get(flow_id)
-    public_flow_info = await _build_public_flow_info(flow_info)
-
-    return FlowActionResult(flow=public_flow_info, status=status)
+    return await _build_public_flow_info(flow_info)
 
 
 @router.delete("/flow/{flow_id}")
@@ -82,17 +71,18 @@ async def get_session_info():
     session = get_current_session()
 
     config = get_config()
-    if not config.development_mode:
-        return {"session_id": session.session_id}
 
-    # Allow inspecting session details, but only for development!
-    return {
-        "session_id": session.session_id,
-        "created_at": session.created_at,
-        "last_used_at": session.last_used_at,
-        "metadata": session.metadata,
-        "assertions": session.assertions,
-    }
+    # During development, return more information about the session.
+    if config.development_mode:
+        return {
+            "session_id": session.session_id,
+            "created_at": session.created_at,
+            "last_used_at": session.last_used_at,
+            "metadata": session.metadata,
+            "assertions": session.assertions,
+        }
+
+    return {"session_id": session.session_id}
 
 
 async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
@@ -106,5 +96,5 @@ async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
         expires_at=get_flow_expiration_date(flow),
         kind=flow.kind,
         challenge=processor.get_challenge(),
-        status="in-progress",
+        status=processor.get_status(),
     )
