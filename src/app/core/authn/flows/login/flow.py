@@ -11,6 +11,7 @@ from app.core.authn.exceptions import FlowProcessingError
 from app.core.authn.flows.login.utils import generate_otp
 from app.core.authn.session import set_current_user_id
 from app.exceptions import ObjectNotFound
+from app.lib.flows.constants import FlowStatus
 from app.lib.flows.flow import FailureStateBlock, FlowStateBlock, SuccessStateBlock
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowState
 
@@ -42,6 +43,9 @@ class ModelStateBlock(BaseModel, FlowStateBlock):
         return FlowProcessingError(
             f"Action {action_type_name} is not supported in state {state_type_name}"
         )
+
+    def get_status(self) -> FlowStatus:
+        return FlowStatus.IN_PROGRESS
 
 
 # --------------------------------------------------------------------

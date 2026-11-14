@@ -10,7 +10,7 @@ from app.core.authn.exceptions import (
     FlowExpired,
 )
 from app.core.context import get_current_session
-from app.lib.flows.processor import FlowProcessor
+from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.registry import FlowRegistry
 from app.lib.flows.repo import FlowRepo, LockedFlow
 from app.lib.flows.types import FlowParams
@@ -25,7 +25,7 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
     async def create(self, kind: FlowKind, params: FlowParams | None = None) -> FlowID:
         session = get_current_session()
         factory = self._registry[kind]
-        proc: FlowProcessor = await factory.create()
+        proc: FlowStateBlock = await factory.create(params)
         state = proc.dump()
 
         flow_id = await repo.auth.flow.create(
@@ -59,7 +59,7 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
         async with self._get_for_update(flow_id) as upd:
             flow = await upd.get()
             factory = self._registry[flow.kind]
-            proc: FlowProcessor = await factory.load(flow.state)
+            proc: FlowStateBlock = await factory.load(flow.state)
 
             yield LockedFlow(flow, proc)
 

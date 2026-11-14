@@ -6,6 +6,7 @@ from abc import abstractmethod
 from typing import Protocol, Self
 
 from app.core.authn.exceptions import FlowProcessingError
+from app.lib.flows.constants import FlowStatus
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowState
 
 
@@ -27,6 +28,10 @@ class FlowStateBlock(Protocol):
     def get_challenge(self) -> FlowChallenge:
         pass
 
+    @abstractmethod
+    def get_status(self) -> FlowStatus:
+        pass
+
 
 class SuccessStateBlock(FlowStateBlock):
     @classmethod
@@ -42,6 +47,9 @@ class SuccessStateBlock(FlowStateBlock):
     def get_challenge(self) -> FlowChallenge:
         return FlowChallenge({"kind": "final", "status": "completed"})
 
+    def get_status(self) -> FlowStatus:
+        return FlowStatus.COMPLETED
+
 
 class FailureStateBlock(FlowStateBlock):
     @classmethod
@@ -56,3 +64,6 @@ class FailureStateBlock(FlowStateBlock):
 
     def get_challenge(self) -> FlowChallenge:
         return FlowChallenge({"kind": "final", "status": "failed"})
+
+    def get_status(self) -> FlowStatus:
+        return FlowStatus.FAILED

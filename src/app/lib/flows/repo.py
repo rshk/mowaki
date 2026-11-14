@@ -3,14 +3,14 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import NamedTuple, Protocol
 
-from app.lib.flows.processor import FlowProcessor
+from app.lib.flows.flow import FlowStateBlock
 
 from .types import FlowKind, FlowParams
 
 
 class LockedFlow[FlowObject](NamedTuple):
     info: FlowObject
-    processor: FlowProcessor
+    state: FlowStateBlock
 
 
 class FlowRepo[FlowID, FlowObject](Protocol):

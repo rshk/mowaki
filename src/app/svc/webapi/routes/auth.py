@@ -8,7 +8,7 @@ from app.config import get_config
 from app.core.authn.flows.repo import get_flow_expiration_date
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
-from app.lib.flows.processor import FlowProcessor
+from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowKind, FlowParams
 from app.types.auth.auth_flow import AuthFlow, FlowID
 
@@ -56,8 +56,8 @@ async def post_flow_action(
 ) -> FlowActionResult:
 
     async with flow_repo.for_processing(flow_id) as flow:
-        await flow.processor.execute(action)
-        status = flow.processor.get_status()
+        await flow.state.execute(action)
+        status = flow.state.get_status()
 
     if status.is_ended():
         return FlowActionResult(flow=None, status=status)
@@ -99,7 +99,7 @@ async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
     """
     Create a PublicFlowInfo instance from an AuthFlow (database) record
     """
-    processor: FlowProcessor = await flow_registry[flow.kind].load(flow.state)
+    processor: FlowStateBlock = await flow_registry[flow.kind].load(flow.state)
     return PublicFlowInfo(
         flow_id=flow.flow_id,
         created_at=flow.created_at,
