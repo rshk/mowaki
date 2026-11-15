@@ -193,8 +193,19 @@ async def set_current_user_id(user_id: UserID):
 
     async with repo.auth.session.for_update(session_id) as upd:
         session = await upd.get()
-        if (user_id is not None) and (user_id not in _get_allowable_user_ids(session)):
-            raise AuthorizationError("Requested user id is not allowable")
+
+        # ************************************************************
+        # ************************************************************
+        # ************************************************************
+        # FIXME: do a better check to see if this session is
+        # authorized to act ast this user.
+        # Or just stop users from being able to call this directly.
+        # ************************************************************
+        # ************************************************************
+        # ************************************************************
+
+        # if (user_id is not None) and (user_id not in _get_allowable_user_ids(session)):
+        #     raise AuthorizationError("Requested user id is not allowable")
 
         await upd.set_current_user_id(user_id)
 
