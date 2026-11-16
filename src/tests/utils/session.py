@@ -27,15 +27,15 @@ class TestingRequestSession:
     __test__ = False  # this is **not** a test case
 
     def __init__(self):
-        self._session_id: SessionID | None = None
-        self._token = None
+        self.session_id: SessionID | None = None
+        self._context_token = None
 
     async def __aenter__(self):
-        if self._session_id is None:
+        if self.session_id is None:
             session, _ = await create_session()
-            self._session_id = session.session_id
+            self.session_id = session.session_id
         else:
-            session = await get_session(self._session_id)
+            session = await get_session(self.session_id)
 
         auth_subject = await get_auth_subject_from_session(session)
         ctx = RequestContext(
@@ -44,15 +44,15 @@ class TestingRequestSession:
             auth_subject=auth_subject,
         )
 
-        self._token = request_context.set(ctx)
+        self._context_token = request_context.set(ctx)
 
         return ctx
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         ctx = request_context.get()
-        if self._token is not None:
-            request_context.reset(self._token)
-            self._token = None
+        if self._context_token is not None:
+            request_context.reset(self._context_token)
+            self._context_token = None
 
         # Preserve whatever session was current
-        self._session_id = ctx.auth_session.session_id
+        self.session_id = ctx.auth_session.session_id

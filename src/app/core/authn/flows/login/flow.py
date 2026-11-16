@@ -8,7 +8,7 @@ from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
 from app import repo
 from app.core.authn.flows.login.utils import generate_otp
-from app.core.authn.session import set_current_user_id
+from app.core.authn.session import invalidate_current_session, set_current_user_id
 from app.exceptions import ObjectNotFound
 from app.lib.flows.base import FailureStateBlock, ModelStateBlock, SuccessStateBlock
 from app.lib.flows.flow import FlowStateBlock
@@ -96,9 +96,12 @@ class OtpPendingState(ModelStateBlock):
                 retries_left=self.retries_left - 1,
             )
 
+        # IMPORTANT - SECURITY:
+        # Create a new session to prevent session fixation attacks.
+        await invalidate_current_session()
+
         # Add assertion to indicate the current client verified
         # ownership of this email address.
-        # TODO: we should create a new session instead!
         await do_add_session_assertion(self.email)
 
         try:

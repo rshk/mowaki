@@ -31,6 +31,8 @@ async def test_happy_path_through_standalone_login_flow():
     intended, without storing the flow in the database.
     """
 
+    EMAIL = "user@example.com"
+
     request_ctx_mgr = TestingRequestSession()
 
     factory = LoginFlowFactory()
@@ -40,11 +42,12 @@ async def test_happy_path_through_standalone_login_flow():
     assert isinstance(state0, InitialState)
 
     # Start email-based OTP validation
-    action = FlowAction({"kind": "start-email-otp", "email": "user@example.com"})
+    action = FlowAction({"kind": "start-email-otp", "email": EMAIL})
     async with request_ctx_mgr:
         state1 = await state0.execute(action)
+    initial_session_id = request_ctx_mgr.session_id
     assert isinstance(state1, OtpPendingState)
-    assert state1.email == "user@example.com"
+    assert state1.email == EMAIL
     assert isinstance(state1.otp, str)
     assert state1.retries_left == 3
 
@@ -52,8 +55,9 @@ async def test_happy_path_through_standalone_login_flow():
     action = FlowAction({"kind": "otp-response", "otp": state1.otp})
     async with request_ctx_mgr:
         state2 = await state1.execute(action)
+    assert request_ctx_mgr.session_id != initial_session_id  # A new session was created!
     assert isinstance(state2, SignupState)  # user does not exist yet
-    assert state2.email == "user@example.com"
+    assert state2.email == EMAIL
 
     # Confirm account creation
     action = FlowAction({"kind": "signup-confirm", "display_name": "Test User"})
@@ -62,7 +66,7 @@ async def test_happy_path_through_standalone_login_flow():
     assert isinstance(state3, SuccessStateBlock)
 
     # Verify that the user was indeed created
-    user = await repo.user.get_by_email("user@example.com")
+    user = await repo.user.get_by_email(EMAIL)
     assert isinstance(user, User)
 
     # Verify that the correct assertions have been added to the session
@@ -73,4 +77,4 @@ async def test_happy_path_through_standalone_login_flow():
     [email_assertion] = session.assertions
     assert isinstance(email_assertion, Assertion)
     assert isinstance(email_assertion.params, assertions.EmailAuth)
-    assert email_assertion.params.email_address == "user@example.com"
+    assert email_assertion.params.email_address == EMAIL
