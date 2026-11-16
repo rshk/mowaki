@@ -98,6 +98,7 @@ class OtpPendingState(ModelStateBlock):
 
         # Add assertion to indicate the current client verified
         # ownership of this email address.
+        # TODO: we should create a new session instead!
         await do_add_session_assertion(self.email)
 
         try:

@@ -91,26 +91,17 @@ class EmailAuth(BaseAssertionParams):
     """Solved an email-based OTP challenge"""
 
     email_address: str
-    user_id: UserID | None = None
 
     def get_assertion_text(self) -> str:
         return f"email-auth:{self.email_address}"
 
-    def get_user_id(self) -> UserID | None:
-        return self.user_id
-
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         email_address = data["email_address"]
-
-        user_id = None
-        if (_user_id := data.get("user_id")) is not None:
-            user_id = UserID(uuid.UUID(_user_id))
-
-        return cls(email_address=email_address, user_id=user_id)
+        return cls(email_address=email_address)
 
     def to_dict(self):
-        return {"email_address": self.email_address, "user_id": self.user_id}
+        return {"email_address": self.email_address}
 
 
 @register_assertion("passkey-auth")
