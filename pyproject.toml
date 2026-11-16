@@ -44,3 +44,8 @@ dev = [
     "sphinx-autobuild>=2025.8.25",
     "time-machine>=3.4.0",
 ]
+
+[tool.pytest]
+addopts = ["-vvv"]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

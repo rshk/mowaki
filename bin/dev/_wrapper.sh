@@ -77,14 +77,20 @@ case "$COMMAND" in
         ;;
 
     test)
-        # Run the Python test suite
-        exec docker compose exec api uv run pytest -vvv ./src/tests
+        echo "Please use one of the following commands instead:"
+        echo "pytest pytest-cov"
+        exit 1
         ;;
 
-    test-cov)
+    pytest)
+        # Run the Python test suite
+        exec docker compose exec api uv run pytest "$@"
+        ;;
+
+    pytest-cov)
         # Run the Python test suite, with coverage reporting
-        exec docker compose exec api uv run pytest -vvv ./src/tests \
-             --cov=app --cov-report=term-missing
+        exec docker compose exec api uv run pytest \
+             --cov=app --cov-report=term-missing "$@"
         ;;
 
     style-fix)
