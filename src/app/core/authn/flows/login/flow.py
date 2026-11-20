@@ -8,7 +8,7 @@ from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
 
 from app import repo
 from app.core.authn.session import (
-    add_session_assertion_from_params,
+    add_session_assertion,
     invalidate_current_session,
     set_current_user_id,
 )
@@ -110,7 +110,7 @@ class OtpPendingState(ModelStateBlock):
         # Add assertion to indicate the current client verified
         # ownership of this email address.
         assertion = assertions.EmailAuth(email_address=self.email)
-        await add_session_assertion_from_params(assertion)
+        await add_session_assertion(assertion)
 
         try:
             user = await repo.user.get_by_email(self.email)

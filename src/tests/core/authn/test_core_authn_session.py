@@ -7,7 +7,7 @@ import pytest
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
 from app.core.authn.session import (
-    _add_session_assertion,
+    add_session_assertion,
     create_session,
     edit_session_metadata,
     get_current_session,
@@ -229,10 +229,8 @@ class Test_current_session_operations:
                     # Add an "email auth" assertion associated with an email address
                     # not currently tied to any user.
 
-                    assertion1 = Assertion.from_params(
-                        EmailAuth("not-a-user@example.com")
-                    )
-                    await _add_session_assertion(assertion1)
+                    assertion1 = EmailAuth("not-a-user@example.com")
+                    await add_session_assertion(assertion1)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -243,7 +241,7 @@ class Test_current_session_operations:
                     for session in (ctx_session, db_session):
                         assert session.session_id == session_id
                         assert session.session_secret != _prev_secret  # rotated
-                        assert session.assertions == [assertion1]
+                        assert session.assertions == [Assertion.from_params(assertion1)]
                         assert session.current_user_id is None
 
                     assert ctx_session.session_secret == db_session.session_secret
@@ -268,8 +266,8 @@ class Test_current_session_operations:
                     # This will set session.current_user_id to the
                     # user_id provided by the new assertion.
 
-                    assertion2 = Assertion.from_params(EmailAuth("user-1@example.com"))
-                    await _add_session_assertion(assertion2)
+                    assertion2 = EmailAuth("user-1@example.com")
+                    await add_session_assertion(assertion2)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -301,15 +299,8 @@ class Test_current_session_operations:
                     _prev_token = _new_token
 
                 with subtests.test("email-auth for different user"):
-                    assertion3 = Assertion.from_params(
-                        EmailAuth(
-                            "user-2@example.com",
-                            user_id=UserID(
-                                uuid.UUID("8764ea4f-4cd8-4777-be9f-89ecaf6c42ab")
-                            ),
-                        )
-                    )
-                    await _add_session_assertion(assertion3)
+                    assertion3 = EmailAuth("user-2@example.com")
+                    await add_session_assertion(assertion3)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -351,15 +342,8 @@ class Test_current_session_operations:
                 # Add an "email auth" assertion associated with an email address
                 # belonging to a user.
 
-                assertion = Assertion.from_params(
-                    EmailAuth(
-                        "user-1@example.com",
-                        user_id=UserID(
-                            uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3")
-                        ),
-                    )
-                )
-                await _add_session_assertion(assertion)
+                assertion = EmailAuth("user-1@example.com")
+                await add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -396,7 +380,7 @@ class Test_current_session_operations:
 
             user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
             assertions = [
-                Assertion.from_params(EmailAuth("user-1@example.com", user_id=user_id)),
+                Assertion.from_params(EmailAuth("user-1@example.com")),
             ]
 
             async with request_context_factory(
@@ -409,15 +393,8 @@ class Test_current_session_operations:
                 # Add an "email auth" assertion associated with an email address
                 # belonging to a different user.
 
-                assertion = Assertion.from_params(
-                    EmailAuth(
-                        "user-2@example.com",
-                        user_id=UserID(
-                            uuid.UUID("8764ea4f-4cd8-4777-be9f-89ecaf6c42ab")
-                        ),
-                    )
-                )
-                await _add_session_assertion(assertion)
+                assertion = EmailAuth("user-2@example.com")
+                await add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -451,7 +428,7 @@ class Test_current_session_operations:
 
             user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
             assertions = [
-                Assertion.from_params(EmailAuth("user-1@example.com", user_id=user_id)),
+                Assertion.from_params(EmailAuth("user-1@example.com")),
             ]
 
             async with request_context_factory(
@@ -464,10 +441,8 @@ class Test_current_session_operations:
                 # Add an "email auth" assertion associated with an email address
                 # belonging to a different user.
 
-                assertion = Assertion.from_params(
-                    EmailAuth("user-1@example.com", user_id=user_id)
-                )
-                await _add_session_assertion(assertion)
+                assertion = EmailAuth("user-1@example.com")
+                await add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -504,10 +479,10 @@ class Test_current_session_operations:
             user_email = "user-1@example.com"
 
             user_id1 = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
-            assertion1 = Assertion.from_params(EmailAuth(user_email, user_id=user_id1))
+            assertion1 = Assertion.from_params(EmailAuth(user_email))
 
             user_id2 = UserID(uuid.UUID("d117eb12-9db6-4c08-ae5d-206aafdeba94"))
-            assertion2 = Assertion.from_params(EmailAuth(user_email, user_id=user_id2))
+            assertion2 = EmailAuth(user_email)
 
             async with request_context_factory(
                 assertions=[assertion1], current_user_id=user_id1
@@ -517,7 +492,7 @@ class Test_current_session_operations:
                 _prev_token = get_request_context().new_session_token
 
                 # Same email, different user ID
-                await _add_session_assertion(assertion2)
+                await add_session_assertion(assertion2)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -546,7 +521,7 @@ class Test_current_session_operations:
         async def test_set_current_user_id_to_valid_id(self, request_context_factory):
             user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
             assertions = [
-                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
+                Assertion.from_params(EmailAuth("u1@example.com")),
             ]
 
             async with request_context_factory(assertions=assertions):
@@ -584,8 +559,8 @@ class Test_current_session_operations:
             user_id1 = UserID(uuid.UUID("4e81dca7-1111-4fad-b056-e767acda47c3"))
             user_id2 = UserID(uuid.UUID("6c87c6e3-2222-4ac2-a578-6bc7bcc9fce4"))
             assertions = [
-                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id1)),
-                Assertion.from_params(EmailAuth("u2@example.com", user_id=user_id2)),
+                Assertion.from_params(EmailAuth("u1@example.com")),
+                Assertion.from_params(EmailAuth("u2@example.com")),
             ]
 
             async with request_context_factory(
@@ -625,7 +600,7 @@ class Test_current_session_operations:
         ):
             user_id = UserID(uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3"))
             assertions = [
-                Assertion.from_params(EmailAuth("u1@example.com", user_id=user_id)),
+                Assertion.from_params(EmailAuth("u1@example.com")),
             ]
 
             async with request_context_factory(
