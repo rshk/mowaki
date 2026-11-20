@@ -28,11 +28,19 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
         proc: FlowStateBlock = await factory.create(params)
         state = proc.dump()
 
+        session_id = None
+        if kind != FlowKind("login"):
+            # Login flows are **not** attached to a specific session,
+            # as they need to create a different one.
+            # This is kinda hacky tho, we should delegate this
+            # decision to the flow factory somehow!
+            session_id = session.session_id
+
         flow_id = await repo.auth.flow.create(
             kind=kind,
             state=FlowState(state),
             expires_in=None,  # TODO: allow setting this on creation
-            session_id=session.session_id,
+            session_id=session_id,
         )
 
         return flow_id
@@ -93,13 +101,11 @@ def _flow_authz_check(flow: AuthFlow):
     Check whether a flow can be used in the current session.
     """
 
-    # Flow is not tied to a session -> all good
+    # Flow is tied to a session; ensure it matches the current one.
     if flow.session_id is not None:
-        return
-
-    session = get_current_session()
-    if flow.session_id != session.session_id:
-        raise FlowAccessDenied("This flow belongs to a different session")
+        session = get_current_session()
+        if flow.session_id != session.session_id:
+            raise FlowAccessDenied("This flow belongs to a different session")
 
 
 def _ensure_flow_is_processable(flow: AuthFlow):
