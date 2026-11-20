@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from app import repo
 from app.const import AUTH_FLOW_HARD_VALIDITY
@@ -12,17 +12,21 @@ from app.core.authn.exceptions import (
 from app.core.context import get_current_session
 from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.registry import FlowRegistry
-from app.lib.flows.repo import FlowRepo, LockedFlow
-from app.lib.flows.types import FlowParams
+from app.lib.flows.types import FlowAction, FlowKind, FlowParams, FlowState
 from app.lib.sql.table_helper import UpdateHelper
-from app.types.auth.auth_flow import AuthFlow, FlowID, FlowKind, FlowState
+from app.types.auth.auth_flow import AuthFlow, FlowID
 
 
-class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
-    def __init__(self, registry: FlowRegistry):
+class FlowManager:
+    def __init__(self, *, registry: FlowRegistry):
         self._registry = registry
 
-    async def create(self, kind: FlowKind, params: FlowParams | None = None) -> FlowID:
+    async def create(
+        self,
+        kind: FlowKind,
+        params: FlowParams | None = None,
+        expires_in: timedelta | None = None,
+    ) -> FlowID:
         session = get_current_session()
         factory = self._registry[kind]
         proc: FlowStateBlock = await factory.create(params)
@@ -39,13 +43,13 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
         flow_id = await repo.auth.flow.create(
             kind=kind,
             state=FlowState(state),
-            expires_in=None,  # TODO: allow setting this on creation
+            expires_in=expires_in,
             session_id=session_id,
         )
 
         return flow_id
 
-    async def get(self, flow_id: FlowID) -> AuthFlow:
+    async def get_info(self, flow_id: FlowID) -> AuthFlow:
         flow = await repo.auth.flow.get(flow_id)
         _flow_authz_check(flow)
         return flow
@@ -60,20 +64,19 @@ class AuthnFlowRepo(FlowRepo[FlowID, AuthFlow]):
             _ensure_flow_is_processable(flow)
             yield upd
 
-    @asynccontextmanager
-    async def for_processing(
-        self, flow_id: FlowID
-    ) -> AsyncGenerator[LockedFlow[AuthFlow]]:
+    async def execute(self, flow_id: FlowID, action: FlowAction) -> None:
         async with self._get_for_update(flow_id) as upd:
             flow = await upd.get()
             factory = self._registry[flow.kind]
             proc: FlowStateBlock = await factory.load(flow.state)
 
-            yield LockedFlow(flow, proc)
+            new_state = await proc.execute(action)
+
+            # yield LockedFlow(flow, proc)
 
             # Save current state
-            state = proc.dump()
-            is_ended = proc.get_status().is_ended()
+            state = new_state.dump()
+            is_ended = new_state.get_status().is_ended()
             await upd.update(state=state, is_ended=is_ended)
 
         # Automatically cleanup ended flows

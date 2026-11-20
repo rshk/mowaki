@@ -5,14 +5,14 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel
 
 from app.config import get_config
-from app.core.authn.flows.repo import get_flow_expiration_date
+from app.core.authn.flows.manager import get_flow_expiration_date
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
 from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowKind, FlowParams
 from app.types.auth.auth_flow import AuthFlow, FlowID
 
-from ..authn import flow_registry, flow_repo
+from ..authn import flow_mgr, flow_registry
 
 router = APIRouter(tags=["authentication"])
 
@@ -33,14 +33,14 @@ async def init_flow(
 ) -> PublicFlowInfo:
     """Initiate an authentication flow of the specified type"""
 
-    flow_id = await flow_repo.create(flow_kind, params=params)
-    flow_info = await flow_repo.get(flow_id)
+    flow_id = await flow_mgr.create(flow_kind, params=params)
+    flow_info = await flow_mgr.get_info(flow_id)
     return await _build_public_flow_info(flow_info)
 
 
 @router.get("/flow/{flow_id}")
 async def get_flow(flow_id: FlowID):
-    flow_info = await flow_repo.get(flow_id)
+    flow_info = await flow_mgr.get_info(flow_id)
     return await _build_public_flow_info(flow_info)
 
 
@@ -50,18 +50,16 @@ async def post_flow_action(
     action: Annotated[FlowAction, Body(default_factory=dict)],
 ) -> PublicFlowInfo:
 
-    async with flow_repo.for_processing(flow_id) as flow:
-        await flow.state.execute(action)
-        # TODO: handle exceptions during execution of the action, return appropriate error results
+    await flow_mgr.execute(flow_id, action)
 
-    flow_info = await flow_repo.get(flow_id)
+    flow_info = await flow_mgr.get_info(flow_id)
     return await _build_public_flow_info(flow_info)
 
 
 @router.delete("/flow/{flow_id}")
 async def cancel_flow(flow_id: FlowID):
     """Cancel / abort an in-progress flow"""
-    await flow_repo.delete(flow_id)
+    await flow_mgr.delete(flow_id)
 
 
 @router.get("/session")

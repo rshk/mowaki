@@ -4,7 +4,6 @@ from datetime import UTC, datetime
 
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
-from app.core.authz.exceptions import AuthorizationError
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
@@ -192,20 +191,8 @@ async def set_current_user_id(user_id: UserID):
     session_id = ctx.auth_session.session_id
 
     async with repo.auth.session.for_update(session_id) as upd:
-        session = await upd.get()
-
-        # ************************************************************
-        # ************************************************************
-        # ************************************************************
-        # FIXME: do a better check to see if this session is
-        # authorized to act ast this user.
-        # Or just stop users from being able to call this directly.
-        # ************************************************************
-        # ************************************************************
-        # ************************************************************
-
-        # if (user_id is not None) and (user_id not in _get_allowable_user_ids(session)):
-        #     raise AuthorizationError("Requested user id is not allowable")
+        # FIXME: we might want to check that the session has a valid
+        # assertion, if this method is to be exposed directly.
 
         await upd.set_current_user_id(user_id)
 

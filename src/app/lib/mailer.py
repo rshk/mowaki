@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 import abc
 import smtplib
 import typing
 from contextlib import contextmanager
 from contextvars import ContextVar
+from email.message import Message
 from urllib.parse import ParseResult, parse_qs, urlparse
 
 # ********************************************************************
@@ -54,10 +53,6 @@ def get_mailer_from_url(url: str) -> BaseMailer:
         return SMTPMailer.from_url(parsed)
 
     raise ValueError(f"Unsupported Mailer URL: {url}")
-
-
-if typing.TYPE_CHECKING:
-    from email.message import Message
 
 
 class BaseMailer(metaclass=abc.ABCMeta):
@@ -120,7 +115,7 @@ class SMTPMailer(BaseMailer):
             smtp.send_message(msg)
 
 
-_outbox = ContextVar("dummy_outbox")
+_outbox = ContextVar[list[Message]]("dummy_outbox")
 
 
 class DummyMailer(BaseMailer):
@@ -136,6 +131,7 @@ class DummyMailer(BaseMailer):
 
     @classmethod
     def from_url(cls, url: ParseResult):
+        _ = url  # Ignored
         return DummyMailer()
 
     async def send_message(self, msg):

@@ -23,7 +23,7 @@ async def set_request_context_from_session_id(
         yield ctx
 
 
-class TestingRequestSession:
+class TestingRequestContextManager:
     __test__ = False  # this is **not** a test case
 
     def __init__(self):
@@ -32,6 +32,7 @@ class TestingRequestSession:
 
     async def __aenter__(self):
         if self.session_id is None:
+            # Ensure a session is attached to this context
             session, _ = await create_session()
             self.session_id = session.session_id
         else:

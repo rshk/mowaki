@@ -1,5 +1,6 @@
 from .fixtures.config import config, setup_config_context, testing_config
 from .fixtures.database import database, database_metadata, database_schema
+from .fixtures.request_context import request_ctx, request_ctx_factory
 from .fixtures.resources import email_outbox, resources
 from .fixtures.testmode import setup_test_mode
 from .fixtures.time_machine import freeze_time_fixture, time_machine_fixture
@@ -11,6 +12,8 @@ __all__ = [
     "database_schema",
     "email_outbox",
     "freeze_time_fixture",
+    "request_ctx",
+    "request_ctx_factory",
     "resources",
     "setup_config_context",
     "setup_test_mode",
