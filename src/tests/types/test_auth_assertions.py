@@ -41,6 +41,5 @@ def test_dump_assertion():
         "params": {
             "kind": "email-auth",
             "email_address": "foo@example.com",
-            "user_id": None,
         },
     }

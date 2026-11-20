@@ -133,7 +133,18 @@ async def rotate_current_session_secret():
     await refresh_current_session()
 
 
-async def add_session_assertion(assertion: Assertion):
+async def add_session_assertion_from_params(
+    params: BaseAssertionParams, expires_at: datetime | None = None
+):
+    """
+    Add a new assertion to the current session.
+    """
+
+    assertion = Assertion(params=params, expires_at=expires_at)
+    return await _add_session_assertion(assertion)
+
+
+async def _add_session_assertion(assertion: Assertion):
     """Grant a new assertion to the current session.
 
     - Pre-existing assertions with the same text will be removed.
@@ -146,22 +157,22 @@ async def add_session_assertion(assertion: Assertion):
     session_id = ctx.auth_session.session_id
 
     async with repo.auth.session.for_update(session_id) as upd:
-        session = await upd.get()
+        # session = await upd.get()
 
         await upd.add_assertion(assertion)
 
-        # Make sure current_user_id is still valid, unset it
-        # otherwise.
-        session = await upd.get()
-        if session.current_user_id not in _get_allowable_user_ids(session):
-            await upd.unset_current_user_id()
-            session.current_user_id = None
+        # # Make sure current_user_id is still valid, unset it
+        # # otherwise.
+        # session = await upd.get()
+        # if session.current_user_id not in _get_allowable_user_ids(session):
+        #     await upd.unset_current_user_id()
+        #     session.current_user_id = None
 
-        # Set current_user_id, if not previously set
-        if session.current_user_id is None:
-            user_id = assertion.get_user_id()
-            if user_id is not None:
-                await upd.set_current_user_id(user_id)
+        # # Set current_user_id, if not previously set
+        # if session.current_user_id is None:
+        #     user_id = assertion.get_user_id()
+        #     if user_id is not None:
+        #         await upd.set_current_user_id(user_id)
 
         # Rotate secret and update context
         new_secret = await upd.rotate_secret()
@@ -169,14 +180,6 @@ async def add_session_assertion(assertion: Assertion):
         ctx.new_session_token = new_token
 
     await refresh_current_session()
-
-
-async def add_session_assertion_from_params(
-    params: BaseAssertionParams, expires_at: datetime | None = None
-):
-    # TODO: use this to replace add_session_assertion() entirely?
-    assertion = Assertion(params=params, expires_at=expires_at)
-    return await add_session_assertion(assertion)
 
 
 async def set_current_user_id(user_id: UserID):

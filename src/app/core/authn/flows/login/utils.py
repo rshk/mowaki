@@ -6,10 +6,8 @@ import logging
 import secrets
 
 from app.config import get_config
-from app.core.authn.session import add_session_assertion
 from app.lib.email_builder import EmailBuilder
 from app.resources import get_mailer
-from app.types.auth import assertions
 
 logger = logging.getLogger(__name__)
 
@@ -44,9 +42,3 @@ def generate_otp(length: int = 6) -> str:
     """
     _number = secrets.randbelow(10**length)
     return format(_number).rjust(length, "0")
-
-
-async def do_add_session_assertion(email: str):
-    params = assertions.EmailAuth(email_address=email)
-    assertion = assertions.Assertion.from_params(params)
-    await add_session_assertion(assertion)

@@ -5,17 +5,16 @@ Tests for app.svc.webapi.routes.auth
 from email.message import Message
 
 import pytest
+from fastapi.security.utils import get_authorization_scheme_param
+
 from app.const import SESSION_TOKEN_HEADER
 from app.core.authn.flows.login.flow import (
     InitialState,
     OtpPendingState,
 )
 from app.core.authn.session import get_session_from_token
-from app.core.context import RequestContext
 from app.svc.webapi.authn import flow_mgr, flow_registry
 from app.types.auth.session import SessionToken
-from fastapi.security.utils import get_authorization_scheme_param
-
 from tests.svc.webapi.conftest import AsyncTestClient
 from tests.utils.session import set_request_context_from_session_id
 

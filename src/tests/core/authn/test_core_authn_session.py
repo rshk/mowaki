@@ -7,7 +7,7 @@ import pytest
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
 from app.core.authn.session import (
-    add_session_assertion,
+    _add_session_assertion,
     create_session,
     edit_session_metadata,
     get_current_session,
@@ -232,7 +232,7 @@ class Test_current_session_operations:
                     assertion1 = Assertion.from_params(
                         EmailAuth("not-a-user@example.com")
                     )
-                    await add_session_assertion(assertion1)
+                    await _add_session_assertion(assertion1)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -268,15 +268,8 @@ class Test_current_session_operations:
                     # This will set session.current_user_id to the
                     # user_id provided by the new assertion.
 
-                    assertion2 = Assertion.from_params(
-                        EmailAuth(
-                            "user-1@example.com",
-                            user_id=UserID(
-                                uuid.UUID("4e81dca7-4888-4fad-b056-e767acda47c3")
-                            ),
-                        )
-                    )
-                    await add_session_assertion(assertion2)
+                    assertion2 = Assertion.from_params(EmailAuth("user-1@example.com"))
+                    await _add_session_assertion(assertion2)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -316,7 +309,7 @@ class Test_current_session_operations:
                             ),
                         )
                     )
-                    await add_session_assertion(assertion3)
+                    await _add_session_assertion(assertion3)
 
                     # Verify both the session in the request context
                     # and the one stored in the database.
@@ -366,7 +359,7 @@ class Test_current_session_operations:
                         ),
                     )
                 )
-                await add_session_assertion(assertion)
+                await _add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -424,7 +417,7 @@ class Test_current_session_operations:
                         ),
                     )
                 )
-                await add_session_assertion(assertion)
+                await _add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -474,7 +467,7 @@ class Test_current_session_operations:
                 assertion = Assertion.from_params(
                     EmailAuth("user-1@example.com", user_id=user_id)
                 )
-                await add_session_assertion(assertion)
+                await _add_session_assertion(assertion)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
@@ -524,7 +517,7 @@ class Test_current_session_operations:
                 _prev_token = get_request_context().new_session_token
 
                 # Same email, different user ID
-                await add_session_assertion(assertion2)
+                await _add_session_assertion(assertion2)
 
                 # Verify both the session in the request context
                 # and the one stored in the database.
