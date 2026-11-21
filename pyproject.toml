@@ -45,7 +45,12 @@ dev = [
     "time-machine>=3.4.0",
 ]
 
+# https://docs.pytest.org/en/stable/reference/customize.html
 [tool.pytest]
 addopts = ["-vvv"]
 testpaths = ["src/tests"]
 python_files = ["test_*.py"]
+
+# https://coverage.readthedocs.io/en/latest/config.html
+[tool.coverage.report]
+show_missing = true
