@@ -1,5 +1,4 @@
 import pytest
-
 from app import repo
 from app.core.authn.flows.login.factory import LoginFlowFactory
 from app.core.authn.flows.login.flow import (
@@ -17,12 +16,13 @@ from app.types.auth import assertions
 from app.types.auth.assertions import Assertion
 from app.types.auth.auth_flow import FlowID
 from app.types.user import User
+
 from tests.utils.session import (
     TestingRequestContextManager,
 )
 
 pytestmark = [
-    pytest.mark.usefixtures("database_schema"),
+    pytest.mark.usefixtures("database_schema", "request_ctx"),
     pytest.mark.asyncio,
 ]
 
@@ -35,8 +35,6 @@ async def test_happy_path_through_standalone_login_flow():
 
     EMAIL = "user@example.com"
 
-    request_ctx_mgr = TestingRequestContextManager()
-
     factory = LoginFlowFactory()
 
     # Create new login flow
@@ -45,9 +43,8 @@ async def test_happy_path_through_standalone_login_flow():
 
     # Start email-based OTP validation
     action = FlowAction({"kind": "start-email-otp", "email": EMAIL})
-    async with request_ctx_mgr:
-        state1 = await state0.execute(action)
-    initial_session_id = request_ctx_mgr.session_id
+    state1 = await state0.execute(action)
+    initial_session_id = get_current_session().session_id
     assert isinstance(state1, OtpPendingState)
     assert state1.email == EMAIL
     assert isinstance(state1.otp, str)
@@ -55,18 +52,16 @@ async def test_happy_path_through_standalone_login_flow():
 
     # Correctly respond to OTP validation
     action = FlowAction({"kind": "otp-response", "otp": state1.otp})
-    async with request_ctx_mgr:
-        state2 = await state1.execute(action)
+    state2 = await state1.execute(action)
     assert (
-        request_ctx_mgr.session_id != initial_session_id
+        get_current_session().session_id != initial_session_id
     )  # A new session was created!
     assert isinstance(state2, SignupState)  # user does not exist yet
     assert state2.email == EMAIL
 
     # Confirm account creation
     action = FlowAction({"kind": "signup-confirm", "display_name": "Test User"})
-    async with request_ctx_mgr:
-        state3 = await state2.execute(action)
+    state3 = await state2.execute(action)
     assert isinstance(state3, SuccessStateBlock)
 
     # Verify that the user was indeed created
@@ -74,8 +69,7 @@ async def test_happy_path_through_standalone_login_flow():
     assert isinstance(user, User)
 
     # Verify that the correct assertions have been added to the session
-    async with request_ctx_mgr:
-        session = get_current_session()
+    session = get_current_session()
     assert session.current_user_id == user.id
     assert len(session.assertions) == 1
     [email_assertion] = session.assertions
@@ -84,7 +78,7 @@ async def test_happy_path_through_standalone_login_flow():
     assert email_assertion.params.email_address == EMAIL
 
 
-async def test_happy_path_through_stored_login_flow(request_ctx: RequestContext):
+async def test_happy_path_through_stored_login_flow():
     """
     Test that the "happy path" through the login flow works as
     intended, using a flow stored in the database.
@@ -116,7 +110,7 @@ async def test_happy_path_through_stored_login_flow(request_ctx: RequestContext)
     assert flow_info.is_ended is False
 
     # Store initial session ID to check it's changed later
-    initial_session_id = request_ctx.auth_session.session_id
+    initial_session_id = get_current_session().session_id
 
     # ----------------------------------------------------------------
     # Start email-based OTP validation
