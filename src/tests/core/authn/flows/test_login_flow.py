@@ -1,4 +1,5 @@
 import pytest
+
 from app import repo
 from app.core.authn.flows.login.factory import LoginFlowFactory
 from app.core.authn.flows.login.flow import (
@@ -7,7 +8,7 @@ from app.core.authn.flows.login.flow import (
     SignupState,
 )
 from app.core.authn.flows.manager import FlowManager
-from app.core.context import RequestContext, get_current_session
+from app.core.context import get_current_session
 from app.exceptions import ObjectNotFound
 from app.lib.flows.base import SuccessStateBlock
 from app.lib.flows.registry import FlowRegistry
@@ -16,10 +17,6 @@ from app.types.auth import assertions
 from app.types.auth.assertions import Assertion
 from app.types.auth.auth_flow import FlowID
 from app.types.user import User
-
-from tests.utils.session import (
-    TestingRequestContextManager,
-)
 
 pytestmark = [
     pytest.mark.usefixtures("database_schema", "request_ctx"),

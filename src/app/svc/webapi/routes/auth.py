@@ -5,6 +5,7 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel
 
 from app.config import get_config
+from app.core.authn.flows.docs import docs as flow_docs
 from app.core.authn.flows.manager import get_flow_expiration_date
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
@@ -26,25 +27,28 @@ class PublicFlowInfo(BaseModel):
     status: FlowStatus
 
 
-@router.post("/flow/init/{flow_kind}")
+@router.post("/flow/init/{flow_kind}", summary="Start an authentication flow")
 async def init_flow(
     flow_kind: FlowKind,
     params: Annotated[FlowParams, Body(default_factory=dict)],
 ) -> PublicFlowInfo:
-    """Initiate an authentication flow of the specified type"""
+    """Initiate an authentication flow of the specified kind.
+
+    See the [flows documentation](/auth/docs.json) for more information on available flows.
+    """
 
     flow_id = await flow_mgr.create(flow_kind, params=params)
     flow_info = await flow_mgr.get_info(flow_id)
     return await _build_public_flow_info(flow_info)
 
 
-@router.get("/flow/{flow_id}")
+@router.get("/flow/{flow_id}", summary="Get info and next steps")
 async def get_flow(flow_id: FlowID):
     flow_info = await flow_mgr.get_info(flow_id)
     return await _build_public_flow_info(flow_info)
 
 
-@router.post("/flow/{flow_id}")
+@router.post("/flow/{flow_id}", summary="Execute an action")
 async def post_flow_action(
     flow_id: FlowID,
     action: Annotated[FlowAction, Body(default_factory=dict)],
@@ -56,13 +60,13 @@ async def post_flow_action(
     return await _build_public_flow_info(flow_info)
 
 
-@router.delete("/flow/{flow_id}")
+@router.delete("/flow/{flow_id}", summary="Abort an in-progress flow")
 async def cancel_flow(flow_id: FlowID):
     """Cancel / abort an in-progress flow"""
     await flow_mgr.delete(flow_id)
 
 
-@router.get("/session")
+@router.get("/session", summary="Get current session information")
 async def get_session_info():
     """Get information about the current session"""
 
@@ -81,6 +85,20 @@ async def get_session_info():
         }
 
     return {"session_id": session.session_id}
+
+
+@router.get("/docs.json", summary="JSON documentation of available flows")
+async def get_flows_docs_json():
+    all_flows_docs = []
+
+    for kind, factory in flow_registry.items():
+        _flow_docs = {
+            "kind": kind,
+            **flow_docs.generate_flow_docs(type(factory)),
+        }
+        all_flows_docs.append(_flow_docs)
+
+    return all_flows_docs
 
 
 async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:

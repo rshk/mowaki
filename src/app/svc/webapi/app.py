@@ -24,7 +24,11 @@ def create_app():
 
     # Create FastAPI app -------------------------------------------------
 
-    app = FastAPI()
+    app = FastAPI(
+        title="MoWAKi App",
+        summary="",
+        description="A brand new web API, created with [MoWAKi](https://mowaki.org).",
+    )
 
     # CORS middleware ----------------------------------------------------
 
