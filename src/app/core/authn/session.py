@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from app import repo
 from app.core.authn.exceptions import SessionNotFound
+from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
@@ -104,6 +105,7 @@ async def refresh_current_session():
     ctx = get_request_context()
     session_id = ctx.auth_session.session_id
     ctx.auth_session = await get_session(session_id)
+    ctx.auth_subject = await get_auth_subject_from_session(ctx.auth_session)
 
 
 async def invalidate_current_session() -> AuthSession:
@@ -230,3 +232,5 @@ async def edit_session_metadata() -> AsyncGenerator[AuthSessionMetadata]:
         upd.edit_metadata() as metadata,
     ):
         yield metadata
+
+    await refresh_current_session()
