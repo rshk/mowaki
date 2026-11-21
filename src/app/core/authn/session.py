@@ -8,6 +8,8 @@ from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
+from app.lib.sql.table_helper import UpdateHelper
+from app.repo.auth.session import SessionUpdater
 from app.types.auth.assertions import Assertion, BaseAssertionParams
 from app.types.auth.session import (
     AuthSession,
@@ -129,19 +131,10 @@ async def rotate_current_session_secret(force: bool = False):
     This will create a new session token and return it to the client.
     """
 
-    ctx = get_request_context()
-    session = ctx.auth_session
+    session_id = get_current_session().session_id
 
-    # Session secret was already rotated during this request (or a new
-    # session was created), so we don't need to rotate it again.
-    if (not force) and (ctx.new_session_token is not None):
-        return
-
-    async with repo.auth.session.for_update(session.session_id) as upd:
-        new_secret = await upd.rotate_secret()
-
-    new_token = format_session_token(session.session_id, new_secret)
-    ctx.new_session_token = new_token
+    async with repo.auth.session.for_update(session_id) as upd:
+        await _rotate_secret_if_needed(upd, force=force)
 
     await refresh_current_session()
 
@@ -151,81 +144,61 @@ async def add_session_assertion(
     expires_at: datetime | None = None,
 ):
     """
-    Add a new assertion to the current session.
+    Add an assertion to the current session.
 
-    The session secret will be rotated as a result.
+    The session secret will also be rotated as needed.
     """
 
     assertion = Assertion(params=params, expires_at=expires_at)
-    ctx = get_request_context()
-    session_id = ctx.auth_session.session_id
+    session_id = get_current_session().session_id
 
     async with repo.auth.session.for_update(session_id) as upd:
         await upd.add_assertion(assertion)
-
-        if ctx.new_session_token is None:
-            # Rotate secret and update context, if needed
-            new_secret = await upd.rotate_secret()
-            new_token = format_session_token(session_id, new_secret)
-            ctx.new_session_token = new_token
+        await _rotate_secret_if_needed(upd)
 
     await refresh_current_session()
 
 
 async def set_current_user_id(user_id: UserID):
     """
-    Change user_id associated with the current session
+    Change user_id associated with the current session.
 
-    - Check that at least one assertion contains the selected user_id
-    - Rotates the session secret
+    The session secret will also be rotated as needed.
     """
 
-    ctx = get_request_context()
-    session_id = ctx.auth_session.session_id
+    session_id = get_current_session().session_id
 
     async with repo.auth.session.for_update(session_id) as upd:
-        # FIXME: we might want to check that the session has a valid
-        # assertion, if this method is to be exposed directly.
-
         await upd.set_current_user_id(user_id)
-
-        # Rotate secret and update context
-        new_secret = await upd.rotate_secret()
-        new_token = format_session_token(session_id, new_secret)
-        ctx.new_session_token = new_token
+        await _rotate_secret_if_needed(upd)
 
     await refresh_current_session()
 
 
-def _get_allowable_user_ids(session: AuthSession) -> set[UserID]:
-    """Get a list of user IDs associated with this session"""
-    result = set()
-    for assertion in session.assertions:
-        user_id = assertion.get_user_id()
-        if user_id is not None:
-            result.add(user_id)
-    return result
-
-
 async def unset_current_user_id():
-    ctx = get_request_context()
-    session_id = ctx.auth_session.session_id
+    """
+    Unset the user_id associated with the current session.
+
+    The session secret will also be rotated as needed.
+    """
+
+    session_id = get_current_session().session_id
 
     async with repo.auth.session.for_update(session_id) as upd:
         await upd.unset_current_user_id()
-
-        # Rotate secret and update context
-        new_secret = await upd.rotate_secret()
-        new_token = format_session_token(session_id, new_secret)
-        ctx.new_session_token = new_token
+        await _rotate_secret_if_needed(upd)
 
     await refresh_current_session()
 
 
 @asynccontextmanager
 async def edit_session_metadata() -> AsyncGenerator[AuthSessionMetadata]:
-    ctx = get_request_context()
-    session_id = ctx.auth_session.session_id
+    """
+    Context manager yielding an object that can be used to update the
+    current session metadata.
+    """
+
+    session_id = get_current_session().session_id
 
     async with (
         repo.auth.session.for_update(session_id) as upd,
@@ -234,3 +207,34 @@ async def edit_session_metadata() -> AsyncGenerator[AuthSessionMetadata]:
         yield metadata
 
     await refresh_current_session()
+
+
+async def _rotate_secret_if_needed(upd: SessionUpdater, force: bool = False):
+    """
+    Rotate secret and update context (if needed).
+
+    This function is designed to use on an existing SessionUpdater
+    instance, on an already-locked session, as opposed to
+    rotate_current_session_secret() which creates a new transaction.
+    """
+
+    # *** SECURITY ***********************************************
+    # Instead of calling rotate_current_session_secret(), we
+    # do this atomically while the session object is locked
+    # for update. This prevents a race condition which might
+    # lead to a security issue: if an attacker is able to
+    # issue a call to add an assertion at nearly the same time
+    # a session-fixated user is issuing a similar request,
+    # they might be able to still control the session with the
+    # legitimate user's assertion added.
+    # ************************************************************
+
+    ctx = get_request_context()
+
+    if (not force) and (ctx.new_session_token is not None):
+        return  # already rotated
+
+    session_id = ctx.auth_session.session_id
+    new_secret = await upd.rotate_secret()
+    new_token = format_session_token(session_id, new_secret)
+    ctx.new_session_token = new_token
