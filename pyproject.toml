@@ -47,5 +47,5 @@ dev = [
 
 [tool.pytest]
 addopts = ["-vvv"]
-testpaths = ["tests"]
+testpaths = ["src/tests"]
 python_files = ["test_*.py"]

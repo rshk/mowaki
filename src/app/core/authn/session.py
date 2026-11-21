@@ -8,7 +8,6 @@ from app.core.authz.subject import get_auth_subject_from_session
 from app.core.context import get_current_session as _get_current_session
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
-from app.lib.sql.table_helper import UpdateHelper
 from app.repo.auth.session import SessionUpdater
 from app.types.auth.assertions import Assertion, BaseAssertionParams
 from app.types.auth.session import (

@@ -2,10 +2,10 @@ from uuid import UUID
 
 import pytest
 import pytest_asyncio
+
 from app import repo
 from app.core.authn.session import (
     add_session_assertion,
-    create_session,
     edit_session_metadata,
     get_current_session,
     get_session,
@@ -17,16 +17,12 @@ from app.core.authn.session import (
 )
 from app.core.context import get_request_context
 from app.exceptions import ObjectNotFound
-from app.repo.auth.session import hash_session_secret
 from app.types.auth import assertions
 from app.types.auth.session import (
     AuthSession,
     AuthSessionMetadata,
-    HashedSessionSecret,
-    SessionToken,
 )
 from app.types.user import UserID
-
 from tests.utils.session import TestingRequestContextManager
 
 pytestmark = [
@@ -242,7 +238,9 @@ class Test_set_and_unset_user_id_from_existing:
 
     async def test_set_current_user_id(self, subtests):
         session = get_current_session()
-        assert session.current_user_id == UserID(UUID("a1b0054e-51fc-4d16-92da-ba7db97c1c90"))
+        assert session.current_user_id == UserID(
+            UUID("a1b0054e-51fc-4d16-92da-ba7db97c1c90")
+        )
 
         user_id = UserID(UUID("01a1ff5c-970c-7227-a8b6-dfceb025444e"))
         await set_current_user_id(user_id)
@@ -257,7 +255,9 @@ class Test_set_and_unset_user_id_from_existing:
 
     async def test_unset_current_user_id(self, subtests):
         session = get_current_session()
-        assert session.current_user_id == UserID(UUID("a1b0054e-51fc-4d16-92da-ba7db97c1c90"))
+        assert session.current_user_id == UserID(
+            UUID("a1b0054e-51fc-4d16-92da-ba7db97c1c90")
+        )
 
         await unset_current_user_id()
 
@@ -268,11 +268,6 @@ class Test_set_and_unset_user_id_from_existing:
         with subtests.test("Session has been updated in the database"):
             session_db = await get_session(session.session_id)
             assert session_db.current_user_id is None
-
-
-# --------------------------------------------------------------------
-# Tests for unset_current_user_id()
-# --------------------------------------------------------------------
 
 
 # --------------------------------------------------------------------
