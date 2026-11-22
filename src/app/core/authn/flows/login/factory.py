@@ -8,8 +8,6 @@ from app.core.authn.flows.login.flow import (
 from app.lib.flows.factory import FlowFactory
 from app.lib.flows.types import FlowParams, FlowState
 
-from ..docs import docs
-
 
 class LoginFlowFactory(FlowFactory):
     async def create(self, params: FlowParams | None = None) -> LoginFlowStates:
@@ -18,13 +16,6 @@ class LoginFlowFactory(FlowFactory):
 
     async def load(self, state: FlowState) -> LoginFlowStates:
         return LoginFlowStatesTA.validate_python(state)
-
-
-docs.document_factory(
-    LoginFlowFactory,
-    title="Login flow",
-    summary="Authenticate a user through various methods",
-).add_state(InitialState, description="Initial flow state")
 
 
 if TYPE_CHECKING:

@@ -18,7 +18,6 @@ from app.lib.flows.flow import FlowStateBlock
 from app.lib.flows.types import FlowAction, FlowChallenge
 from app.types.auth import assertions
 
-from ..docs import docs
 from .utils import (
     compose_and_send_otp_challenge_email,
     generate_otp,
@@ -44,6 +43,9 @@ class InitialState(ModelStateBlock):
             email = _action.email
             await compose_and_send_otp_challenge_email(email=email, code=otp)
             return OtpPendingState(email=email, otp=otp)
+
+        if isinstance(_action, StartWebauthnAction):
+            pass  # TODO: implement this
 
         raise self._unsupported_action(_action)
 
@@ -75,19 +77,6 @@ InitialStateActions = Annotated[
     StartOTPAction | StartWebauthnAction, Discriminator("kind")
 ]
 InitialStateActionsTA = TypeAdapter(InitialStateActions)
-
-
-# Documentation
-docs.document_state(InitialState, title="Initial state").add_action(
-    StartOTPAction,
-    description="Start email-based OTP verification",
-).add_action(
-    StartWebauthnAction,
-    description="Start webauthn-based verification",
-)
-
-docs.document_action(StartOTPAction, title="Login with email")
-docs.document_action(StartWebauthnAction, title="Login with passkey")
 
 
 # --------------------------------------------------------------------

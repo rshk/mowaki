@@ -7,7 +7,6 @@ Utilities for documenting flows.
 # ActionRel. State documentation is fine as it is.
 
 from dataclasses import dataclass
-from typing import Self
 
 import pydantic
 
@@ -22,12 +21,14 @@ ActionType = pydantic.BaseModel
 
 
 class FlowObjectDocsRegistry:
-    _registry: dict[type[FactoryType | StateType | ActionType], ObjectDocs]
+    _flow_docs: dict[type[FactoryType], FactoryDocs]
+    _state_docs: dict[type[StateType], StateDocs]
 
     def __init__(self):
-        self._registry = {}
+        self._flow_docs = {}
+        self._state_docs = {}
 
-    def document_factory(
+    def document_flow(
         self,
         obj: type[FactoryType],
         title: str | None = None,
@@ -48,7 +49,7 @@ class FlowObjectDocsRegistry:
             params_schema=params.model_json_schema() if params is not None else None,
             states=states,
         )
-        self._registry[obj] = docs
+        self._flow_docs[obj] = docs
         return docs
 
     def document_state(
@@ -58,16 +59,10 @@ class FlowObjectDocsRegistry:
         title: str | None = None,
         summary: str | None = None,
         description: str | None = None,
-        actions: list[ActionRel] | None = None,
+        actions: list[ActionDocs] | None = None,
     ) -> StateDocs:
-        if kind is None:
-            kind = _extract_object_kind(obj)
-        if title is None:
-            title = _extract_object_title(obj)
-        if description is None:
-            description = _extract_object_description(obj)
-
         docs = StateDocs(
+            state=obj,
             kind=kind,
             title=title,
             summary=summary,
@@ -75,44 +70,14 @@ class FlowObjectDocsRegistry:
             schema=obj.model_json_schema(),
             actions=actions,
         )
-        self._registry[obj] = docs
-        return docs
-
-    def document_action(
-        self,
-        obj: type[ActionType],
-        kind: str | None = None,
-        title: str | None = None,
-        summary: str | None = None,
-        description: str | None = None,
-        states: list[StateRel] | None = None,
-    ) -> ActionDocs:
-        if kind is None:
-            kind = _extract_object_kind(obj)
-        if title is None:
-            title = _extract_object_title(obj)
-        if description is None:
-            description = _extract_object_description(obj)
-
-        docs = ActionDocs(
-            kind=kind,
-            title=title,
-            summary=summary,
-            description=description,
-            schema=obj.model_json_schema(),
-            states=states,
-        )
-        self._registry[obj] = docs
+        self._state_docs[obj] = docs
         return docs
 
     def generate_flow_docs(self, factory: type[FlowFactory]):
         """Generate full documentation for a flow"""
 
         states: dict[str, StateDocs] = {}
-        actions: dict[str, ActionDocs] = {}
-
         states_docs_json: dict[str, JSONObject] = {}
-        actions_docs_json: dict[str, JSONObject] = {}
 
         def generate_factory_docs(factory: type[FlowFactory]) -> JSONObject:
             factory_docs = self._get_or_create_factory_docs(factory)
@@ -132,12 +97,6 @@ class FlowObjectDocsRegistry:
                 "state_kind": get_state_kind(state_rel.state),
             }
 
-        def generate_action_rel_docs(action_rel: ActionRel) -> JSONObject:
-            return {
-                "description": action_rel.description,
-                "action_kind": get_action_kind(action_rel.action),
-            }
-
         def get_state_kind(obj: type[StateType]) -> str:
             docs = self._get_or_create_state_docs(obj)
             assert isinstance(docs, StateDocs)
@@ -151,27 +110,14 @@ class FlowObjectDocsRegistry:
             states_docs_json[docs.kind] = generate_state_docs(docs)
             return docs.kind
 
-        def get_action_kind(obj: type[ActionType]) -> str:
-            docs = self._get_or_create_action_docs(obj)
-            assert isinstance(docs, ActionDocs)
-
-            if docs.kind in actions:
-                if actions[docs.kind] is not docs:
-                    raise TypeError(f"Multiple actions found for kind: {docs.kind}")
-                return docs.kind
-
-            actions[docs.kind] = docs
-            actions_docs_json[docs.kind] = generate_action_docs(docs)
-            return docs.kind
-
         def generate_state_docs(obj: StateDocs) -> JSONObject:
             return {
                 "kind": obj.kind,
                 "title": obj.title,
                 "summary": obj.summary,
                 "description": obj.description,
-                "schema": obj.schema,
-                "actions": [generate_action_rel_docs(x) for x in obj.actions],
+                # TODO: add "challenge" schema here?
+                "actions": [generate_action_docs(x) for x in obj.actions],
             }
 
         def generate_action_docs(obj: ActionDocs) -> JSONObject:
@@ -181,35 +127,27 @@ class FlowObjectDocsRegistry:
                 "summary": obj.summary,
                 "description": obj.description,
                 "schema": obj.schema,
-                "states": [generate_state_rel_docs(x) for x in obj.states],
+                "next_states": [generate_state_rel_docs(x) for x in obj.next_states],
             }
 
         factory_docs_json = generate_factory_docs(factory)
         return {
             "flow": factory_docs_json,
             "states": states_docs_json,
-            "actions": actions_docs_json,
         }
 
     def _get_or_create_factory_docs(self, obj: type[FactoryType]) -> FactoryDocs:
-        if obj not in self._registry:
-            self.document_factory(obj)
-        docs = self._registry[obj]
+        if obj not in self._flow_docs:
+            self.document_flow(obj)
+        docs = self._flow_docs[obj]
         assert isinstance(docs, FactoryDocs)
         return docs
 
     def _get_or_create_state_docs(self, obj: type[StateType]) -> StateDocs:
-        if obj not in self._registry:
+        if obj not in self._state_docs:
             self.document_state(obj)
-        docs = self._registry[obj]
+        docs = self._state_docs[obj]
         assert isinstance(docs, StateDocs)
-        return docs
-
-    def _get_or_create_action_docs(self, obj: type[ActionType]) -> ActionDocs:
-        if obj not in self._registry:
-            self.document_action(obj)
-        docs = self._registry[obj]
-        assert isinstance(docs, ActionDocs)
         return docs
 
 
@@ -238,10 +176,6 @@ class FactoryDocs(ObjectDocs):
         self.params_schema = params_schema
         self.states = states if states is not None else []
 
-    def add_state(self, state: type[StateType], description: str | None = None) -> Self:
-        self.states.append(StateRel(state=state, description=description))
-        return self
-
 
 class StateDocs(ObjectDocs):
     kind: str
@@ -249,34 +183,38 @@ class StateDocs(ObjectDocs):
     summary: str | None
     description: str | None
     schema: JSONObject | None
-    actions: list[ActionRel]
+    actions: list[ActionDocs]
 
     def __init__(
         self,
-        kind: str,
+        state: type[StateType] | None = None,
+        *,
+        kind: str | None = None,
         title: str | None = None,
         summary: str | None = None,
         description: str | None = None,
         schema: JSONObject | None = None,
-        actions: list[ActionRel] | None = None,
+        actions: list[ActionDocs] | None = None,
     ):
+        if state is not None:
+            if kind is None:
+                kind = _extract_object_kind(state)
+            if title is None:
+                title = _extract_object_title(state)
+            if description is None:
+                description = _extract_object_description(state)
+
+        if kind is None:
+            raise ValueError(
+                "State kind must be specified, either explicitly or in the action type"
+            )
+
         self.kind = kind
         self.title = title
         self.summary = summary
         self.description = description
         self.schema = schema
         self.actions = actions if actions is not None else []
-
-    def add_action(
-        self,
-        action: type[ActionType],
-        *,
-        title: str | None = None,
-        description: str | None = None,
-    ) -> Self:
-        rel = ActionRel(action=action, title=title, description=description)
-        self.actions.append(rel)
-        return self
 
 
 class ActionDocs(ObjectDocs):
@@ -285,46 +223,46 @@ class ActionDocs(ObjectDocs):
     summary: str | None
     description: str | None
     schema: JSONObject | None
-    states: list[StateRel]
+    next_states: list[StateRel]
 
     def __init__(
         self,
-        kind: str,
+        action: type[ActionType] | None = None,
+        *,
+        kind: str | None = None,
         title: str | None = None,
         summary: str | None = None,
         description: str | None = None,
         schema: JSONObject | None = None,
         states: list[StateRel] | None = None,
     ):
+
+        if action is not None:
+            if kind is None:
+                kind = _extract_object_kind(action)
+            if title is None:
+                title = _extract_object_title(action)
+            if description is None:
+                description = _extract_object_description(action)
+            if schema is None:
+                schema = action.model_json_schema()
+
+        if kind is None:
+            raise ValueError(
+                "Action kind must be specified, either explicitly or in the action type"
+            )
+
         self.kind = kind
         self.title = title
         self.summary = summary
         self.description = description
         self.schema = schema
-        self.states = states if states is not None else []
-
-    def add_state(
-        self,
-        state: type[StateType],
-        *,
-        title: str | None = None,
-        description: str | None = None,
-    ) -> Self:
-        rel = StateRel(state=state, title=title, description=description)
-        self.states.append(rel)
-        return self
+        self.next_states = states if states is not None else []
 
 
 @dataclass
 class StateRel:
     state: type[StateType]
-    title: str | None = None
-    description: str | None = None
-
-
-@dataclass
-class ActionRel:
-    action: type[ActionType]
     title: str | None = None
     description: str | None = None
 
