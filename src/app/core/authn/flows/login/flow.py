@@ -106,7 +106,7 @@ class OtpPendingState(ModelStateBlock):
                 retries_left=self.retries_left - 1,
             )
 
-        # IMPORTANT - SECURITY:
+        # *** SECURITY ***********************************************
         # Create a new session to prevent session fixation attacks.
         await invalidate_current_session()
 
