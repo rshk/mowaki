@@ -1,4 +1,4 @@
-from app.lib.flows.base import SuccessStateBlock
+from app.lib.flows.base import FailureStateBlock, SuccessStateBlock
 from app.lib.flows.docs import ActionDocs, FlowObjectDocsRegistry, StateRel
 
 from .login import flow as login_flow
@@ -50,7 +50,12 @@ docs.document_state(
                 StateRel(
                     login_flow.OtpPendingState,
                     description="If OTP verification failed, remain in this "
-                    "state until a number of retries is exceeded",
+                    "state until a number of retries is exceeded.",
+                ),
+                StateRel(
+                    FailureStateBlock,
+                    description="If OTP verification failed more than the "
+                    "allowed amount of times, the flow will fail.",
                 ),
                 StateRel(
                     login_flow.SignupState,
@@ -91,9 +96,19 @@ docs.document_state(
             title="Reject signup",
             states=[
                 StateRel(
-                    SuccessStateBlock, description="Do nothing and complete the flow"
+                    SuccessStateBlock,
+                    description="Do nothing and complete the flow",
                 )
             ],
         ),
     ],
 )
+
+
+# --------------------------------------------------------------------
+# Generic states
+# --------------------------------------------------------------------
+
+docs.document_state(SuccessStateBlock, title="Flow completed successfully")
+
+docs.document_state(FailureStateBlock, title="Flow failed")
