@@ -102,7 +102,7 @@ class OtpPendingState(ModelStateBlock):
 
         if _action.otp != self.otp:
             # Maximum retries exceeded -> fail
-            if self.retries_left <= 0:
+            if self.retries_left <= 1:
                 return FailureStateBlock()
 
             # Wrong OTP, allow retrying
