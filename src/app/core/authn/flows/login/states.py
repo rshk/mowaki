@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Discriminator, EmailStr, TypeAdapter
 
 from app import repo
 from app.core.authn.session import (
@@ -58,13 +58,23 @@ class InitialState(ModelStateBlock):
 
 
 class StartOTPAction(BaseModel):
-    """Initiate email-based OTP"""
+    """Verify email address ownership using a one-time password"""
+
+    model_config = ConfigDict(
+        title="Start email OTP",
+    )
 
     kind: Literal["start-email-otp"] = "start-email-otp"
     email: EmailStr
 
 
 class StartWebauthnAction(BaseModel):
+    """Authenticate using a Webauthn passkey"""
+
+    model_config = ConfigDict(
+        title="Start webauthn",
+    )
+
     kind: Literal["start-webauthn"] = "start-webauthn"
 
 

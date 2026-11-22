@@ -1,5 +1,6 @@
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Annotated, Iterable
+from typing import Annotated
 
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
@@ -7,6 +8,7 @@ from pydantic import BaseModel
 from app.config import get_config
 from app.core.authn.flows.docs import docs as flow_docs
 from app.core.authn.flows.manager import get_flow_expiration_date
+from app.core.authn.session import invalidate_current_session
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
 from app.lib.flows.docs import FlowObjectDocsRegistry
@@ -100,6 +102,11 @@ def _generate_all_flow_docs(
 ) -> Iterable[JSONObject]:
     for kind in registry:
         yield {"kind": kind, **docs.generate_flow_docs(kind)}
+
+
+@router.post("/logout", summary="Log out")
+async def post_logout():
+    await invalidate_current_session()
 
 
 async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
