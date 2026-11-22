@@ -2,26 +2,21 @@
 Utilities for documenting flows.
 """
 
-# FIXME: Action only makes sense in the context of a *state*, so we
-# should probably move most of its documentation from ActionDocs to
-# ActionRel. State documentation is fine as it is.
-
 from dataclasses import dataclass
 
 import pydantic
 
 from app.lib.types import JSONObject
 
-from .factory import FlowFactory
+from .types import FlowKind
 
-FactoryType = FlowFactory
 ParamsType = pydantic.BaseModel
 StateType = pydantic.BaseModel
 ActionType = pydantic.BaseModel
 
 
 class FlowObjectDocsRegistry:
-    _flow_docs: dict[type[FactoryType], FactoryDocs]
+    _flow_docs: dict[FlowKind, FlowDocs]
     _state_docs: dict[type[StateType], StateDocs]
 
     def __init__(self):
@@ -30,26 +25,42 @@ class FlowObjectDocsRegistry:
 
     def document_flow(
         self,
-        obj: type[FactoryType],
+        kind: FlowKind,
         title: str | None = None,
         summary: str | None = None,
         description: str | None = None,
         params: type[ParamsType] | None = None,
         states: list[StateRel] | None = None,
-    ) -> FactoryDocs:
-        if title is None:
-            title = _extract_object_title(obj)
-        if description is None:
-            description = _extract_object_description(obj)
+    ) -> FlowDocs:
+        """
+        Add documentation for a Flow.
 
-        docs = FactoryDocs(
+        Args:
+            kind:
+                The FlowKind we're documenting.
+            title:
+                A short title for the flow.
+            summary:
+                A one-line description of the flow.
+            description:
+                A longer description of the flow.
+            params:
+                A Pydantic model used to load flow parameters, if any.
+            states:
+                A list of initial states for the flow.
+        """
+
+        if title is None:
+            title = str(kind)
+
+        docs = FlowDocs(
             title=title,
             summary=summary,
             description=description,
             params_schema=params.model_json_schema() if params is not None else None,
             states=states,
         )
-        self._flow_docs[obj] = docs
+        self._flow_docs[kind] = docs
         return docs
 
     def document_state(
@@ -61,6 +72,26 @@ class FlowObjectDocsRegistry:
         description: str | None = None,
         actions: list[ActionDocs] | None = None,
     ) -> StateDocs:
+        """
+        Add documentation for a flow state.
+
+        Args:
+            obj:
+                Type of a state block to be documented. Will be used
+                to provide default values for some of the other
+                fields.
+            kind:
+                Value of the state "kind". Retrieved from the model if
+                set to None.
+            title:
+                A short title for the flow state.
+            summary:
+                A one-line description of the flow state.
+            description:
+                A longer description of the flow state.
+            actions:
+                A list of actions that may be performed in this state.
+        """
         docs = StateDocs(
             state=obj,
             kind=kind,
@@ -73,22 +104,22 @@ class FlowObjectDocsRegistry:
         self._state_docs[obj] = docs
         return docs
 
-    def generate_flow_docs(self, factory: type[FlowFactory]):
-        """Generate full documentation for a flow"""
+    def generate_flow_docs(self, kind: FlowKind):
+        """
+        Generate full documentation for a flow, as a JSON object.
+        """
 
         states: dict[str, StateDocs] = {}
         states_docs_json: dict[str, JSONObject] = {}
 
-        def generate_factory_docs(factory: type[FlowFactory]) -> JSONObject:
-            factory_docs = self._get_or_create_factory_docs(factory)
-            assert isinstance(factory_docs, FactoryDocs)
-
+        def generate_flow_docs(kind: FlowKind) -> JSONObject:
+            obj = self._flow_docs[kind]
             return {
-                "title": factory_docs.title,
-                "summary": factory_docs.summary,
-                "description": factory_docs.description,
-                "params_schema": factory_docs.params_schema,
-                "states": [generate_state_rel_docs(x) for x in factory_docs.states],
+                "title": obj.title,
+                "summary": obj.summary,
+                "description": obj.description,
+                "params_schema": obj.params_schema,
+                "states": [generate_state_rel_docs(x) for x in obj.states],
             }
 
         def generate_state_rel_docs(state_rel: StateRel) -> JSONObject:
@@ -130,18 +161,11 @@ class FlowObjectDocsRegistry:
                 "next_states": [generate_state_rel_docs(x) for x in obj.next_states],
             }
 
-        factory_docs_json = generate_factory_docs(factory)
+        flow_docs_json = generate_flow_docs(kind)
         return {
-            "flow": factory_docs_json,
+            "flow": flow_docs_json,
             "states": states_docs_json,
         }
-
-    def _get_or_create_factory_docs(self, obj: type[FactoryType]) -> FactoryDocs:
-        if obj not in self._flow_docs:
-            self.document_flow(obj)
-        docs = self._flow_docs[obj]
-        assert isinstance(docs, FactoryDocs)
-        return docs
 
     def _get_or_create_state_docs(self, obj: type[StateType]) -> StateDocs:
         if obj not in self._state_docs:
@@ -151,11 +175,7 @@ class FlowObjectDocsRegistry:
         return docs
 
 
-class ObjectDocs:
-    pass
-
-
-class FactoryDocs(ObjectDocs):
+class FlowDocs:
     title: str | None
     summary: str | None
     description: str | None
@@ -177,7 +197,7 @@ class FactoryDocs(ObjectDocs):
         self.states = states if states is not None else []
 
 
-class StateDocs(ObjectDocs):
+class StateDocs:
     kind: str
     title: str | None
     summary: str | None
@@ -217,7 +237,7 @@ class StateDocs(ObjectDocs):
         self.actions = actions if actions is not None else []
 
 
-class ActionDocs(ObjectDocs):
+class ActionDocs:
     kind: str
     title: str | None
     summary: str | None

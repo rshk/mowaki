@@ -1,8 +1,8 @@
 from app.lib.flows.base import FailureStateBlock, SuccessStateBlock
 from app.lib.flows.docs import ActionDocs, FlowObjectDocsRegistry, StateRel
+from app.lib.flows.types import FlowKind
 
 from .login import flow as login_flow
-from .login.factory import LoginFlowFactory
 
 docs = FlowObjectDocsRegistry()
 
@@ -11,7 +11,7 @@ docs = FlowObjectDocsRegistry()
 # --------------------------------------------------------------------
 
 docs.document_flow(
-    LoginFlowFactory,
+    FlowKind("login"),
     title="Login flow",
     summary="Authenticate a user through various methods",
     states=[StateRel(login_flow.InitialState, description="Initial flow state")],

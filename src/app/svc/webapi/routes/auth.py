@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Iterable
 
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
@@ -9,8 +9,11 @@ from app.core.authn.flows.docs import docs as flow_docs
 from app.core.authn.flows.manager import get_flow_expiration_date
 from app.core.context import get_current_session
 from app.lib.flows.constants import FlowStatus
+from app.lib.flows.docs import FlowObjectDocsRegistry
 from app.lib.flows.flow import FlowStateBlock
+from app.lib.flows.registry import FlowRegistry
 from app.lib.flows.types import FlowAction, FlowChallenge, FlowKind, FlowParams
+from app.lib.types import JSONObject
 from app.types.auth.auth_flow import AuthFlow, FlowID
 
 from ..authn import flow_mgr, flow_registry
@@ -89,16 +92,14 @@ async def get_session_info():
 
 @router.get("/docs.json", summary="JSON documentation of available flows")
 async def get_flows_docs_json():
-    all_flows_docs = []
+    return list(_generate_all_flow_docs(flow_registry, flow_docs))
 
-    for kind, factory in flow_registry.items():
-        _flow_docs = {
-            "kind": kind,
-            **flow_docs.generate_flow_docs(type(factory)),
-        }
-        all_flows_docs.append(_flow_docs)
 
-    return all_flows_docs
+def _generate_all_flow_docs(
+    registry: FlowRegistry, docs: FlowObjectDocsRegistry
+) -> Iterable[JSONObject]:
+    for kind in registry:
+        yield {"kind": kind, **docs.generate_flow_docs(kind)}
 
 
 async def _build_public_flow_info(flow: AuthFlow) -> PublicFlowInfo:
