@@ -1,12 +1,13 @@
 from typing import TYPE_CHECKING
 
-from app.core.authn.flows.login.flow import (
+from app.lib.flows.factory import FlowFactory
+from app.lib.flows.types import FlowParams, FlowState
+
+from .states import (
     InitialState,
     LoginFlowStates,
     LoginFlowStatesTA,
 )
-from app.lib.flows.factory import FlowFactory
-from app.lib.flows.types import FlowParams, FlowState
 
 
 class LoginFlowFactory(FlowFactory):

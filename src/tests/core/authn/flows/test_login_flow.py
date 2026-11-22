@@ -2,7 +2,7 @@ import pytest
 
 from app import repo
 from app.core.authn.flows.login.factory import LoginFlowFactory
-from app.core.authn.flows.login.flow import (
+from app.core.authn.flows.login.states import (
     InitialState,
     OtpPendingState,
     SignupState,

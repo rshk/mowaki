@@ -2,7 +2,7 @@ from app.lib.flows.base import FailureStateBlock, SuccessStateBlock
 from app.lib.flows.docs import ActionDocs, FlowObjectDocsRegistry, StateRel
 from app.lib.flows.types import FlowKind
 
-from .login import flow as login_flow
+from .login import states as login_flow
 
 docs = FlowObjectDocsRegistry()
 

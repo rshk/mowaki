@@ -1,7 +1,3 @@
-"""
-Utilities for the Login Flow
-"""
-
 import logging
 import secrets
 

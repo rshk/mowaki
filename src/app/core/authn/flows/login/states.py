@@ -1,7 +1,3 @@
-"""
-Definition of states for the login flow
-"""
-
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Discriminator, EmailStr, TypeAdapter
